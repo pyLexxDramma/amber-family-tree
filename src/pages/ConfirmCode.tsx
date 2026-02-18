@@ -19,22 +19,28 @@ const ConfirmCode: React.FC = () => {
   }, [resendTimer]);
 
   const handleConfirm = () => {
-    if (code.length < 4) { setError('Please enter the full code'); return; }
-    if (code === '0000') { setError('Invalid or expired code'); return; }
+    if (code.length < 4) { setError('Введите полный код'); return; }
+    if (code === '0000') { setError('Неверный код'); return; }
+    if (code === '9999') { setError('Время кода истекло'); return; }
     if (mode === 'register') navigate('/onboarding');
     else navigate(ROUTES.app);
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-6 pt-6">
+    <div className="relative flex min-h-screen flex-col overflow-hidden">
+      <div className="absolute inset-0">
+        <img src="/bg-3.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
+        <div className="absolute inset-0 overlay-light" />
+      </div>
+      <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6">
       <button onClick={() => navigate(-1)} className="mb-12 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        <span className="text-xs tracking-widest uppercase font-light">Back</span>
+        <span className="text-xs tracking-widest uppercase font-light">Назад</span>
       </button>
 
-      <h1 className="editorial-title text-3xl mb-2">Enter Code</h1>
-      <p className="text-sm font-light text-muted-foreground mb-12">
-        We sent a code to <span className="text-foreground">{contact}</span>
+      <h1 className="editorial-title text-3xl mb-2">Подтвердите вход</h1>
+      <p className="text-sm font-light text-muted-foreground mb-10">
+        Мы отправили код на <span className="text-foreground">{contact || '…'}</span>
       </p>
 
       <div className="flex flex-col items-center gap-8">
@@ -47,21 +53,22 @@ const ConfirmCode: React.FC = () => {
         {error && <p className="text-destructive text-sm font-light">{error}</p>}
 
         <button onClick={handleConfirm} className="w-full h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300">
-          Confirm
+          Подтвердить
         </button>
 
         <div className="text-center text-sm font-light text-muted-foreground">
           {resendTimer > 0 ? (
-            <span>Resend code in {resendTimer}s</span>
+            <span>Отправить код ещё раз через {resendTimer} с</span>
           ) : (
-            <button className="underline hover:text-foreground transition-colors" onClick={() => setResendTimer(30)}>
-              Resend code
+            <button type="button" className="underline hover:text-foreground transition-colors" onClick={() => setResendTimer(30)}>
+              Отправить код ещё раз
             </button>
           )}
         </div>
-        <button className="text-xs font-light text-muted-foreground/50 underline hover:text-foreground transition-colors" onClick={() => navigate(-1)}>
-          Change phone/email
+        <button type="button" className="text-xs font-light text-muted-foreground/70 underline hover:text-foreground transition-colors" onClick={() => navigate(-1)}>
+          Изменить номер или email
         </button>
+      </div>
       </div>
     </div>
   );

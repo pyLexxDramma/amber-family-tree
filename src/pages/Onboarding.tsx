@@ -13,9 +13,9 @@ const Onboarding: React.FC = () => {
 
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!form.lastName.trim()) e.lastName = 'Required';
-    if (!form.firstName.trim()) e.firstName = 'Required';
-    if (!form.birthDate) e.birthDate = 'Required';
+    if (!form.lastName.trim()) e.lastName = 'Обязательное поле';
+    if (!form.firstName.trim()) e.firstName = 'Обязательное поле';
+    if (!form.birthDate) e.birthDate = 'Обязательное поле';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -33,7 +33,7 @@ const Onboarding: React.FC = () => {
           value={form[key]}
           onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
           className="mt-2 rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 focus-visible:border-foreground resize-none"
-          placeholder="Tell your family about yourself..."
+          placeholder="Коротко о себе (по желанию)"
         />
       ) : (
         <Input
@@ -49,43 +49,50 @@ const Onboarding: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-6 pt-8 pb-8">
-      <h1 className="editorial-title text-3xl mb-2">Your Profile</h1>
-      <p className="text-sm font-light text-muted-foreground mb-10">Tell your family a bit about you</p>
+    <div className="relative flex min-h-screen flex-col overflow-hidden">
+      <div className="absolute inset-0">
+        <img src="/bg-6.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
+        <div className="absolute inset-0 overlay-light" />
+      </div>
+      <div className="relative z-10 flex min-h-screen flex-col px-6 pt-8 pb-8">
+      <h1 className="editorial-title text-3xl mb-2">Давайте настроим профиль</h1>
 
-      <div className="flex justify-center mb-10">
+      <div className="flex justify-center my-10">
         <div className="relative">
-          <div className="h-24 w-24 bg-secondary flex items-center justify-center">
+          <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
             <span className="text-2xl font-serif text-foreground/30">?</span>
           </div>
-          <button className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center bg-foreground text-background">
-            <Camera className="h-3.5 w-3.5" />
+          <button type="button" className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background text-xs font-light">
+            <Camera className="h-3.5 w-3.5" aria-hidden />
           </button>
         </div>
       </div>
 
       <div className="space-y-6">
-        {field('lastName', 'Last Name', true)}
-        {field('firstName', 'First Name', true)}
-        {field('middleName', 'Middle Name')}
-        {field('birthDate', 'Birth Date', true, 'date')}
-        {field('city', 'City')}
-        {field('about', 'About')}
+        {field('lastName', 'Фамилия', true)}
+        {field('firstName', 'Имя', true)}
+        {field('middleName', 'Отчество')}
+        {field('birthDate', 'Дата рождения', true, 'date')}
+        {field('city', 'Живу в')}
+        {field('about', 'О себе')}
       </div>
 
       <div className="mt-12 flex gap-3">
         <button
+          type="button"
           onClick={() => navigate(ROUTES.app)}
           className="flex-1 h-12 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300"
         >
-          Skip
+          Пропустить
         </button>
         <button
+          type="button"
           onClick={handleNext}
           className="flex-1 h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300"
         >
-          Next
+          Далее
         </button>
+      </div>
       </div>
     </div>
   );

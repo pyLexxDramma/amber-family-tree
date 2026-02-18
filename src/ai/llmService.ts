@@ -1,8 +1,6 @@
 import type { Intent } from './types';
 import { resolvePersonQuery } from './intentRouter';
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-
 const TOOLS: Array<{
   type: 'function';
   function: { name: string; description: string; parameters: { type: 'object'; properties: Record<string, unknown>; required?: string[] };
@@ -130,12 +128,9 @@ export async function getIntentFromLLM(
 Если пользователь говорит «про него», «подробнее», «его фото» — имеется в виду уже выбранный человек (контекст).`;
 
   try {
-    const res = await fetch(OPENAI_API_URL, {
+    const res = await fetch('/api/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [

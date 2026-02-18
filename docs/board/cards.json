@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "schema": { "id": "?", "column": "backlog|todo|progress|review|done", "title": "", "tag": "backend|frontend|devops|bug|other", "desc": "?", "pay": "?", "due": "?", "progress": "?" },
+    "columns": ["backlog", "todo", "progress", "review", "done"],
+    "tags": ["backend", "frontend", "devops", "bug", "other"],
+    "updated": "2026-02-18"
+  },
+  "cards": [
+    { "id": "auth", "column": "todo", "title": "Авторизация: отправка кода и проверка", "tag": "backend", "desc": "Реальная отправка кода на email/телефон или Telegram", "due": "2026-02-26", "progress": 0 },
+    { "id": "filters", "column": "todo", "title": "Фильтры ленты: автор, участники, даты, избранное", "tag": "frontend", "desc": "Экран 8 по ТЗ", "due": "2026-02-26", "progress": 0 },
+    { "id": "family-tabs", "column": "todo", "title": "Семья: вкладки Обо мне / Семья, Профили / Группы", "tag": "frontend", "due": "2026-02-26", "progress": 0 },
+    { "id": "contact-profile", "column": "todo", "title": "Профиль контакта: блоки Публикации и Медиа", "tag": "frontend", "due": "2026-02-26", "progress": 0 },
+    { "id": "settings-exit", "column": "todo", "title": "Настройки: имя, фото, Выйти, Условия/Политика", "tag": "frontend", "due": "2026-02-26", "progress": 0 },
+    { "id": "invites-actions", "column": "todo", "title": "Приглашения: копировать, отменить, принять/отклонить", "tag": "frontend", "due": "2026-02-26", "progress": 0 },
+    { "id": "places-screen", "column": "todo", "title": "Экран «Места»: список, пригласить, освободить", "tag": "frontend", "due": "2026-02-26", "progress": 0 },
+    { "id": "visibility-pub", "column": "todo", "title": "Видимость публикации: Видна для / Исключить", "tag": "frontend", "due": "2026-02-26", "progress": 0 },
+    { "id": "empty-feed", "column": "backlog", "title": "Пустое состояние ленты: CTA Создать/Пригласить", "tag": "frontend" },
+    { "id": "onboarding-2", "column": "backlog", "title": "Онбординг шаг 2 (уточнить у заказчика)", "tag": "frontend" },
+    { "id": "media-select", "column": "backlog", "title": "Режим выбора медиа в ленте для действий", "tag": "frontend" },
+    { "id": "i18n", "column": "backlog", "title": "Локализация: единый язык или переключатель", "tag": "frontend" },
+    { "id": "legacy-research", "column": "backlog", "title": "Исследование Legacy Storage (Фаза 1)", "tag": "other" },
+    { "id": "welcome-tz", "column": "done", "title": "Welcome по ТЗ: твой семейный альбом, Условия/Политика", "tag": "frontend", "progress": 100 },
+    { "id": "login-tz", "column": "done", "title": "Вход: русские тексты по ТЗ", "tag": "frontend", "progress": 100 },
+    { "id": "register-tz", "column": "done", "title": "Регистрация: чекбоксы и тексты по ТЗ", "tag": "frontend", "progress": 100 },
+    { "id": "confirm-tz", "column": "done", "title": "Подтверждение кода: Подтвердите вход по ТЗ", "tag": "frontend", "progress": 100 },
+    { "id": "onboarding-tz", "column": "done", "title": "Онбординг: Давайте настроим профиль по ТЗ", "tag": "frontend", "progress": 100 },
+    { "id": "routing-welcome", "column": "done", "title": "Роутинг: / — Welcome, /app — голосовой помощник", "tag": "frontend", "progress": 100 },
+    { "id": "voice-fix", "column": "done", "title": "Микрофон: обработка ошибок и стабильный callback", "tag": "frontend", "progress": 100 },
+    { "id": "ai-shell", "column": "done", "title": "AiShell: интенты, ответы, LLM опционально", "tag": "frontend", "progress": 100 },
+    { "id": "design-warm", "column": "done", "title": "Дизайн: тёплая палитра и акценты", "tag": "frontend", "progress": 100 }
+  ]
+}

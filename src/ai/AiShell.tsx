@@ -166,7 +166,11 @@ export const AiShell: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background paper-texture">
+    <div className="relative flex flex-col h-screen overflow-hidden paper-texture">
+      <div className="fixed inset-0 -z-10">
+        <img src="/bg-5.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
+        <div className="absolute inset-0 bg-background/90" />
+      </div>
       {/* Header */}
       <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-primary/20 gradient-warm">
         <div className="flex items-center gap-3">

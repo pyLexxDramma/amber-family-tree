@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { speakWithOpenAI } from './openaiTts';
 
 function checkSpeechRecognitionSupport(): boolean {
   if (typeof window === 'undefined') return false;
@@ -13,6 +14,7 @@ export function useVoice(onResult: (text: string) => void) {
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const openAiAudioRef = useRef<HTMLAudioElement | null>(null);
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
@@ -70,7 +72,7 @@ export function useVoice(onResult: (text: string) => void) {
     setIsListening(false);
   }, []);
 
-  const speak = useCallback((text: string) => {
+  const fallbackSpeak = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) return;
     const synth = window.speechSynthesis;
     synthRef.current = synth;
@@ -82,8 +84,27 @@ export function useVoice(onResult: (text: string) => void) {
     synth.speak(u);
   }, []);
 
+  const speak = useCallback((text: string) => {
+    if (!text?.trim()) return;
+    openAiAudioRef.current = null;
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
+    if (apiKey?.trim()) {
+      speakWithOpenAI(text, apiKey.trim(), {
+        voice: 'nova',
+        speed: 0.95,
+        onAudio: (audio) => { openAiAudioRef.current = audio; },
+      }).catch(() => fallbackSpeak(text));
+    } else {
+      fallbackSpeak(text);
+    }
+  }, [fallbackSpeak]);
+
   const stopSpeaking = useCallback(() => {
     if (synthRef.current) synthRef.current.cancel();
+    if (openAiAudioRef.current) {
+      openAiAudioRef.current.pause();
+      openAiAudioRef.current = null;
+    }
   }, []);
 
   return { isListening, isSupported, startListening, stopListening, speak, stopSpeaking };
