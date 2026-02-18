@@ -16,13 +16,19 @@ const Welcome: React.FC = () => {
       </div>
 
       <div className="flex w-full max-w-xs flex-col gap-3">
-        <Button size="lg" className="w-full text-base rounded-xl h-12" onClick={() => navigate('/login')}>
+        <Button size="lg" className="w-full text-base rounded-xl h-12" onClick={() => navigate('/tree')}>
+          Посмотреть без входа
+        </Button>
+        <Button size="lg" variant="outline" className="w-full text-base rounded-xl h-12 opacity-60" onClick={() => navigate('/login')}>
           Sign In
         </Button>
-        <Button size="lg" variant="outline" className="w-full text-base rounded-xl h-12" onClick={() => navigate('/register')}>
+        <Button size="lg" variant="outline" className="w-full text-base rounded-xl h-12 opacity-60" onClick={() => navigate('/register')}>
           Create Account
         </Button>
       </div>
+      <p className="mt-2 text-xs text-muted-foreground text-center max-w-xs">
+        Демо: регистрация и код отключены. Нажмите «Посмотреть без входа», чтобы открыть приложение.
+      </p>
 
       <div className="mt-auto pt-12 pb-8">
         <button className="text-xs text-muted-foreground underline-offset-2 hover:underline">
