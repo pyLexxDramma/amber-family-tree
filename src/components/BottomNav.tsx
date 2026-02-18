@@ -1,11 +1,11 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TreePine, Newspaper, PlusCircle, Users, Store } from 'lucide-react';
+import { TreePine, Newspaper, Plus, Users, Store } from 'lucide-react';
 
 const navItems = [
   { path: '/tree', label: 'Tree', icon: TreePine },
   { path: '/feed', label: 'Feed', icon: Newspaper },
-  { path: '/create', label: '', icon: PlusCircle, isCenter: true },
+  { path: '/create', label: '', icon: Plus, isCenter: true },
   { path: '/family', label: 'Family', icon: Users },
   { path: '/store', label: 'Store', icon: Store },
 ];
@@ -15,23 +15,27 @@ export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-md items-center justify-around py-1.5">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t border-border/50">
+      <div className="mx-auto flex max-w-md items-center justify-around py-2">
         {navItems.map(item => {
           const active = location.pathname.startsWith(item.path);
           if (item.isCenter) {
             return (
-              <button key={item.path} onClick={() => navigate(item.path)} className="flex flex-col items-center -mt-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-                  <item.icon className="h-6 w-6" />
+              <button key={item.path} onClick={() => navigate(item.path)} className="flex items-center justify-center">
+                <div className="flex h-10 w-10 items-center justify-center border border-foreground/20 hover:bg-foreground hover:text-background transition-all duration-300">
+                  <item.icon className="h-4 w-4" />
                 </div>
               </button>
             );
           }
           return (
-            <button key={item.path} onClick={() => navigate(item.path)} className={`flex flex-col items-center gap-0.5 px-2 py-1 transition-colors ${active ? 'text-primary' : 'text-muted-foreground'}`}>
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center gap-1 px-3 py-1 transition-colors duration-200 ${active ? 'text-foreground' : 'text-muted-foreground/50'}`}
+            >
+              <item.icon className="h-4 w-4" strokeWidth={active ? 2 : 1.5} />
+              <span className="text-[9px] tracking-widest uppercase font-light">{item.label}</span>
             </button>
           );
         })}

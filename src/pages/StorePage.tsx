@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
-import { Button } from '@/components/ui/button';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
-import { CreditCard, Check, Users, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const StorePage: React.FC = () => {
@@ -17,93 +16,119 @@ const StorePage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="px-4 pt-6 pb-4">
-        <h1 className="text-2xl font-bold mb-4">Store</h1>
+      <div className="pt-4 pb-4">
+        <div className="px-6 mb-8">
+          <h1 className="editorial-title text-2xl mb-1">Store</h1>
+          <p className="text-sm font-light text-muted-foreground">Manage your subscription</p>
+        </div>
 
-        {/* Current subscription */}
-        <div className="rounded-2xl bg-card p-4 mb-4">
-          <p className="text-xs text-muted-foreground mb-1">Current Plan</p>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-bold">{currentPlan.name}</p>
-              <p className="text-sm text-muted-foreground">{currentPlan.price === 0 ? 'Free' : `$${currentPlan.price}/mo`}</p>
-            </div>
-            <CreditCard className="h-8 w-8 text-primary/30" />
-          </div>
+        {/* Current subscription -- editorial card */}
+        <div className="mx-6 mb-6 p-6 bg-card">
+          <p className="editorial-caption text-muted-foreground mb-3">Current plan</p>
+          <h2 className="editorial-title text-2xl mb-1">{currentPlan.name}</h2>
+          <p className="text-sm font-light text-muted-foreground">
+            {currentPlan.price === 0 ? 'Free' : `$${currentPlan.price}/month`}
+          </p>
         </div>
 
         {/* Places */}
-        <div className="rounded-2xl bg-card p-4 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium">Family Places</p>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        <div className="mx-6 mb-8">
+          <div className="flex items-baseline justify-between mb-3">
+            <p className="editorial-caption text-muted-foreground">Family places</p>
+            <p className="text-xs font-light text-muted-foreground">{currentSubscription.usedPlaces} of {currentPlan.maxPlaces}</p>
           </div>
-          <div className="h-2 rounded-full bg-muted overflow-hidden mb-1">
-            <div className="h-full bg-primary rounded-full" style={{ width: `${(currentSubscription.usedPlaces / currentPlan.maxPlaces) * 100}%` }} />
+          <div className="h-px bg-border relative overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full bg-foreground/40 transition-all duration-500"
+              style={{ width: `${(currentSubscription.usedPlaces / currentPlan.maxPlaces) * 100}%` }}
+            />
           </div>
-          <p className="text-xs text-muted-foreground">{currentSubscription.usedPlaces} of {currentPlan.maxPlaces} places used</p>
         </div>
 
-        {/* Plans comparison */}
-        <h2 className="text-lg font-bold mb-3">Plans</h2>
-        <div className="space-y-3 mb-6">
-          {plans.map(plan => (
-            <div key={plan.id} className={`rounded-2xl p-4 ${plan.id === currentSubscription.planId ? 'bg-primary/5 border-2 border-primary' : 'bg-card'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="font-bold">{plan.name}</p>
-                  <p className="text-sm text-muted-foreground">{plan.price === 0 ? 'Free forever' : `$${plan.price}/month`}</p>
+        {/* Plans */}
+        <div className="px-6 mb-8">
+          <p className="editorial-caption text-muted-foreground mb-6">Plans</p>
+          <div className="space-y-4">
+            {plans.map(plan => {
+              const isCurrent = plan.id === currentSubscription.planId;
+              return (
+                <div key={plan.id} className={`p-6 ${isCurrent ? 'border border-foreground/20' : 'bg-card'}`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="editorial-title text-xl">{plan.name}</h3>
+                      <p className="text-sm font-light text-muted-foreground mt-1">
+                        {plan.price === 0 ? 'Free forever' : `$${plan.price}/month`}
+                      </p>
+                    </div>
+                    {isCurrent && (
+                      <span className="editorial-caption text-muted-foreground border-b border-foreground/30 pb-0.5">current</span>
+                    )}
+                  </div>
+                  <ul className="space-y-2 mb-4">
+                    {plan.features.map(f => (
+                      <li key={f} className="flex items-center gap-2 text-xs font-light text-muted-foreground">
+                        <Check className="h-3 w-3 text-foreground/40" /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {!isCurrent && (
+                    <button
+                      onClick={handleUpgrade}
+                      className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300"
+                    >
+                      Upgrade
+                    </button>
+                  )}
                 </div>
-                {plan.id === currentSubscription.planId && <span className="text-xs bg-primary text-primary-foreground rounded-full px-2 py-0.5">Current</span>}
-              </div>
-              <ul className="space-y-1">
-                {plan.features.map(f => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Check className="h-3 w-3 text-primary" /> {f}
-                  </li>
-                ))}
-              </ul>
-              {plan.id !== currentSubscription.planId && (
-                <Button className="w-full mt-3 rounded-xl" onClick={handleUpgrade}>Upgrade to {plan.name}</Button>
-              )}
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
 
-        {/* Payment state overlay */}
+        {/* Payment overlay */}
         {paymentState && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="rounded-2xl bg-card p-6 shadow-lg text-center max-w-xs">
-              {paymentState === 'processing' && <>
-                <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
-                <p className="font-medium">Processing payment...</p>
-              </>}
-              {paymentState === 'success' && <>
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Check className="h-6 w-6 text-primary" /></div>
-                <p className="font-bold text-lg">Payment Successful!</p>
-                <p className="text-sm text-muted-foreground mt-1">Welcome to Premium</p>
-                <Button className="mt-4 rounded-xl" onClick={() => setPaymentState(null)}>Done</Button>
-              </>}
-              {paymentState === 'error' && <>
-                <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3"><span className="text-2xl">✕</span></div>
-                <p className="font-bold text-lg">Payment Failed</p>
-                <p className="text-sm text-muted-foreground mt-1">Please try again</p>
-                <Button className="mt-4 rounded-xl" onClick={() => setPaymentState(null)}>Close</Button>
-              </>}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm">
+            <div className="p-8 text-center max-w-xs">
+              {paymentState === 'processing' && (
+                <>
+                  <div className="h-10 w-10 border border-foreground/30 border-t-transparent animate-spin mx-auto mb-4" />
+                  <p className="text-sm font-light tracking-wide">Processing...</p>
+                </>
+              )}
+              {paymentState === 'success' && (
+                <>
+                  <p className="editorial-title text-2xl mb-2">Payment Successful</p>
+                  <p className="text-sm font-light text-muted-foreground mb-6">Welcome to Premium</p>
+                  <button onClick={() => setPaymentState(null)} className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300">
+                    Continue
+                  </button>
+                </>
+              )}
+              {paymentState === 'error' && (
+                <>
+                  <p className="editorial-title text-2xl mb-2">Payment Failed</p>
+                  <p className="text-sm font-light text-muted-foreground mb-6">Please try again</p>
+                  <button onClick={() => setPaymentState(null)} className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300">
+                    Close
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
 
-        {/* Settings & Help links */}
-        <div className="space-y-1">
-          <button onClick={() => navigate('/settings')} className="w-full flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-card transition-colors">
-            <span className="text-sm font-medium flex-1 text-left">Settings</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <button onClick={() => navigate('/help')} className="w-full flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-card transition-colors">
-            <span className="text-sm font-medium flex-1 text-left">Help & FAQ</span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </button>
+        {/* Links */}
+        <div className="px-6">
+          {['Settings', 'Help & FAQ'].map(label => (
+            <button
+              key={label}
+              onClick={() => navigate(label === 'Settings' ? '/settings' : '/help')}
+              className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity"
+            >
+              <span className="text-sm font-light tracking-wide flex-1 text-left">{label}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30" />
+            </button>
+          ))}
         </div>
       </div>
     </AppLayout>

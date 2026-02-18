@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { mockInvitations } from '@/data/mock-invitations';
 import { getMember } from '@/data/mock-members';
@@ -25,23 +24,26 @@ const InviteFlow: React.FC = () => {
 
   if (view === 'list') {
     return (
-      <div className="min-h-screen bg-background px-4 pt-4 pb-8">
-        <button onClick={() => setView('invite')} className="mb-4 flex items-center gap-1 text-muted-foreground text-sm">
-          <ArrowLeft className="h-4 w-4" /> Back
+      <div className="min-h-screen bg-background px-6 pt-6 pb-8">
+        <button onClick={() => setView('invite')} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+          <span className="text-xs tracking-widest uppercase font-light">Back</span>
         </button>
-        <h1 className="text-xl font-bold mb-4">Invitations</h1>
-        <div className="space-y-2">
+
+        <h1 className="editorial-title text-2xl mb-8">Invitations</h1>
+
+        <div className="space-y-0">
           {mockInvitations.map(inv => {
             const from = getMember(inv.fromId);
             return (
-              <div key={inv.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+              <div key={inv.id} className="flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0">
                 <div className="flex-1">
-                  <p className="text-sm font-medium">{inv.toEmail || inv.toPhone}</p>
-                  <p className="text-xs text-muted-foreground">from {from?.firstName} · {new Date(inv.createdAt).toLocaleDateString()}</p>
+                  <p className="text-sm font-light tracking-wide">{inv.toEmail || inv.toPhone}</p>
+                  <p className="text-xs font-light text-muted-foreground/50 mt-0.5">
+                    from {from?.firstName} · {new Date(inv.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
-                <span className={`text-xs rounded-full px-2 py-0.5 ${inv.status === 'accepted' ? 'bg-green-100 text-green-700' : inv.status === 'sent' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                  {inv.status}
-                </span>
+                <span className="editorial-caption text-muted-foreground">{inv.status}</span>
               </div>
             );
           })}
@@ -51,31 +53,46 @@ const InviteFlow: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-4 pb-8">
-      <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-1 text-muted-foreground text-sm">
-        <ArrowLeft className="h-4 w-4" /> Back
+    <div className="min-h-screen bg-background px-6 pt-6 pb-8">
+      <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        <span className="text-xs tracking-widest uppercase font-light">Back</span>
       </button>
-      <h1 className="text-xl font-bold mb-2">Invite Family</h1>
-      <p className="text-muted-foreground text-sm mb-6">Share this link to invite someone to your family</p>
 
-      <div className="rounded-2xl bg-card p-4 mb-6">
-        <p className="text-xs text-muted-foreground mb-2">Invitation link</p>
-        <Input value={mockLink} readOnly className="bg-muted text-sm" />
-        <div className="flex gap-2 mt-3">
-          <Button className="flex-1 rounded-xl" onClick={handleCopy}>
-            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-            {copied ? 'Copied!' : 'Copy'}
-          </Button>
-          <Button variant="outline" className="flex-1 rounded-xl" onClick={handleShare}>
-            <Share2 className="h-4 w-4 mr-1" /> Share
-          </Button>
+      <h1 className="editorial-title text-2xl mb-2">Invite Family</h1>
+      <p className="text-sm font-light text-muted-foreground mb-10">Share this link to invite someone to your family</p>
+
+      <div className="mb-10">
+        <p className="editorial-caption text-muted-foreground mb-3">Invitation link</p>
+        <Input
+          value={mockLink}
+          readOnly
+          className="rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 mb-4"
+        />
+        <div className="flex gap-3">
+          <button onClick={handleCopy} className="flex-1 h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 flex items-center justify-center gap-2">
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+          <button onClick={handleShare} className="flex-1 h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 flex items-center justify-center gap-2">
+            <Share2 className="h-3.5 w-3.5" /> Share
+          </button>
         </div>
       </div>
 
-      <Button variant="outline" className="w-full rounded-xl mb-3" onClick={() => navigate('/family')}>Done</Button>
-      <Button variant="ghost" className="w-full text-sm" onClick={() => setView('list')}>
-        <Send className="h-3.5 w-3.5 mr-1" /> View sent invitations
-      </Button>
+      <button
+        onClick={() => navigate('/family')}
+        className="w-full h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300 mb-4"
+      >
+        Done
+      </button>
+      <button
+        onClick={() => setView('list')}
+        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-light text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Send className="h-3.5 w-3.5" />
+        <span className="tracking-wider">View sent invitations</span>
+      </button>
     </div>
   );
 };

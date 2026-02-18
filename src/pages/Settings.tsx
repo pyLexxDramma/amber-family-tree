@@ -14,18 +14,21 @@ const Settings: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-4 pb-8">
-      <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-1 text-muted-foreground text-sm">
-        <ArrowLeft className="h-4 w-4" /> Back
+    <div className="min-h-screen bg-background px-6 pt-6 pb-8">
+      <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        <span className="text-xs tracking-widest uppercase font-light">Back</span>
       </button>
-      <h1 className="text-xl font-bold mb-4">Settings</h1>
-      <div className="space-y-2">
+
+      <h1 className="editorial-title text-2xl mb-8">Settings</h1>
+
+      <div className="space-y-0">
         {items.map(item => (
-          <div key={item.label} className="flex items-center gap-3 rounded-xl bg-card p-3">
-            <item.icon className="h-4 w-4 text-muted-foreground" />
+          <div key={item.label} className="flex items-center gap-4 py-5 border-b border-border/30 last:border-b-0">
+            <item.icon className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
             <div className="flex-1">
-              <p className="text-sm font-medium">{item.label}</p>
-              <p className="text-xs text-muted-foreground">{item.desc}</p>
+              <p className="text-sm font-light tracking-wide">{item.label}</p>
+              <p className="text-xs font-light text-muted-foreground/50 mt-0.5">{item.desc}</p>
             </div>
             <Switch />
           </div>

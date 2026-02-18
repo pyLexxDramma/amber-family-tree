@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 
@@ -21,33 +20,51 @@ const Help: React.FC = () => {
   const [sent, setSent] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-4 pb-8">
-      <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-1 text-muted-foreground text-sm">
-        <ArrowLeft className="h-4 w-4" /> Back
+    <div className="min-h-screen bg-background px-6 pt-6 pb-8">
+      <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        <span className="text-xs tracking-widest uppercase font-light">Back</span>
       </button>
-      <h1 className="text-xl font-bold mb-4">Help & FAQ</h1>
 
-      <Accordion type="single" collapsible className="mb-6">
+      <h1 className="editorial-title text-2xl mb-8">Help & FAQ</h1>
+
+      <Accordion type="single" collapsible className="mb-10">
         {faqs.map((faq, i) => (
-          <AccordionItem key={i} value={`faq-${i}`}>
-            <AccordionTrigger className="text-sm text-left">{faq.q}</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground">{faq.a}</AccordionContent>
+          <AccordionItem key={i} value={`faq-${i}`} className="border-border/30">
+            <AccordionTrigger className="text-sm font-light text-left tracking-wide py-5">{faq.q}</AccordionTrigger>
+            <AccordionContent className="text-sm font-light text-muted-foreground editorial-body pb-5">{faq.a}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
 
-      <h2 className="text-lg font-bold mb-3">Contact Support</h2>
+      <p className="editorial-caption text-muted-foreground mb-6">Contact support</p>
+
       {sent ? (
-        <div className="rounded-2xl bg-card p-6 text-center">
-          <p className="text-2xl mb-2">✓</p>
-          <p className="font-medium">Message sent!</p>
-          <p className="text-sm text-muted-foreground">We'll get back to you soon.</p>
+        <div className="py-12 text-center">
+          <p className="editorial-title text-2xl mb-2">Message sent</p>
+          <p className="text-sm font-light text-muted-foreground">We'll get back to you soon.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          <Input placeholder="Your email" value={email} onChange={e => setEmail(e.target.value)} />
-          <Textarea placeholder="Describe your issue..." value={message} onChange={e => setMessage(e.target.value)} />
-          <Button className="w-full rounded-xl" onClick={() => setSent(true)} disabled={!message.trim()}>Send Message</Button>
+        <div className="space-y-4">
+          <Input
+            placeholder="Your email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 focus-visible:border-foreground"
+          />
+          <Textarea
+            placeholder="Describe your issue..."
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            className="rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 focus-visible:border-foreground resize-none"
+          />
+          <button
+            onClick={() => setSent(true)}
+            disabled={!message.trim()}
+            className="w-full h-12 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground"
+          >
+            Send message
+          </button>
         </div>
       )}
     </div>

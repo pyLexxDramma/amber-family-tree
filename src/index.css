@@ -6,23 +6,23 @@
 
 @layer base {
   :root {
-    --background: 30 100% 97%;
-    --foreground: 25 30% 20%;
+    --background: 33 40% 92%;
+    --foreground: 25 30% 18%;
 
-    --card: 30 60% 96%;
-    --card-foreground: 25 30% 20%;
+    --card: 33 35% 89%;
+    --card-foreground: 25 30% 18%;
 
-    --popover: 30 100% 97%;
-    --popover-foreground: 25 30% 20%;
+    --popover: 33 40% 92%;
+    --popover-foreground: 25 30% 18%;
 
     --primary: 36 80% 50%;
     --primary-foreground: 30 100% 97%;
 
-    --secondary: 30 40% 90%;
+    --secondary: 33 30% 86%;
     --secondary-foreground: 25 30% 25%;
 
-    --muted: 30 30% 92%;
-    --muted-foreground: 25 15% 50%;
+    --muted: 33 25% 88%;
+    --muted-foreground: 25 15% 45%;
 
     --accent: 36 70% 55%;
     --accent-foreground: 30 100% 97%;
@@ -30,15 +30,15 @@
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 30% 85%;
-    --input: 30 30% 85%;
+    --border: 30 25% 80%;
+    --input: 30 25% 80%;
     --ring: 36 80% 50%;
 
     --radius: 0.75rem;
 
     --amber-glow: 36 90% 60%;
     --sepia: 30 20% 70%;
-    --cream-deep: 30 50% 93%;
+    --cream-deep: 33 35% 88%;
 
     --sidebar-background: 30 60% 96%;
     --sidebar-foreground: 25 30% 20%;
@@ -89,9 +89,88 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+}
+
+@layer components {
+  .editorial-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%);
+  }
+
+  .editorial-overlay-top {
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 60%);
+  }
+
+  .editorial-caption {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-style: italic;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .editorial-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .editorial-body {
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    letter-spacing: 0.01em;
+  }
+
+  .paper-texture {
+    position: relative;
+  }
+
+  .paper-texture::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  .paper-texture::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(ellipse at 50% 0%, transparent 50%, hsl(33 30% 85% / 0.4) 100%);
+  }
+
+  .paper-texture > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .snap-center {
+    scroll-snap-align: center;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

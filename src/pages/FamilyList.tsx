@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
-import { AvatarPlaceholder } from '@/components/AvatarPlaceholder';
 import { mockMembers, currentUserId } from '@/data/mock-members';
-import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 
 const FamilyList: React.FC = () => {
@@ -13,31 +11,101 @@ const FamilyList: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="px-4 pt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Family</h1>
-          <Button size="sm" className="rounded-full" onClick={() => navigate('/invite')}>
-            <Send className="h-3.5 w-3.5 mr-1" /> Invite
-          </Button>
+      <div className="pb-4">
+        {/* Header with hero-style treatment */}
+        <div className="relative overflow-hidden" style={{ height: '140px' }}>
+          <img
+            src="https://picsum.photos/seed/familylist/800/300"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ filter: 'sepia(0.3) brightness(0.5)' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
+            <div>
+              <p className="editorial-caption text-white/40 mb-1">All members</p>
+              <h1 className="editorial-title text-white text-2xl">Family</h1>
+            </div>
+            <button
+              onClick={() => navigate('/invite')}
+              className="flex items-center gap-2 text-[10px] tracking-widest uppercase font-light text-white/50 hover:text-white transition-colors border border-white/20 px-3 py-1.5 hover:bg-white hover:text-black duration-300"
+            >
+              <Send className="h-3 w-3" /> Invite
+            </button>
+          </div>
         </div>
 
-        <div className="flex gap-2 mb-4">
+        {/* Tabs */}
+        <div className="px-6 flex gap-6 mt-5 mb-2">
           {(['all', 'active', 'inactive'] as const).map(t => (
-            <Button key={t} variant={tab === t ? 'default' : 'ghost'} size="sm" className="rounded-full h-7 text-xs capitalize" onClick={() => setTab(t)}>{t}</Button>
-          ))}
-        </div>
-
-        <div className="space-y-2 pb-4">
-          {filtered.map(m => (
-            <button key={m.id} onClick={() => navigate(m.id === currentUserId ? '/my-profile' : `/profile/${m.id}`)} className="w-full flex items-center gap-3 rounded-2xl bg-card p-3 text-left hover:shadow-sm transition-shadow">
-              <AvatarPlaceholder name={`${m.firstName} ${m.lastName}`} size="md" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold">{m.firstName} {m.lastName}</p>
-                <p className="text-xs text-muted-foreground truncate">{m.about || m.city || ''}</p>
-              </div>
-              <span className={`h-2 w-2 rounded-full ${m.isActive ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`editorial-caption pb-2 transition-colors ${tab === t ? 'text-foreground border-b border-foreground' : 'text-muted-foreground/40 hover:text-muted-foreground/60'}`}
+            >
+              {t} ({mockMembers.filter(m => t === 'all' || (t === 'active' ? m.isActive : !m.isActive)).length})
             </button>
           ))}
+        </div>
+
+        {/* Members list with visual cards */}
+        <div className="px-4 mt-4 space-y-2 pb-2">
+          {filtered.map(m => {
+            const isCurrent = m.id === currentUserId;
+            return (
+              <button
+                key={m.id}
+                onClick={() => navigate(isCurrent ? '/my-profile' : `/profile/${m.id}`)}
+                className="w-full flex items-center gap-4 text-left group relative overflow-hidden rounded-sm"
+                style={{ height: '72px' }}
+              >
+                {/* Mini background blur */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    src={`https://picsum.photos/seed/member${m.id}/400/530`}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover blur-2xl scale-150 opacity-[0.07]"
+                  />
+                </div>
+
+                <div className="relative flex items-center gap-4 px-3 w-full">
+                  {/* Avatar */}
+                  <div className="h-14 w-14 flex-shrink-0 overflow-hidden relative">
+                    <img
+                      src={`https://picsum.photos/seed/member${m.id}/120/120`}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      style={{ filter: m.isActive ? 'sepia(0.05)' : 'grayscale(0.6)' }}
+                    />
+                    {isCurrent && (
+                      <div className="absolute bottom-0.5 right-0.5 h-2 w-2 bg-foreground rounded-full border border-background" />
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-light tracking-wide">
+                      {m.firstName} {m.lastName}
+                      {isCurrent && <span className="text-muted-foreground/40 ml-1.5 text-[10px] tracking-widest uppercase">you</span>}
+                    </p>
+                    <p className="text-[11px] font-light text-muted-foreground/50 truncate mt-0.5">
+                      {m.nickname && <span className="italic">"{m.nickname}" · </span>}
+                      {m.relations[0]?.type && <span className="capitalize">{m.relations[0].type}</span>}
+                      {m.city && <span> · {m.city}</span>}
+                    </p>
+                  </div>
+
+                  {/* Status indicator */}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className={`h-1.5 w-1.5 rounded-full ${m.isActive ? 'bg-foreground/30' : 'bg-muted-foreground/15'}`} />
+                    <span className="text-[8px] tracking-widest uppercase text-muted-foreground/30 font-light">
+                      {m.isActive ? 'online' : 'offline'}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </AppLayout>
