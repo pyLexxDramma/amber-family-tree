@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/constants/routes';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Welcome: React.FC = () => {
 
         <div className="flex w-full max-w-xs flex-col gap-3">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(ROUTES.app)}
             className="w-full h-12 rounded-xl bg-primary text-primary-foreground text-sm font-medium tracking-widest uppercase shadow-lg shadow-primary/40 hover:opacity-95 hover:shadow-xl transition-all duration-300"
           >
             Смотреть демо
@@ -51,7 +51,7 @@ const Welcome: React.FC = () => {
         </p>
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate(ROUTES.app)}
           className="mt-3 text-xs text-amber-200/90 hover:text-white transition-colors underline underline-offset-2"
         >
           Голосовой режим (демо)

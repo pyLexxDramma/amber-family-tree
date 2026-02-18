@@ -13,6 +13,8 @@ export function useVoice(onResult: (text: string) => void) {
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const onResultRef = useRef(onResult);
+  onResultRef.current = onResult;
 
   useEffect(() => {
     setIsSupported(checkSpeechRecognitionSupport());
@@ -23,23 +25,42 @@ export function useVoice(onResult: (text: string) => void) {
       (window as unknown as { SpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition ||
       (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
-      onResult('[Голос не поддерживается в этом браузере. Напишите текст.]');
+      onResultRef.current('[Голос не поддерживается в этом браузере. Напишите текст.]');
       return;
     }
+    if (recognitionRef.current) return;
     const rec = new SpeechRecognitionAPI();
     rec.continuous = false;
     rec.interimResults = false;
     rec.lang = 'ru-RU';
     rec.onresult = (e: SpeechRecognitionEvent) => {
-      const text = e.results[0][0].transcript;
-      if (text) onResult(text);
+      const transcript = e.results?.[0]?.[0]?.transcript;
+      if (transcript?.trim()) onResultRef.current(transcript.trim());
     };
-    rec.onend = () => setIsListening(false);
-    rec.onerror = () => setIsListening(false);
+    rec.onend = () => {
+      recognitionRef.current = null;
+      setIsListening(false);
+    };
+    rec.onerror = (event: SpeechRecognitionErrorEvent) => {
+      recognitionRef.current = null;
+      setIsListening(false);
+      const msg = event.error === 'not-allowed'
+        ? 'Доступ к микрофону запрещён. Разрешите в настройках браузера и обновите страницу.'
+        : event.error === 'no-speech'
+          ? 'Речь не распознана. Попробуйте ещё раз.'
+          : null;
+      if (msg) onResultRef.current(msg);
+    };
     recognitionRef.current = rec;
-    rec.start();
-    setIsListening(true);
-  }, [onResult]);
+    try {
+      rec.start();
+      setIsListening(true);
+    } catch (err) {
+      recognitionRef.current = null;
+      setIsListening(false);
+      onResultRef.current('Не удалось запустить микрофон. Проверьте разрешение и обновите страницу.');
+    }
+  }, []);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { ArrowLeft } from 'lucide-react';
 
@@ -21,7 +22,7 @@ const ConfirmCode: React.FC = () => {
     if (code.length < 4) { setError('Please enter the full code'); return; }
     if (code === '0000') { setError('Invalid or expired code'); return; }
     if (mode === 'register') navigate('/onboarding');
-    else navigate('/');
+    else navigate(ROUTES.app);
   };
 
   return (

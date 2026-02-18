@@ -37,9 +37,10 @@ const App = () => (
         <BrowserRouter>
           <VoiceControlGlobal />
           <Routes>
-            <Route path="/" element={<AiShell />} />
-            <Route path="/ai-demo" element={<Navigate to="/" replace />} />
-            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/" element={<Welcome />} />
+            <Route path="/app" element={<AiShell />} />
+            <Route path="/ai-demo" element={<Navigate to="/app" replace />} />
+            <Route path="/welcome" element={<Navigate to="/" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/confirm-code" element={<ConfirmCode />} />

@@ -9,7 +9,8 @@ type VoiceAction = { type: 'navigate'; path: string } | { type: 'back' };
 
 const VOICE_MAP: { patterns: RegExp[]; action: VoiceAction }[] = [
   { patterns: [/(назад|вернуться|back)/], action: { type: 'back' } },
-  { patterns: [/(главная|на\s*главную|домой|демо|смотреть\s*демо)/, /(дерево|древо|покажи\s*дерево)/], action: { type: 'navigate', path: ROUTES.home } },
+  { patterns: [/(главная|на\s*главную|домой|демо|смотреть\s*демо)/], action: { type: 'navigate', path: ROUTES.app } },
+  { patterns: [/(дерево|древо|покажи\s*дерево)/], action: { type: 'navigate', path: ROUTES.classic.tree } },
   { patterns: [/(лент[ау]|новости|публикации|что\s*нового)/], action: { type: 'navigate', path: ROUTES.classic.feed } },
   { patterns: [/(семь[яи]|семью|список|контакты|члены\s*семьи)/], action: { type: 'navigate', path: ROUTES.classic.family } },
   { patterns: [/(профиль|мой\s*профиль|обо\s*мне)/], action: { type: 'navigate', path: ROUTES.classic.myProfile } },
@@ -18,7 +19,7 @@ const VOICE_MAP: { patterns: RegExp[]; action: VoiceAction }[] = [
   { patterns: [/(настройки|настройки\s*аккаунта)/], action: { type: 'navigate', path: ROUTES.classic.settings } },
   { patterns: [/(помощь|поддержка|faq)/], action: { type: 'navigate', path: ROUTES.classic.help } },
   { patterns: [/(пригласить|приглашения|инвайт)/], action: { type: 'navigate', path: ROUTES.classic.invite } },
-  { patterns: [/(голос|анжело|помощник|ассистент|управление\s*голосом|расскажи)/, /(покажи\s*дедушку)/], action: { type: 'navigate', path: ROUTES.home } },
+  { patterns: [/(голос|анжело|помощник|ассистент|управление\s*голосом|расскажи)/, /(покажи\s*дедушку)/], action: { type: 'navigate', path: ROUTES.app } },
   { patterns: [/(вход|войти|логин)/], action: { type: 'navigate', path: ROUTES.login } },
   { patterns: [/(регистрация|создать\s*аккаунт)/], action: { type: 'navigate', path: ROUTES.register } },
 ];
@@ -36,7 +37,7 @@ export const VoiceControlGlobal: React.FC = () => {
   const location = useLocation();
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const isAiDemo = location.pathname === '/' || location.pathname === '/ai-demo';
+  const isAiDemo = location.pathname === '/app' || location.pathname === '/ai-demo';
 
   const startListening = useCallback(() => {
     const API =
@@ -55,14 +56,14 @@ export const VoiceControlGlobal: React.FC = () => {
           navigate(-1);
         } else {
           navigate(action.path);
-          if (action.path === ROUTES.home && text) {
+          if (action.path === ROUTES.app && text) {
             try {
               sessionStorage.setItem('ai-demo-voice-query', text);
             } catch {}
           }
         }
-      } else if (text && location.pathname !== '/' && !location.pathname.startsWith('/ai-demo')) {
-        navigate(ROUTES.home);
+      } else if (text && location.pathname !== '/app' && !location.pathname.startsWith('/ai-demo')) {
+        navigate(ROUTES.app);
         try {
           sessionStorage.setItem('ai-demo-voice-query', text);
         } catch {}

@@ -1,8 +1,11 @@
-/** Базовый путь классического UI (дерево, лента, настройки и т.д.). По умолчанию / — AiShell. */
+/** Базовый путь классического UI (дерево, лента, настройки и т.д.). */
 export const CLASSIC_BASE = '/classic';
 
 export const ROUTES = {
+  /** Главная страница сайта — приветствие/вход */
   home: '/',
+  /** Голосовой помощник (AiShell) */
+  app: '/app',
   classic: {
     tree: `${CLASSIC_BASE}/tree`,
     feed: `${CLASSIC_BASE}/feed`,

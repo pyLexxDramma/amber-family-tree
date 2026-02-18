@@ -202,7 +202,7 @@ const FamilyTree: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(ROUTES.app)}
             className="mt-3 text-sm font-light text-primary hover:underline"
           >
             Голосовой режим (демо)
