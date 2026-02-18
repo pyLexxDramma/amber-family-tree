@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Input } from '@/components/ui/input';
 import { mockInvitations } from '@/data/mock-invitations';
 import { getMember } from '@/data/mock-members';
@@ -81,7 +82,7 @@ const InviteFlow: React.FC = () => {
       </div>
 
       <button
-        onClick={() => navigate('/family')}
+        onClick={() => navigate(ROUTES.classic.family)}
         className="w-full h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300 mb-4"
       >
         Done

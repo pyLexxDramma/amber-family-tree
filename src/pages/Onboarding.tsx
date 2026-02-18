@@ -19,7 +19,7 @@ const Onboarding: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
-  const handleNext = () => { if (validate()) navigate('/tree'); };
+  const handleNext = () => { if (validate()) navigate('/'); };
 
   const field = (key: keyof typeof form, label: string, required = false, type = 'text') => (
     <div>
@@ -74,7 +74,7 @@ const Onboarding: React.FC = () => {
 
       <div className="mt-12 flex gap-3">
         <button
-          onClick={() => navigate('/tree')}
+          onClick={() => navigate('/')}
           className="flex-1 h-12 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300"
         >
           Skip

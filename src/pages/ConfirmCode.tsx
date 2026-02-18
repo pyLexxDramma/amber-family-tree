@@ -21,7 +21,7 @@ const ConfirmCode: React.FC = () => {
     if (code.length < 4) { setError('Please enter the full code'); return; }
     if (code === '0000') { setError('Invalid or expired code'); return; }
     if (mode === 'register') navigate('/onboarding');
-    else navigate('/tree');
+    else navigate('/');
   };
 
   return (

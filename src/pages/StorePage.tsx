@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { Check, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 
 const StorePage: React.FC = () => {
   const navigate = useNavigate();
@@ -122,7 +123,7 @@ const StorePage: React.FC = () => {
           {['Settings', 'Help & FAQ'].map(label => (
             <button
               key={label}
-              onClick={() => navigate(label === 'Settings' ? '/settings' : '/help')}
+              onClick={() => navigate(label === 'Settings' ? ROUTES.classic.settings : ROUTES.classic.help)}
               className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity"
             >
               <span className="text-sm font-light tracking-wide flex-1 text-left">{label}</span>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { mockMembers, currentUserId } from '@/data/mock-members';
 import { Send } from 'lucide-react';
@@ -23,29 +24,32 @@ const FamilyList: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
             <div>
-              <p className="editorial-caption text-white/40 mb-1">All members</p>
-              <h1 className="editorial-title text-white text-2xl">Family</h1>
+              <p className="editorial-caption text-white/40 mb-1">Все участники</p>
+              <h1 className="editorial-title text-white text-2xl">Семья</h1>
             </div>
             <button
-              onClick={() => navigate('/invite')}
+              onClick={() => navigate(ROUTES.classic.invite)}
               className="flex items-center gap-2 text-[10px] tracking-widest uppercase font-light text-white/50 hover:text-white transition-colors border border-white/20 px-3 py-1.5 hover:bg-white hover:text-black duration-300"
             >
-              <Send className="h-3 w-3" /> Invite
+              <Send className="h-3 w-3" /> Пригласить
             </button>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="px-6 flex gap-6 mt-5 mb-2">
-          {(['all', 'active', 'inactive'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`editorial-caption pb-2 transition-colors ${tab === t ? 'text-foreground border-b border-foreground' : 'text-muted-foreground/40 hover:text-muted-foreground/60'}`}
-            >
-              {t} ({mockMembers.filter(m => t === 'all' || (t === 'active' ? m.isActive : !m.isActive)).length})
-            </button>
-          ))}
+          {(['all', 'active', 'inactive'] as const).map(t => {
+            const labels = { all: 'Все', active: 'Активные', inactive: 'Неактивные' };
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`editorial-caption pb-2 transition-colors ${tab === t ? 'text-foreground border-b border-foreground' : 'text-muted-foreground/40 hover:text-muted-foreground/60'}`}
+              >
+                {labels[t]} ({mockMembers.filter(m => t === 'all' || (t === 'active' ? m.isActive : !m.isActive)).length})
+              </button>
+            );
+          })}
         </div>
 
         {/* Members list with visual cards */}
@@ -55,7 +59,7 @@ const FamilyList: React.FC = () => {
             return (
               <button
                 key={m.id}
-                onClick={() => navigate(isCurrent ? '/my-profile' : `/profile/${m.id}`)}
+                onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
                 className="w-full flex items-center gap-4 text-left group relative overflow-hidden rounded-sm"
                 style={{ height: '72px' }}
               >
@@ -86,7 +90,7 @@ const FamilyList: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-light tracking-wide">
                       {m.firstName} {m.lastName}
-                      {isCurrent && <span className="text-muted-foreground/40 ml-1.5 text-[10px] tracking-widest uppercase">you</span>}
+                      {isCurrent && <span className="text-muted-foreground/40 ml-1.5 text-[10px] tracking-widest uppercase">вы</span>}
                     </p>
                     <p className="text-[11px] font-light text-muted-foreground/50 truncate mt-0.5">
                       {m.nickname && <span className="italic">"{m.nickname}" · </span>}
@@ -99,7 +103,7 @@ const FamilyList: React.FC = () => {
                   <div className="flex flex-col items-end gap-1">
                     <div className={`h-1.5 w-1.5 rounded-full ${m.isActive ? 'bg-foreground/30' : 'bg-muted-foreground/15'}`} />
                     <span className="text-[8px] tracking-widest uppercase text-muted-foreground/30 font-light">
-                      {m.isActive ? 'online' : 'offline'}
+                      {m.isActive ? 'в сети' : 'не в сети'}
                     </span>
                   </div>
                 </div>

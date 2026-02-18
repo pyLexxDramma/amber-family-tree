@@ -4,11 +4,12 @@ import { mockMembers, currentUserId } from '@/data/mock-members';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Plus, UserPlus, Contact, Send, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 
 const generationConfig: Record<number, { label: string; subtitle: string }> = {
-  1: { label: 'Grandparents', subtitle: 'The roots of our story' },
-  2: { label: 'Parents', subtitle: 'The bridge between worlds' },
-  3: { label: 'Our Generation', subtitle: 'Writing the next chapter' },
+  1: { label: 'Дедушки и бабушки', subtitle: 'Корни нашей истории' },
+  2: { label: 'Родители', subtitle: 'Связь поколений' },
+  3: { label: 'Наше поколение', subtitle: 'Пишем следующую главу' },
 };
 
 const FamilyTree: React.FC = () => {
@@ -37,7 +38,7 @@ const FamilyTree: React.FC = () => {
     return (
       <button
         key={m.id}
-        onClick={() => navigate(isCurrent ? '/my-profile' : `/profile/${m.id}`)}
+        onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
         className={`relative overflow-hidden group ${widthClass} ${aspectClass}`}
       >
         <img
@@ -90,9 +91,8 @@ const FamilyTree: React.FC = () => {
 
           <div className="absolute top-0 left-0 right-0 p-5 flex items-start justify-between">
             <div>
-              <p className="editorial-caption text-white/40">The</p>
-              <h1 className="editorial-title text-white text-4xl mt-0.5">Rossi</h1>
-              <p className="editorial-caption text-white/30 mt-1">Family</p>
+              <p className="editorial-caption text-white/40">Семья</p>
+              <h1 className="editorial-title text-white text-4xl mt-0.5">Соколовы</h1>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -101,9 +101,9 @@ const FamilyTree: React.FC = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Add from contacts</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Create contact</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light" onClick={() => navigate('/invite')}><Send className="h-4 w-4 mr-2" /> Send invite</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать контакт</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm font-light" onClick={() => navigate(ROUTES.classic.invite)}><Send className="h-4 w-4 mr-2" /> Пригласить</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -112,15 +112,15 @@ const FamilyTree: React.FC = () => {
             <div className="flex gap-6">
               <div>
                 <p className="text-white text-2xl font-light">{totalMembers}</p>
-                <p className="editorial-caption text-white/40">Members</p>
+                <p className="editorial-caption text-white/40">участников</p>
               </div>
               <div>
                 <p className="text-white text-2xl font-light">{genCount}</p>
-                <p className="editorial-caption text-white/40">Generations</p>
+                <p className="editorial-caption text-white/40">поколений</p>
               </div>
               <div>
                 <p className="text-white text-2xl font-light">{activeMembers}</p>
-                <p className="editorial-caption text-white/40">Active</p>
+                <p className="editorial-caption text-white/40">активных</p>
               </div>
             </div>
           </div>
@@ -138,7 +138,7 @@ const FamilyTree: React.FC = () => {
               <div className="px-6 mb-4">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="editorial-caption text-muted-foreground/60">{`Generation ${gen}`}</p>
+                    <p className="editorial-caption text-muted-foreground/60">{`Поколение ${gen}`}</p>
                     <h2 className="editorial-title text-xl mt-1">{config.label}</h2>
                   </div>
                   <p className="text-[11px] font-light text-muted-foreground/40 italic">{config.subtitle}</p>
@@ -157,11 +157,11 @@ const FamilyTree: React.FC = () => {
                     {members.map(m => memberCard(m, 'scroll'))}
                     {/* Invite card */}
                     <button
-                      onClick={() => navigate('/invite')}
+                      onClick={() => navigate(ROUTES.classic.invite)}
                       className="w-36 flex-shrink-0 aspect-[3/4] border border-dashed border-border/50 flex flex-col items-center justify-center gap-2 group hover:border-foreground/30 transition-colors"
                     >
                       <Plus className="h-5 w-5 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors" />
-                      <span className="text-[10px] tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Invite</span>
+                      <span className="text-[10px] tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Пригласить</span>
                     </button>
                   </div>
                   <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
@@ -198,8 +198,15 @@ const FamilyTree: React.FC = () => {
         <div className="mt-10 mb-4 px-6 text-center">
           <div className="h-px bg-border/30 mb-4" />
           <p className="editorial-caption text-muted-foreground/30">
-            Tap a portrait to explore their story
+            Нажмите на портрет или скажите голосом: «дерево», «лента», «семья»
           </p>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="mt-3 text-sm font-light text-primary hover:underline"
+          >
+            Голосовой режим (демо)
+          </button>
         </div>
       </div>
     </AppLayout>

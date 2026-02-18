@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,7 +43,7 @@ const CreatePublication: React.FC = () => {
   const handlePublish = () => {
     if (!topicTag) { setTagError('Topic tag is required'); return; }
     // Mock success
-    navigate('/feed');
+    navigate(ROUTES.classic.feed);
   };
 
   if (!type) {

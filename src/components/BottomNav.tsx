@@ -1,13 +1,14 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { TreePine, Newspaper, Plus, Users, Store } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 const navItems = [
-  { path: '/tree', label: 'Tree', icon: TreePine },
-  { path: '/feed', label: 'Feed', icon: Newspaper },
-  { path: '/create', label: '', icon: Plus, isCenter: true },
-  { path: '/family', label: 'Family', icon: Users },
-  { path: '/store', label: 'Store', icon: Store },
+  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreePine },
+  { path: ROUTES.classic.feed, label: 'Лента', icon: Newspaper },
+  { path: ROUTES.classic.create, label: '', icon: Plus, isCenter: true },
+  { path: ROUTES.classic.family, label: 'Семья', icon: Users },
+  { path: ROUTES.classic.store, label: 'Магазин', icon: Store },
 ];
 
 export const BottomNav: React.FC = () => {

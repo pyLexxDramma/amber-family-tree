@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { getCurrentUser } from '@/data/mock-members';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 const MyProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -11,12 +12,12 @@ const MyProfile: React.FC = () => {
   const plan = plans.find(p => p.id === currentSubscription.planId);
 
   const sections = [
-    { label: 'My Publications', icon: Newspaper, path: '/feed' },
-    { label: 'Publications with Me', icon: Image, path: '/feed' },
-    { label: 'My Media', icon: Image, path: '/feed' },
-    { label: 'Subscription', icon: CreditCard, path: '/store' },
-    { label: 'Settings', icon: Settings, path: '/settings' },
-    { label: 'Help & Support', icon: HelpCircle, path: '/help' },
+    { label: 'Мои публикации', icon: Newspaper, path: ROUTES.classic.feed },
+    { label: 'Публикации со мной', icon: Image, path: ROUTES.classic.feed },
+    { label: 'Моё медиа', icon: Image, path: ROUTES.classic.feed },
+    { label: 'Подписка', icon: CreditCard, path: ROUTES.classic.store },
+    { label: 'Настройки', icon: Settings, path: ROUTES.classic.settings },
+    { label: 'Помощь и поддержка', icon: HelpCircle, path: ROUTES.classic.help },
   ];
 
   return (
@@ -32,7 +33,7 @@ const MyProfile: React.FC = () => {
           />
           <div className="absolute inset-0 editorial-overlay" />
           <div className="absolute bottom-0 left-0 right-0 p-5">
-            <p className="editorial-caption text-white/40 mb-2">{plan?.name} plan</p>
+            <p className="editorial-caption text-white/40 mb-2">{plan?.name === 'Free' ? 'Бесплатный' : plan?.name === 'Premium' ? 'Премиум' : plan?.name} · план</p>
             <h1 className="editorial-title text-white text-3xl">{user.firstName} {user.lastName}</h1>
             <p className="text-white/50 text-sm font-light mt-1">{user.city}</p>
           </div>

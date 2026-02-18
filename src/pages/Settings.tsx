@@ -7,20 +7,20 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
 
   const items = [
-    { icon: Bell, label: 'Notifications', desc: 'Push and email notifications' },
-    { icon: Lock, label: 'Privacy', desc: 'Who can see your content' },
-    { icon: Palette, label: 'Appearance', desc: 'Theme and display settings' },
-    { icon: Globe, label: 'Language', desc: 'App language' },
+    { icon: Bell, label: 'Уведомления', desc: 'Push и email' },
+    { icon: Lock, label: 'Приватность', desc: 'Кто видит ваш контент' },
+    { icon: Palette, label: 'Внешний вид', desc: 'Тема и отображение' },
+    { icon: Globe, label: 'Язык', desc: 'Язык приложения' },
   ];
 
   return (
     <div className="min-h-screen bg-background px-6 pt-6 pb-8">
       <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        <span className="text-xs tracking-widest uppercase font-light">Back</span>
+        <span className="text-xs tracking-widest uppercase font-light">Назад</span>
       </button>
 
-      <h1 className="editorial-title text-2xl mb-8">Settings</h1>
+      <h1 className="editorial-title text-2xl mb-8">Настройки</h1>
 
       <div className="space-y-0">
         {items.map(item => (

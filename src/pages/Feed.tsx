@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { UnreadMarker } from '@/components/UnreadMarker';
 import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publications';
@@ -31,7 +32,7 @@ const Feed: React.FC = () => {
     return (
       <button
         key={pub.id}
-        onClick={() => navigate(`/publication/${pub.id}`)}
+        onClick={() => navigate(ROUTES.classic.publication(pub.id))}
         className="w-full text-left relative overflow-hidden"
         style={{ aspectRatio: '3/4' }}
       >
@@ -41,7 +42,7 @@ const Feed: React.FC = () => {
           {!pub.isRead && (
             <div className="flex items-center gap-2">
               <UnreadMarker />
-              <span className="text-white/60 editorial-caption">new</span>
+              <span className="text-white/60 editorial-caption">новое</span>
             </div>
           )}
           <h2 className="editorial-title text-white text-2xl">{pub.title}</h2>
@@ -80,7 +81,7 @@ const Feed: React.FC = () => {
       return (
         <button
           key={pub.id}
-          onClick={() => navigate(`/publication/${pub.id}`)}
+          onClick={() => navigate(ROUTES.classic.publication(pub.id))}
           className={`text-left bg-card rounded-sm overflow-hidden ${size === 'full' ? 'w-full' : 'w-full'}`}
         >
           <div className="p-6 flex flex-col gap-3" style={{ minHeight: size === 'full' ? '240px' : '200px' }}>
@@ -104,7 +105,7 @@ const Feed: React.FC = () => {
     return (
       <button
         key={pub.id}
-        onClick={() => navigate(`/publication/${pub.id}`)}
+        onClick={() => navigate(ROUTES.classic.publication(pub.id))}
         className={`text-left relative overflow-hidden rounded-sm ${size === 'full' ? 'w-full' : 'w-full'}`}
         style={{ aspectRatio: size === 'full' ? '16/10' : '1/1' }}
       >
@@ -172,7 +173,7 @@ const Feed: React.FC = () => {
     <AppLayout>
       <div className="pt-2">
         <div className="px-5 flex items-center justify-between mb-3">
-          <h1 className="editorial-title text-xl text-foreground">Feed</h1>
+          <h1 className="editorial-title text-xl text-foreground">Лента</h1>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setMode('publications')}
@@ -195,14 +196,14 @@ const Feed: React.FC = () => {
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowUpDown className="h-3 w-3" />
-            <span className="editorial-caption">{sortOrder === 'new' ? 'Newest' : 'Oldest'}</span>
+            <span className="editorial-caption">{sortOrder === 'new' ? 'Сначала новые' : 'Сначала старые'}</span>
           </button>
           <button
             onClick={() => setFiltersOpen(true)}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <SlidersHorizontal className="h-3 w-3" />
-            <span className="editorial-caption">Filters</span>
+            <span className="editorial-caption">Фильтры</span>
           </button>
           {mode === 'media' && (
             <div className="ml-auto flex gap-1">
@@ -235,10 +236,10 @@ const Feed: React.FC = () => {
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl">
-          <SheetHeader><SheetTitle className="editorial-title">Filters</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle className="editorial-title">Фильтры</SheetTitle></SheetHeader>
           <div className="space-y-4 py-4">
             <div>
-              <p className="editorial-caption text-muted-foreground mb-3">Topic</p>
+              <p className="editorial-caption text-muted-foreground mb-3">Тема</p>
               <div className="flex flex-wrap gap-2">
                 {topicTags.map(t => (
                   <button key={t} className="px-3 py-1.5 text-xs font-light border border-border rounded-sm hover:bg-foreground hover:text-background transition-colors">
@@ -248,8 +249,8 @@ const Feed: React.FC = () => {
               </div>
             </div>
             <div className="flex gap-3 pt-4">
-              <Button variant="outline" className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Reset</Button>
-              <Button className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Show Results</Button>
+              <Button variant="outline" className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Сбросить</Button>
+              <Button className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Показать</Button>
             </div>
           </div>
         </SheetContent>
