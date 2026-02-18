@@ -1,8 +1,12 @@
-# Welcome to your Lovable project
+# Angelo — Amber Family Tree
+
+Семейная сеть Angelo (прототип): дерево, лента, публикации, профили. Собран в [Lovable](https://lovable.dev).
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+- **Live app:** https://amber-family-tree.lovable.app/
+- **GitHub:** https://github.com/pyLexxDramma/amber-family-tree
+- **Lovable:** откройте свой проект на [lovable.dev](https://lovable.dev) (URL вида `https://lovable.dev/projects/...`)
 
 ## How can I edit this code?
 
@@ -10,7 +14,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Simply visit your [Lovable Project](https://lovable.dev) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -62,7 +66,13 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Deploy and updates are done from Lovable only (not from GitHub):
+
+1. Open your project in [Lovable](https://lovable.dev).
+2. Click **Share** (top right) → **Publish** (first time) or **Update** (to deploy latest changes).
+3. Your app will be available at https://amber-family-tree.lovable.app/
+
+**Detailed steps (GitHub connection, first publish, updating):** see [DEPLOY.md](./DEPLOY.md).
 
 ## Can I connect a custom domain to my Lovable project?
 
