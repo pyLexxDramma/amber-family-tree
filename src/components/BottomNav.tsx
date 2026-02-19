@@ -1,9 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TreePine, Newspaper, Plus, Users, Store } from 'lucide-react';
+import { TreePine, Newspaper, Plus, Users, Store, User } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
-const navItems = [
+const navItemsDefault = [
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreePine },
   { path: ROUTES.classic.feed, label: 'Лента', icon: Newspaper },
   { path: ROUTES.classic.create, label: '', icon: Plus, isCenter: true },
@@ -11,9 +11,20 @@ const navItems = [
   { path: ROUTES.classic.store, label: 'Магазин', icon: Store },
 ];
 
+/** По ТЗ 7.1: в виде «медиа» ленты — Контакты и Профиль вместо Семья и Магазин */
+const navItemsMediaView = [
+  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreePine },
+  { path: ROUTES.classic.feed, label: 'Лента', icon: Newspaper },
+  { path: ROUTES.classic.create, label: '', icon: Plus, isCenter: true },
+  { path: ROUTES.classic.family, label: 'Контакты', icon: Users },
+  { path: ROUTES.classic.myProfile, label: 'Профиль', icon: User },
+];
+
 export const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const isFeedMediaView = location.pathname === ROUTES.classic.feed && new URLSearchParams(location.search).get('view') === 'media';
+  const navItems = isFeedMediaView ? navItemsMediaView : navItemsDefault;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t border-border/50">

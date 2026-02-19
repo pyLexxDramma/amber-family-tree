@@ -19,24 +19,24 @@ const StorePage: React.FC = () => {
     <AppLayout>
       <div className="pt-4 pb-4">
         <div className="px-6 mb-8">
-          <h1 className="editorial-title text-2xl mb-1">Store</h1>
-          <p className="text-sm font-light text-muted-foreground">Manage your subscription</p>
+          <h1 className="editorial-title text-2xl mb-1">Подписка</h1>
+          <p className="text-sm font-light text-muted-foreground">Управление подпиской</p>
         </div>
 
-        {/* Current subscription -- editorial card */}
+        {/* Current subscription */}
         <div className="mx-6 mb-6 p-6 bg-card">
-          <p className="editorial-caption text-muted-foreground mb-3">Current plan</p>
+          <p className="editorial-caption text-muted-foreground mb-3">Текущий план</p>
           <h2 className="editorial-title text-2xl mb-1">{currentPlan.name}</h2>
           <p className="text-sm font-light text-muted-foreground">
-            {currentPlan.price === 0 ? 'Free' : `$${currentPlan.price}/month`}
+            {currentPlan.price === 0 ? 'Бесплатно' : `${currentPlan.price} ₽/мес`}
           </p>
         </div>
 
         {/* Places */}
-        <div className="mx-6 mb-8">
+        <div className="mx-6 mb-4">
           <div className="flex items-baseline justify-between mb-3">
-            <p className="editorial-caption text-muted-foreground">Family places</p>
-            <p className="text-xs font-light text-muted-foreground">{currentSubscription.usedPlaces} of {currentPlan.maxPlaces}</p>
+            <p className="editorial-caption text-muted-foreground">Места</p>
+            <p className="text-xs font-light text-muted-foreground">{currentSubscription.usedPlaces} из {currentPlan.maxPlaces}</p>
           </div>
           <div className="h-px bg-border relative overflow-hidden">
             <div
@@ -44,11 +44,14 @@ const StorePage: React.FC = () => {
               style={{ width: `${(currentSubscription.usedPlaces / currentPlan.maxPlaces) * 100}%` }}
             />
           </div>
+          <button onClick={() => navigate(ROUTES.classic.places)} className="mt-2 text-xs font-light text-muted-foreground hover:text-foreground transition-colors underline">
+            Управление местами
+          </button>
         </div>
 
         {/* Plans */}
         <div className="px-6 mb-8">
-          <p className="editorial-caption text-muted-foreground mb-6">Plans</p>
+          <p className="editorial-caption text-muted-foreground mb-6">Тарифы</p>
           <div className="space-y-4">
             {plans.map(plan => {
               const isCurrent = plan.id === currentSubscription.planId;
@@ -58,11 +61,11 @@ const StorePage: React.FC = () => {
                     <div>
                       <h3 className="editorial-title text-xl">{plan.name}</h3>
                       <p className="text-sm font-light text-muted-foreground mt-1">
-                        {plan.price === 0 ? 'Free forever' : `$${plan.price}/month`}
+                        {plan.price === 0 ? 'Бесплатно' : `${plan.price} ₽/мес`}
                       </p>
                     </div>
                     {isCurrent && (
-                      <span className="editorial-caption text-muted-foreground border-b border-foreground/30 pb-0.5">current</span>
+                      <span className="editorial-caption text-muted-foreground border-b border-foreground/30 pb-0.5">текущий</span>
                     )}
                   </div>
                   <ul className="space-y-2 mb-4">
@@ -77,7 +80,7 @@ const StorePage: React.FC = () => {
                       onClick={handleUpgrade}
                       className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300"
                     >
-                      Upgrade
+                      Выбрать тариф
                     </button>
                   )}
                 </div>
@@ -93,24 +96,30 @@ const StorePage: React.FC = () => {
               {paymentState === 'processing' && (
                 <>
                   <div className="h-10 w-10 border border-foreground/30 border-t-transparent animate-spin mx-auto mb-4" />
-                  <p className="text-sm font-light tracking-wide">Processing...</p>
+                  <p className="text-sm font-light tracking-wide">Обработка...</p>
                 </>
               )}
               {paymentState === 'success' && (
                 <>
-                  <p className="editorial-title text-2xl mb-2">Payment Successful</p>
-                  <p className="text-sm font-light text-muted-foreground mb-6">Welcome to Premium</p>
-                  <button onClick={() => setPaymentState(null)} className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300">
-                    Continue
+                  <p className="editorial-title text-2xl mb-2">Оплата прошла</p>
+                  <p className="text-sm font-light text-muted-foreground mb-6">Подписка активирована</p>
+                  <button onClick={() => { setPaymentState(null); navigate(ROUTES.classic.places); }} className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 mb-2">
+                    Управление местами
+                  </button>
+                  <button onClick={() => setPaymentState(null)} className="w-full h-11 text-sm font-light text-muted-foreground">
+                    Вернуться в ленту
                   </button>
                 </>
               )}
               {paymentState === 'error' && (
                 <>
-                  <p className="editorial-title text-2xl mb-2">Payment Failed</p>
-                  <p className="text-sm font-light text-muted-foreground mb-6">Please try again</p>
-                  <button onClick={() => setPaymentState(null)} className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300">
-                    Close
+                  <p className="editorial-title text-2xl mb-2">Оплата не прошла</p>
+                  <p className="text-sm font-light text-muted-foreground mb-6">Попробуйте ещё раз или выберите другой способ</p>
+                  <button onClick={() => setPaymentState(null)} className="w-full h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 mb-2">
+                    Повторить оплату
+                  </button>
+                  <button onClick={() => setPaymentState(null)} className="w-full h-11 text-sm font-light text-muted-foreground">
+                    Назад к тарифам
                   </button>
                 </>
               )}
@@ -120,16 +129,14 @@ const StorePage: React.FC = () => {
 
         {/* Links */}
         <div className="px-6">
-          {['Settings', 'Help & FAQ'].map(label => (
-            <button
-              key={label}
-              onClick={() => navigate(label === 'Settings' ? ROUTES.classic.settings : ROUTES.classic.help)}
-              className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity"
-            >
-              <span className="text-sm font-light tracking-wide flex-1 text-left">{label}</span>
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30" />
-            </button>
-          ))}
+          <button onClick={() => navigate(ROUTES.classic.settings)} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity">
+            <span className="text-sm font-light tracking-wide flex-1 text-left">Настройки</span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30" />
+          </button>
+          <button onClick={() => navigate(ROUTES.classic.help)} className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity">
+            <span className="text-sm font-light tracking-wide flex-1 text-left">Помощь и поддержка</span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30" />
+          </button>
         </div>
       </div>
     </AppLayout>

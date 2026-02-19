@@ -1,24 +1,85 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { UnreadMarker } from '@/components/UnreadMarker';
 import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publications';
-import { getMember } from '@/data/mock-members';
+import { getMember, mockMembers, currentUserId } from '@/data/mock-members';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { LayoutList, Grid3X3, SlidersHorizontal, ArrowUpDown, Heart, MessageCircle, Image, Video, Mic } from 'lucide-react';
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'publications' | 'media'>('publications');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get('view');
+  const [mode, setMode] = useState<'publications' | 'media'>(viewParam === 'media' ? 'media' : 'publications');
   const [sortOrder, setSortOrder] = useState<'new' | 'old'>('new');
   const [density, setDensity] = useState(3);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  useEffect(() => {
+    const v = searchParams.get('view');
+    setMode(v === 'media' ? 'media' : 'publications');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const author = searchParams.get('author');
+    const participant = searchParams.get('participant');
+    if (author) setFilterAuthorId(author);
+    if (participant) setFilterParticipantIds(prev => (prev.includes(participant) ? prev : [...prev, participant]));
+  }, [searchParams]);
+
+  const setFeedMode = (m: 'publications' | 'media') => {
+    setMode(m);
+    if (m === 'media') setSearchParams({ view: 'media' }, { replace: true });
+    else setSearchParams({}, { replace: true });
+  };
+
+  const [filterAuthorId, setFilterAuthorId] = useState<string | null>(null);
+  const [filterParticipantIds, setFilterParticipantIds] = useState<string[]>([]);
+  const [filterPublishFrom, setFilterPublishFrom] = useState('');
+  const [filterPublishTo, setFilterPublishTo] = useState('');
+  const [filterEventFrom, setFilterEventFrom] = useState('');
+  const [filterEventTo, setFilterEventTo] = useState('');
+  const [filterTopicTag, setFilterTopicTag] = useState<string | null>(null);
+  const [filterFavorite, setFilterFavorite] = useState(false);
+  const [filterUnread, setFilterUnread] = useState(false);
+
   const sorted = [...mockPublications].sort((a, b) =>
     sortOrder === 'new' ? b.publishDate.localeCompare(a.publishDate) : a.publishDate.localeCompare(b.publishDate)
   );
+
+  const filtered = sorted.filter(pub => {
+    if (filterAuthorId && pub.authorId !== filterAuthorId) return false;
+    if (filterParticipantIds.length && !filterParticipantIds.some(id => pub.participantIds.includes(id))) return false;
+    if (filterPublishFrom && pub.publishDate < filterPublishFrom) return false;
+    if (filterPublishTo && pub.publishDate > filterPublishTo) return false;
+    if (filterEventFrom && pub.eventDate < filterEventFrom) return false;
+    if (filterEventTo && pub.eventDate > filterEventTo) return false;
+    if (filterTopicTag && pub.topicTag !== filterTopicTag) return false;
+    if (filterFavorite && !pub.likes.includes(currentUserId)) return false;
+    if (filterUnread && !pub.isRead) return false;
+    return true;
+  });
+
+  const hasActiveFilters = !!(filterAuthorId || filterParticipantIds.length || filterPublishFrom || filterPublishTo || filterEventFrom || filterEventTo || filterTopicTag || filterFavorite || filterUnread);
+
+  const resetFilters = () => {
+    setFilterAuthorId(null);
+    setFilterParticipantIds([]);
+    setFilterPublishFrom('');
+    setFilterPublishTo('');
+    setFilterEventFrom('');
+    setFilterEventTo('');
+    setFilterTopicTag(null);
+    setFilterFavorite(false);
+    setFilterUnread(false);
+  };
+
+  const toggleParticipant = (id: string) => {
+    setFilterParticipantIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
 
   const mediaCount = (type: string, items: any[]) => items.filter(i => i.type === type).length;
 
@@ -133,10 +194,10 @@ const Feed: React.FC = () => {
   };
 
   const renderMagazineLayout = () => {
-    if (sorted.length === 0) return null;
+    if (filtered.length === 0) return null;
 
     const items: React.ReactNode[] = [];
-    const [first, ...rest] = sorted;
+    const [first, ...rest] = filtered;
 
     items.push(heroCard(first));
 
@@ -166,6 +227,9 @@ const Feed: React.FC = () => {
     return <div className="flex flex-col gap-1 pb-4">{items}</div>;
   };
 
+  const showNoResults = hasActiveFilters && filtered.length === 0 && sorted.length > 0;
+  const showEmptyFeed = sorted.length === 0;
+
   const masonry = allMediaItems.filter(m => m.type === 'photo' || m.type === 'video');
   const masonryAspects = ['aspect-square', 'aspect-[3/4]', 'aspect-[4/3]', 'aspect-square', 'aspect-[3/4]'];
 
@@ -176,13 +240,13 @@ const Feed: React.FC = () => {
           <h1 className="editorial-title text-xl text-foreground">Лента</h1>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setMode('publications')}
+              onClick={() => setFeedMode('publications')}
               className={`p-2 rounded-sm transition-colors ${mode === 'publications' ? 'text-foreground' : 'text-muted-foreground'}`}
             >
               <LayoutList className="h-4 w-4" />
             </button>
             <button
-              onClick={() => setMode('media')}
+              onClick={() => setFeedMode('media')}
               className={`p-2 rounded-sm transition-colors ${mode === 'media' ? 'text-foreground' : 'text-muted-foreground'}`}
             >
               <Grid3X3 className="h-4 w-4" />
@@ -214,7 +278,25 @@ const Feed: React.FC = () => {
           )}
         </div>
 
-        {mode === 'publications' && renderMagazineLayout()}
+        {mode === 'publications' && showNoResults && (
+          <div className="px-6 py-12 text-center">
+            <p className="editorial-caption text-muted-foreground">Нет результатов</p>
+            <p className="text-sm font-light text-muted-foreground mt-1">Измените параметры фильтров</p>
+            <Button variant="outline" className="mt-4 rounded-sm" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить фильтры</Button>
+          </div>
+        )}
+        {mode === 'publications' && !showNoResults && renderMagazineLayout()}
+
+        {mode === 'publications' && showEmptyFeed && (
+          <div className="px-6 py-12 text-center">
+            <p className="editorial-title text-lg">Создайте первую историю</p>
+            <p className="text-sm font-light text-muted-foreground mt-2">Добавьте публикацию или пригласите близких</p>
+            <div className="flex gap-3 justify-center mt-6">
+              <Button className="rounded-sm" onClick={() => navigate(ROUTES.classic.create)}>Создать</Button>
+              <Button variant="outline" className="rounded-sm" onClick={() => navigate(ROUTES.classic.invite)}>Пригласить</Button>
+            </div>
+          </div>
+        )}
 
         {mode === 'media' && (
           <div className="px-0.5">
@@ -235,21 +317,71 @@ const Feed: React.FC = () => {
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl">
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
           <SheetHeader><SheetTitle className="editorial-title">Фильтры</SheetTitle></SheetHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-5 py-4">
             <div>
-              <p className="editorial-caption text-muted-foreground mb-3">Тема</p>
+              <p className="editorial-caption text-muted-foreground mb-2">Автор</p>
+              <div className="flex flex-wrap gap-2">
+                {mockMembers.slice(0, 12).map(m => (
+                  <button key={m.id} onClick={() => setFilterAuthorId(filterAuthorId === m.id ? null : m.id)} className={`px-3 py-1.5 text-xs font-light border rounded-sm transition-colors ${filterAuthorId === m.id ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-muted'}`}>
+                    {m.nickname || m.firstName}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="editorial-caption text-muted-foreground mb-2">Участники</p>
+              <div className="flex flex-wrap gap-2">
+                {mockMembers.slice(0, 10).map(m => (
+                  <button key={m.id} onClick={() => toggleParticipant(m.id)} className={`px-3 py-1.5 text-xs font-light border rounded-sm transition-colors ${filterParticipantIds.includes(m.id) ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-muted'}`}>
+                    {m.nickname || m.firstName}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-1">Дата публикации от</p>
+                <input type="date" value={filterPublishFrom} onChange={e => setFilterPublishFrom(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+              </div>
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-1">до</p>
+                <input type="date" value={filterPublishTo} onChange={e => setFilterPublishTo(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-1">Дата события от</p>
+                <input type="date" value={filterEventFrom} onChange={e => setFilterEventFrom(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+              </div>
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-1">до</p>
+                <input type="date" value={filterEventTo} onChange={e => setFilterEventTo(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+              </div>
+            </div>
+            <div>
+              <p className="editorial-caption text-muted-foreground mb-2">Тег темы</p>
               <div className="flex flex-wrap gap-2">
                 {topicTags.map(t => (
-                  <button key={t} className="px-3 py-1.5 text-xs font-light border border-border rounded-sm hover:bg-foreground hover:text-background transition-colors">
+                  <button key={t} onClick={() => setFilterTopicTag(filterTopicTag === t ? null : t)} className={`px-3 py-1.5 text-xs font-light border rounded-sm transition-colors ${filterTopicTag === t ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-muted'}`}>
                     {t}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex gap-3 pt-4">
-              <Button variant="outline" className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Сбросить</Button>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={filterFavorite} onChange={e => setFilterFavorite(e.target.checked)} className="rounded border-border" />
+                <span className="text-sm font-light">Избранное</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={filterUnread} onChange={e => setFilterUnread(e.target.checked)} className="rounded border-border" />
+                <span className="text-sm font-light">Непрочитанное</span>
+              </label>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1 rounded-sm h-11" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить</Button>
               <Button className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Показать</Button>
             </div>
           </div>

@@ -1,22 +1,25 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { getMember } from '@/data/mock-members';
-import { ArrowLeft, Send, TreePine, Users, Trash2 } from 'lucide-react';
+import { ArrowLeft, Send, TreePine, Users, Trash2, Newspaper, Image } from 'lucide-react';
 
 const ContactProfile: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const member = getMember(id || '');
 
-  if (!member) return <div className="p-6 text-center text-muted-foreground font-light">Member not found</div>;
+  if (!member) return <div className="p-6 text-center text-muted-foreground font-light">Контакт не найден</div>;
 
-  const relationLabel = member.relations[0]?.type || 'Family member';
+  const relationLabel = member.relations[0]?.type === 'parent' ? 'Родитель' : member.relations[0]?.type === 'child' ? 'Ребёнок' : member.relations[0]?.type === 'spouse' ? 'Супруг(а)' : member.relations[0]?.type === 'sibling' ? 'Брат/сестра' : 'Член семьи';
 
   const actions = [
-    { label: 'Invite to Angelo', icon: Send },
-    { label: 'Add to Tree', icon: TreePine },
-    { label: 'Add to Group', icon: Users },
+    { label: 'Пригласить', icon: Send },
+    { label: 'Добавить на дерево', icon: TreePine },
+    { label: 'Добавить в группу', icon: Users },
   ];
+
+  const feedUrl = (params: string) => `${ROUTES.classic.feed}?${params}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,13 +40,16 @@ const ContactProfile: React.FC = () => {
 
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <p className="editorial-caption text-white/40 mb-1">{relationLabel}</p>
-          <h1 className="editorial-title text-white text-3xl">{member.firstName} {member.lastName}</h1>
+          <h1 className="editorial-title text-white text-3xl">{member.nickname || member.firstName + ' ' + member.lastName}</h1>
           {member.nickname && (
-            <p className="text-white/50 text-sm font-light italic mt-1">"{member.nickname}"</p>
+            <p className="text-white/50 text-sm font-light mt-1">{member.firstName} {member.lastName}</p>
+          )}
+          {!member.nickname && (
+            <p className="text-white/60 text-xs font-light mt-2 bg-white/10 inline-block px-2 py-1 rounded">Заполните ник — так контакт отобразится на дереве</p>
           )}
           <div className="flex items-center gap-3 mt-2">
             <span className={`text-xs tracking-wider uppercase font-light ${member.isActive ? 'text-white/50' : 'text-white/30'}`}>
-              {member.isActive ? 'Active' : 'Inactive'}
+              {member.isActive ? 'Активный' : 'Неактивный'}
             </span>
             {member.city && (
               <>
@@ -58,23 +64,36 @@ const ContactProfile: React.FC = () => {
       {/* Content */}
       <div className="px-6 pt-6 pb-8">
         {member.about && (
-          <p className="editorial-body text-foreground/70 text-sm mb-8">{member.about}</p>
+          <p className="editorial-body text-foreground/70 text-sm mb-6">{member.about}</p>
         )}
 
-        <p className="editorial-caption text-muted-foreground mb-4">Actions</p>
-        <div className="space-y-0 mb-8">
+        {/* По ТЗ: Публикации контакта, Медиа */}
+        <div className="space-y-0 mb-6">
+          <button onClick={() => navigate(feedUrl(`author=${member.id}`))} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity text-left">
+            <Newspaper className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
+            <span className="text-sm font-light tracking-wide">Публикации контакта</span>
+          </button>
+          <button onClick={() => navigate(feedUrl(`participant=${member.id}`))} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity text-left">
+            <Newspaper className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
+            <span className="text-sm font-light tracking-wide">Публикации, где контакт участник</span>
+          </button>
+          <button onClick={() => navigate(feedUrl(`view=media&author=${member.id}`))} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity text-left">
+            <Image className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
+            <span className="text-sm font-light tracking-wide">Медиа</span>
+          </button>
+        </div>
+
+        <p className="editorial-caption text-muted-foreground mb-2">Действия</p>
+        <div className="space-y-0 mb-6">
           {actions.map(a => (
-            <button
-              key={a.label}
-              className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity text-left"
-            >
+            <button key={a.label} className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity text-left">
               <a.icon className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
               <span className="text-sm font-light tracking-wide">{a.label}</span>
             </button>
           ))}
           <button className="w-full flex items-center gap-4 py-4 hover:opacity-70 transition-opacity text-left">
             <Trash2 className="h-4 w-4 text-destructive/50" strokeWidth={1.5} />
-            <span className="text-sm font-light tracking-wide text-destructive/70">Delete Contact</span>
+            <span className="text-sm font-light tracking-wide text-destructive/70">Удалить контакт</span>
           </button>
         </div>
       </div>

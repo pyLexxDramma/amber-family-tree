@@ -16,6 +16,7 @@ export const ROUTES = {
     publication: (id: string) => `${CLASSIC_BASE}/publication/${id}`,
     invite: `${CLASSIC_BASE}/invite`,
     store: `${CLASSIC_BASE}/store`,
+    places: `${CLASSIC_BASE}/places`,
     settings: `${CLASSIC_BASE}/settings`,
     help: `${CLASSIC_BASE}/help`,
   },

@@ -18,6 +18,7 @@ import MyProfile from "./pages/MyProfile";
 import ContactProfile from "./pages/ContactProfile";
 import InviteFlow from "./pages/InviteFlow";
 import StorePage from "./pages/StorePage";
+import PlacesPage from "./pages/PlacesPage";
 import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import AIDemoPage from "./pages/AIDemoPage";
@@ -55,6 +56,7 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/profile/:id`} element={<ContactProfile />} />
             <Route path={`${CLASSIC_BASE}/invite`} element={<InviteFlow />} />
             <Route path={`${CLASSIC_BASE}/store`} element={<StorePage />} />
+            <Route path={`${CLASSIC_BASE}/places`} element={<PlacesPage />} />
             <Route path={`${CLASSIC_BASE}/settings`} element={<Settings />} />
             <Route path={`${CLASSIC_BASE}/help`} element={<Help />} />
             <Route path="/ai" element={<AIDemoPage />} />
