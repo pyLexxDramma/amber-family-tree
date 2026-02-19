@@ -49,20 +49,26 @@ export const VoiceControlGlobal: React.FC = () => {
     rec.interimResults = false;
     rec.lang = 'ru-RU';
     rec.onresult = (e: SpeechRecognitionEvent) => {
-      const text = (e.results[0] && e.results[0][0]?.transcript) || '';
+      // Собираем итоговый текст из всех результатов (в части браузеров приходит несколько сегментов)
+      let text = '';
+      for (let i = 0; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r?.[0]?.transcript) text += r[0].transcript;
+      }
+      text = text.trim() || (e.results[0]?.[0]?.transcript ?? '').trim();
+
+      const onApp = location.pathname === '/app' || location.pathname.startsWith('/ai-demo');
+      if (onApp) return;
+
+      // Явная команда «назад» — возврат, без открытия помощника
       const action = matchVoiceAction(text);
-      if (action) {
-        if (action.type === 'back') {
-          navigate(-1);
-        } else {
-          navigate(action.path);
-          if (action.path === ROUTES.app && text) {
-            try {
-              sessionStorage.setItem('ai-demo-voice-query', text);
-            } catch {}
-          }
-        }
-      } else if (text && location.pathname !== '/app' && !location.pathname.startsWith('/ai-demo')) {
+      if (action?.type === 'back' && text) {
+        navigate(-1);
+        return;
+      }
+
+      // Нажатие на микрофон и любой сказанный запрос — открываем голосового помощника с этим запросом
+      if (text) {
         navigate(ROUTES.app);
         try {
           sessionStorage.setItem('ai-demo-voice-query', text);

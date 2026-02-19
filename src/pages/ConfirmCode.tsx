@@ -23,7 +23,7 @@ const ConfirmCode: React.FC = () => {
     if (code === '0000') { setError('Неверный код'); return; }
     if (code === '9999') { setError('Время кода истекло'); return; }
     if (mode === 'register') navigate('/onboarding');
-    else navigate(ROUTES.app);
+    else navigate(ROUTES.classic.feed);
   };
 
   return (

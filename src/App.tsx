@@ -48,7 +48,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/confirm-code" element={<ConfirmCode />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path={CLASSIC_BASE} element={<Navigate to={`${CLASSIC_BASE}/tree`} replace />} />
+            <Route path={CLASSIC_BASE} element={<Navigate to={`${CLASSIC_BASE}/feed`} replace />} />
             <Route path={`${CLASSIC_BASE}/tree`} element={<FamilyTree />} />
             <Route path={`${CLASSIC_BASE}/feed`} element={<Feed />} />
             <Route path={`${CLASSIC_BASE}/publication/:id`} element={<PublicationDetails />} />
