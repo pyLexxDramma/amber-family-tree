@@ -83,12 +83,13 @@ const Feed: React.FC = () => {
 
   const mediaCount = (type: string, items: any[]) => items.filter(i => i.type === type).length;
 
-  const heroCard = (pub: typeof sorted[0]) => {
+  /** Главная карточка ленты: первая использует bg-4.png, остальные — медиа публикации */
+  const heroCard = (pub: typeof sorted[0], isFirst = false) => {
     const author = getMember(pub.authorId);
     const hasMedia = pub.media.length > 0 && pub.media[0]?.type === 'photo';
-    const imgUrl = hasMedia
-      ? (pub.media[0].url || pub.media[0].thumbnail)
-      : `https://picsum.photos/seed/hero${pub.id}/800/1000`;
+    const imgUrl = isFirst
+      ? '/bg-4.png'
+      : (hasMedia ? (pub.media[0].url || pub.media[0].thumbnail) : `https://picsum.photos/seed/hero${pub.id}/800/1000`);
 
     return (
       <button
@@ -199,7 +200,7 @@ const Feed: React.FC = () => {
     const items: React.ReactNode[] = [];
     const [first, ...rest] = filtered;
 
-    items.push(heroCard(first));
+    items.push(heroCard(first, true));
 
     let i = 0;
     while (i < rest.length) {

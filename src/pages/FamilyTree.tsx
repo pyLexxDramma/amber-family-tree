@@ -23,54 +23,36 @@ const FamilyTree: React.FC = () => {
   const activeMembers = mockMembers.filter(m => m.isActive).length;
   const genCount = Object.keys(generations).length;
 
+  /* Профили — квадраты со скруглёнными углами; на иконках фото, под ними ник (без ника контакт на дерево не добавляется по ТЗ) */
   const memberCard = (m: typeof mockMembers[0], variant: 'portrait' | 'landscape' | 'scroll') => {
     const isCurrent = m.id === currentUserId;
     const imgSeed = `member${m.id}`;
-
-    const aspectClass =
-      variant === 'portrait' ? 'aspect-[3/4]'
-      : variant === 'landscape' ? 'aspect-[4/3]'
-      : 'aspect-[3/4]';
-
-    const widthClass =
-      variant === 'scroll' ? 'w-36 flex-shrink-0' : 'w-full';
+    const widthClass = variant === 'scroll' ? 'w-28 flex-shrink-0' : 'w-full';
 
     return (
       <button
         key={m.id}
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-        className={`relative overflow-hidden group ${widthClass} ${aspectClass}`}
+        className={`relative overflow-hidden group rounded-xl ${widthClass} aspect-square flex flex-col bg-card border border-border/50`}
       >
-        <img
-          src={`https://picsum.photos/seed/${imgSeed}/400/530`}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-          style={{ filter: m.isActive ? 'sepia(0.08)' : 'grayscale(0.6) sepia(0.1)' }}
-        />
-        <div className="absolute inset-0 editorial-overlay" />
-
-        {isCurrent && (
-          <div className="absolute top-3 right-3">
-            <div className="h-1.5 w-1.5 rounded-full bg-white" />
-          </div>
-        )}
-
-        {!m.isActive && (
-          <div className="absolute top-3 left-3">
-            <span className="text-[9px] tracking-widest uppercase text-white/30 font-light">offline</span>
-          </div>
-        )}
-
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <p className="text-white text-sm font-light tracking-wide leading-tight">
+        <div className="relative w-full flex-1 min-h-0">
+          <img
+            src={`https://picsum.photos/seed/${imgSeed}/400/400`}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
+            style={{ filter: m.isActive ? 'sepia(0.08)' : 'grayscale(0.6) sepia(0.1)' }}
+          />
+          {isCurrent && (
+            <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary border border-background" />
+          )}
+          {!m.isActive && (
+            <span className="absolute top-1.5 left-1.5 text-[8px] tracking-widest uppercase text-white/40 font-light">offline</span>
+          )}
+        </div>
+        <div className="p-2 text-center bg-card/95 border-t border-border/30 rounded-b-xl">
+          <p className="text-foreground text-xs font-medium truncate" title={m.nickname || m.firstName}>
             {m.nickname || m.firstName}
           </p>
-          <p className="text-white/40 text-[10px] font-light tracking-wider mt-0.5">
-            {m.firstName} {m.lastName}
-          </p>
-          {m.city && (
-            <p className="text-white/25 text-[9px] font-light tracking-wider mt-0.5">{m.city}</p>
-          )}
         </div>
       </button>
     );
@@ -94,18 +76,26 @@ const FamilyTree: React.FC = () => {
               <p className="editorial-caption text-white/40">Семья</p>
               <h1 className="editorial-title text-white text-4xl mt-0.5">Соколовы</h1>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-9 w-9 flex items-center justify-center border border-white/20 text-white/60 hover:bg-white hover:text-black transition-all duration-300">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать контакт</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light" onClick={() => navigate(ROUTES.classic.invite)}><Send className="h-4 w-4 mr-2" /> Пригласить</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="h-9 px-3 flex items-center gap-1.5 border border-white/20 text-white/80 text-xs font-light tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Создать контакт
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-9 w-9 flex items-center justify-center border border-white/20 text-white/60 hover:bg-white hover:text-black transition-all duration-300">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
+                  <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
+                  <DropdownMenuItem className="text-sm font-light" onClick={() => navigate(ROUTES.classic.invite)}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
@@ -126,9 +116,12 @@ const FamilyTree: React.FC = () => {
           </div>
         </div>
 
-        {/* Generations */}
+        {/* Generations: в центре — текущий пользователь (в своём поколении он первый) */}
         {[1, 2, 3].map(gen => {
-          const members = generations[gen] || [];
+          const raw = generations[gen] || [];
+          const members = gen === 3
+            ? [...raw].sort((a, b) => (a.id === currentUserId ? -1 : b.id === currentUserId ? 1 : 0))
+            : raw;
           const config = generationConfig[gen];
           const isLastGen = gen === 3;
 
@@ -138,10 +131,10 @@ const FamilyTree: React.FC = () => {
               <div className="px-6 mb-4">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="editorial-caption text-muted-foreground/60">{`Поколение ${gen}`}</p>
-                    <h2 className="editorial-title text-xl mt-1">{config.label}</h2>
+                    <p className="editorial-caption text-muted-foreground">{`Поколение ${gen}`}</p>
+                    <h2 className="editorial-title text-xl mt-1 text-foreground">{config.label}</h2>
                   </div>
-                  <p className="text-[11px] font-light text-muted-foreground/40 italic">{config.subtitle}</p>
+                  <p className="text-[11px] font-light text-muted-foreground italic">{config.subtitle}</p>
                 </div>
                 <div className="h-px bg-border/40 mt-3" />
               </div>
@@ -158,10 +151,10 @@ const FamilyTree: React.FC = () => {
                     {/* Invite card */}
                     <button
                       onClick={() => navigate(ROUTES.classic.invite)}
-                      className="w-36 flex-shrink-0 aspect-[3/4] border border-dashed border-border/50 flex flex-col items-center justify-center gap-2 group hover:border-foreground/30 transition-colors"
+                      className="w-28 flex-shrink-0 aspect-square rounded-xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-2 group hover:border-foreground/30 transition-colors"
                     >
                       <Plus className="h-5 w-5 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors" />
-                      <span className="text-[10px] tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Пригласить</span>
+                      <span className="text-[9px] tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Пригласить</span>
                     </button>
                   </div>
                   <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
