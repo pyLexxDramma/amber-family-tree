@@ -4,6 +4,7 @@ import { mockPublications } from '@/data/mock-publications';
 import { getMember } from '@/data/mock-members';
 import { useUIVariant } from '@/contexts/UIVariantContext';
 import { ROUTES } from '@/constants/routes';
+import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
 import { AvatarPlaceholder } from '@/components/AvatarPlaceholder';
 import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { Button } from '@/components/ui/button';
@@ -30,9 +31,10 @@ const PublicationDetails: React.FC = () => {
   const audios = pub.media.filter(m => m.type === 'audio');
 
   const heroImg = photos[0] || (videos[0] ? videos[0] : null);
+  const fallbackSeed = (pub.id.replace(/\D/g, '') || '1').slice(0, 2);
   const heroUrl = heroImg
-    ? (heroImg.url || heroImg.thumbnail || `https://picsum.photos/seed/det${pub.id}/800/1000`)
-    : `https://picsum.photos/seed/det${pub.id}/800/1000`;
+    ? (heroImg.url || heroImg.thumbnail || getDemoFeedPhotoUrl(parseInt(fallbackSeed, 10) || 1))
+    : getDemoFeedPhotoUrl(parseInt(fallbackSeed, 10) || 1);
 
   const lightboxImages = photos.map(p => ({
     url: p.url || p.thumbnail || '',
@@ -53,7 +55,7 @@ const PublicationDetails: React.FC = () => {
         <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '55vh' }}>
           <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center">
-            <button onClick={() => navigate(-1)} className="touch-target p-2 text-white/90 hover:text-white rounded-lg hover:bg-black/20 transition-colors">
+            <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-xl border-2 border-white/40 text-white/90 hover:text-white hover:bg-white/15 hover:border-white/60 transition-colors shadow-sm" aria-label="Назад">
               <ArrowLeft className="h-6 w-6" />
             </button>
           </div>
@@ -99,7 +101,7 @@ const PublicationDetails: React.FC = () => {
         <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '50vh' }}>
           <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute top-0 left-0 right-0 p-4">
-            <button onClick={() => navigate(-1)} className="touch-target p-2 text-white/90 hover:text-white rounded-lg hover:bg-black/20 transition-colors">
+            <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-xl border-2 border-white/40 text-white/90 hover:text-white hover:bg-white/15 hover:border-white/60 transition-colors shadow-sm" aria-label="Назад">
               <ArrowLeft className="h-6 w-6" />
             </button>
           </div>
@@ -159,7 +161,7 @@ const PublicationDetails: React.FC = () => {
 
         {/* Nav over hero */}
         <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4">
-          <button onClick={() => navigate(-1)} className="text-white/80 hover:text-white transition-colors">
+          <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-xl border-2 border-white/40 text-white/90 hover:text-white hover:bg-white/15 hover:border-white/60 transition-colors shadow-sm" aria-label="Назад">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <DropdownMenu>
@@ -175,7 +177,7 @@ const PublicationDetails: React.FC = () => {
         </div>
 
         {/* Title overlay on hero */}
-        <div className="absolute bottom-0 left-0 right-0 p-6">
+        <div className="absolute bottom-0 left-0 right-0 p-6 photo-card-text">
           <span className="editorial-caption text-white/50 block mb-2">{pub.topicTag}</span>
           <h1 className="editorial-title text-white text-3xl mb-2">{pub.title}</h1>
           <div className="flex items-center gap-3 text-white/50 text-xs font-light">
@@ -259,7 +261,7 @@ const PublicationDetails: React.FC = () => {
                 <Play className="h-6 w-6 text-white ml-0.5" />
               </div>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-3 editorial-overlay">
+            <div className="absolute bottom-0 left-0 right-0 p-3 editorial-overlay photo-card-text">
               <p className="text-white text-sm font-light">{v.name}</p>
               {v.duration && <p className="text-white/50 text-xs">{Math.floor(v.duration/60)}:{String(v.duration%60).padStart(2,'0')}</p>}
             </div>

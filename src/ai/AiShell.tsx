@@ -177,7 +177,7 @@ export const AiShell: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate(ROUTES.classic.tree)}
-            className="p-2 -ml-2 text-foreground/70 hover:text-foreground rounded-lg hover:bg-primary/10 transition-colors"
+            className="touch-target p-2.5 -ml-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors shadow-sm"
             aria-label="Назад"
           >
             <ArrowLeft className="h-5 w-5" />

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { allMediaItems } from '@/data/mock-publications';
 import { ExternalLink, Video, Mic } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
 
 export const MiniGallery: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export const MiniGallery: React.FC = () => {
           >
             {item.type === 'photo' && (
               <img
-                src={item.thumbnail || 'https://picsum.photos/200'}
+                src={item.thumbnail || getDemoFeedPhotoUrl(1)}
                 alt={item.name}
                 className="w-full h-full object-cover"
               />

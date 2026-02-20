@@ -5,6 +5,7 @@ import { mockMembers, currentUserId } from '@/data/mock-members';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+import { getDemoMemberPhotoUrl, getDemoTreeHeroUrl } from '@/lib/demo-photos';
 import { User, Plus, UserPlus, Contact, Send } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -34,7 +35,7 @@ const FamilyTree: React.FC = () => {
       >
         <div className="relative h-16 w-16 flex-shrink-0 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
           {demoWithPhotos && (
-            <img src={`https://picsum.photos/seed/member${m.id}/128/128`} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+            <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
           )}
           <div className={`absolute inset-0 flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
             <User className={`h-8 w-8 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
@@ -94,7 +95,7 @@ const FamilyTree: React.FC = () => {
       <div className="pb-4 page-enter">
         <div className="relative w-full bg-muted/30 overflow-hidden" style={{ aspectRatio: '16/9' }}>
           {demoWithPhotos && (
-            <img src="https://picsum.photos/seed/sokolov/1200/675" alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { if (e.currentTarget.src !== '/placeholder.svg') e.currentTarget.src = '/placeholder.svg'; }} />
+            <img src={getDemoTreeHeroUrl()} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { if (e.currentTarget.src !== '/placeholder.svg') e.currentTarget.src = '/placeholder.svg'; }} />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
         </div>

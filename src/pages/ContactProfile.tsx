@@ -7,6 +7,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { usePlatform } from '@/platform/PlatformContext';
 import { ChevronLeft, ChevronRight, Users, User } from 'lucide-react';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
 
 /**
  * Card Mini-Album profile for Family Album (TMA).
@@ -47,11 +48,7 @@ const ContactProfile: React.FC = () => {
   };
 
   const photoUrls = demoWithPhotos
-    ? [
-        `https://picsum.photos/seed/member${member.id}/800/600`,
-        `https://picsum.photos/seed/member${member.id}b/800/600`,
-        `https://picsum.photos/seed/member${member.id}c/800/600`,
-      ]
+    ? [getDemoMemberPhotoUrl(member.id), getDemoMemberPhotoUrl(member.id), getDemoMemberPhotoUrl(member.id)]
     : [];
 
   const goToParent = (parentId: string) => {

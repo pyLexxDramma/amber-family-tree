@@ -49,11 +49,11 @@ export const BottomNav: React.FC = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`touch-target flex flex-1 flex-col items-center justify-center gap-1 min-w-0 px-2 py-2 rounded-xl transition-all duration-200 ${active ? 'text-primary font-semibold bg-primary/15 ring-2 ring-primary/25' : 'text-muted-foreground hover:text-foreground/80 hover:bg-primary/5'}`}
+              className={`touch-target flex flex-1 flex-col items-center justify-center gap-1 min-w-0 overflow-hidden px-1 sm:px-2 py-2 rounded-xl transition-all duration-200 ${active ? 'text-primary font-semibold bg-primary/15 ring-2 ring-primary/25' : 'text-muted-foreground hover:text-foreground/80 hover:bg-primary/5'}`}
               aria-current={active ? 'page' : undefined}
             >
               <item.icon className="h-6 w-6 shrink-0" strokeWidth={active ? 2.25 : 1.5} />
-              <span className="text-xs sm:text-sm font-semibold tracking-wide uppercase tabular-nums">{item.label}</span>
+              <span className="text-xs sm:text-sm font-semibold tracking-wide uppercase tabular-nums truncate w-full max-w-full text-center min-w-0 block max-[400px]:hidden">{item.label}</span>
             </button>
           );
         })}

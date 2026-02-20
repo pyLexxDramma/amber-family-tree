@@ -1,10 +1,11 @@
 import { Publication, MediaItem } from '@/types';
+import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
 
 const photo = (id: number, name: string): MediaItem => ({
-  id: `ph${id}`, type: 'photo', url: `https://picsum.photos/seed/angelo${id}/800/600`, thumbnail: `https://picsum.photos/seed/angelo${id}/200/150`, name, size: Math.floor(Math.random() * 15_000_000) + 500_000,
+  id: `ph${id}`, type: 'photo', url: getDemoFeedPhotoUrl(id), thumbnail: getDemoFeedPhotoUrl(id), name, size: Math.floor(Math.random() * 15_000_000) + 500_000,
 });
 const video = (id: number, name: string): MediaItem => ({
-  id: `vi${id}`, type: 'video', url: '', thumbnail: `https://picsum.photos/seed/vid${id}/200/150`, name, size: Math.floor(Math.random() * 400_000_000) + 10_000_000, duration: Math.floor(Math.random() * 300) + 10,
+  id: `vi${id}`, type: 'video', url: '', thumbnail: getDemoFeedPhotoUrl(30 + id), name, size: Math.floor(Math.random() * 400_000_000) + 10_000_000, duration: Math.floor(Math.random() * 300) + 10,
 });
 const audio = (id: number, name: string): MediaItem => ({
   id: `au${id}`, type: 'audio', url: '', name, size: Math.floor(Math.random() * 80_000_000) + 1_000_000, duration: Math.floor(Math.random() * 600) + 30,

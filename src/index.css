@@ -239,11 +239,26 @@
 
 @layer components {
   .editorial-overlay {
-    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%);
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 35%, rgba(0,0,0,0.08) 65%, transparent 100%);
   }
 
   .editorial-overlay-top {
     background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 60%);
+  }
+
+  /* Текст на фото: тень-обводка для читаемости на любом фоне */
+  .photo-card-text,
+  .photo-card-text * {
+    text-shadow:
+      0 0 1px rgba(0,0,0,1),
+      0 0 2px rgba(0,0,0,0.95),
+      0 0 3px rgba(0,0,0,0.9),
+      0 1px 2px rgba(0,0,0,0.9),
+      0 -1px 2px rgba(0,0,0,0.9),
+      1px 0 2px rgba(0,0,0,0.9),
+      -1px 0 2px rgba(0,0,0,0.9),
+      1px 1px 3px rgba(0,0,0,0.85),
+      -1px -1px 3px rgba(0,0,0,0.85);
   }
 
   .touch-target {

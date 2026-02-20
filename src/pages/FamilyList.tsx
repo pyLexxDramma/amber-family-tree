@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { mockMembers, currentUserId, getCurrentUser } from '@/data/mock-members';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
+import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
 import { Send, User } from 'lucide-react';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
@@ -66,7 +67,7 @@ const FamilyList: React.FC = () => {
               className="content-card p-5 flex items-center gap-4 min-h-[96px] w-full text-left hover:border-primary/30 transition-colors"
             >
               {demoWithPhotos ? (
-                <img src={`https://picsum.photos/seed/member${currentUser.id}/120/120`} alt="" className="h-16 w-16 rounded-full object-cover flex-shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                <img src={getDemoMemberPhotoUrl(currentUser.id)} alt="" className="h-16 w-16 rounded-full object-cover flex-shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
               ) : null}
               <div className={`h-16 w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ${demoWithPhotos ? 'hidden' : ''}`}>
                 <User className="h-8 w-8 text-muted-foreground" />
@@ -116,15 +117,23 @@ const FamilyList: React.FC = () => {
                 onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
                 className="person-card person-card-accent w-full flex items-center gap-5 text-left group relative min-h-[96px] pl-5 pr-5 py-4 touch-target"
               >
-                <div className="h-[72px] w-[72px] flex-shrink-0 rounded-full bg-muted flex items-center justify-center relative overflow-hidden ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
-                  {demoWithPhotos && (
-                    <img src={`https://picsum.photos/seed/member${m.id}/144/144`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
-                  )}
-                  <div className={`h-full w-full flex items-center justify-center relative ${demoWithPhotos ? 'hidden' : ''}`}>
-                    <User className={`h-9 w-9 ${m.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                    {isCurrent && (
-                      <div className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-background" />
+                <div className="flex flex-col items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`h-3.5 w-3.5 rounded-full ${m.isActive ? 'status-online-dot' : 'bg-muted-foreground/60'}`} />
+                    <span className={`text-[11px] tracking-widest uppercase font-bold whitespace-nowrap ${m.isActive ? 'status-online-text' : 'text-foreground/90 dark:text-white/90'}`}>
+                      {m.isActive ? 'в сети' : 'не в сети'}
+                    </span>
+                  </div>
+                  <div className="h-[72px] w-[72px] rounded-full bg-muted flex items-center justify-center relative overflow-hidden ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                    {demoWithPhotos && (
+                      <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
                     )}
+                    <div className={`h-full w-full flex items-center justify-center relative ${demoWithPhotos ? 'hidden' : ''}`}>
+                      <User className={`h-9 w-9 ${m.isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                      {isCurrent && (
+                        <div className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 bg-primary rounded-full border-2 border-background" />
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -139,13 +148,6 @@ const FamilyList: React.FC = () => {
                     {m.city && <span> · {m.city}</span>}
                   </p>
                   <p className="card-action text-base font-bold text-primary mt-2 dark:text-[hsl(36,80%,58%)]">Смотреть фото и ленту →</p>
-                </div>
-
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <div className={`h-3.5 w-3.5 rounded-full ${m.isActive ? 'status-online-dot' : 'bg-muted-foreground/60'}`} />
-                  <span className={`text-sm tracking-widest uppercase font-bold ${m.isActive ? 'status-online-text' : 'text-foreground/90 dark:text-white/90'}`}>
-                    {m.isActive ? 'в сети' : 'не в сети'}
-                  </span>
                 </div>
               </button>
             );

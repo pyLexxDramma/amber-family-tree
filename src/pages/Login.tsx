@@ -31,9 +31,9 @@ const Login: React.FC = () => {
         <div className="absolute inset-0 overlay-light" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-12 flex items-center gap-2 min-h-touch min-w-[80px] -ml-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-black/5">
+      <button onClick={() => navigate(-1)} className="touch-target mb-12 flex items-center gap-2 min-h-touch min-w-[80px] -ml-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
         <ArrowLeft className="h-5 w-5 shrink-0" />
-        <span className="text-sm font-medium tracking-wide">Назад</span>
+        <span className="text-sm tracking-wide">Назад</span>
       </button>
 
       <h1 className="hero-title text-3xl sm:text-4xl mb-2">Вход</h1>

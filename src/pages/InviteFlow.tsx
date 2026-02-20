@@ -42,9 +42,9 @@ const InviteFlow: React.FC = () => {
   if (view === 'list') {
     return (
       <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
+        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
           <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium tracking-wide">Назад</span>
+          <span className="text-sm tracking-wide">Назад</span>
         </button>
 
         <h1 className="hero-title text-2xl mb-6 px-3">Приглашения</h1>
@@ -114,9 +114,9 @@ const InviteFlow: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
         <ArrowLeft className="h-5 w-5" />
-        <span className="text-sm font-medium tracking-wide">Назад</span>
+        <span className="text-sm tracking-wide">Назад</span>
       </button>
 
       <h1 className="hero-title text-2xl mb-2 px-3">Пригласить</h1>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { getMember } from '@/data/mock-members';
+import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
 
 interface PersonCardProps {
   memberId: string;
@@ -26,13 +27,13 @@ export const PersonCard: React.FC<PersonCardProps> = ({ memberId, isSelected, on
         style={{ aspectRatio: '4/3' }}
       >
         <img
-          src={`https://picsum.photos/seed/member${member.id}/600/450`}
+          src={getDemoMemberPhotoUrl(member.id)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           style={{ filter: member.isActive ? 'sepia(0.1)' : 'grayscale(0.5) sepia(0.1)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
           <p className="editorial-caption text-white/50 mb-1">
             {member.relations[0]?.type === 'parent' && 'Дедушка'}
             {member.relations[0]?.type === 'spouse' && member.generation === 1 && 'Бабушка'}

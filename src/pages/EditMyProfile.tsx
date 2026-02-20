@@ -5,7 +5,6 @@ import { TopBar } from '@/components/TopBar';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 import { setDemoProfilePatch, type DemoProfilePatch } from '@/data/demo-profile-storage';
 import { ROUTES } from '@/constants/routes';
-import { ArrowLeft } from 'lucide-react';
 
 const EditMyProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -45,14 +44,7 @@ const EditMyProfile: React.FC = () => {
 
   return (
     <AppLayout>
-      <TopBar
-        title="Редактировать профиль"
-        left={
-          <button onClick={() => navigate(ROUTES.classic.myProfile)} className="touch-target p-2 -ml-2 rounded-lg hover:bg-muted/50" aria-label="Назад">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        }
-      />
+      <TopBar title="Редактировать профиль" onBack={() => navigate(ROUTES.classic.myProfile)} />
       <div className="px-4 pt-4 pb-8 page-enter max-w-xl mx-auto">
         <p className="text-sm text-muted-foreground mb-4">В демо изменения сохраняются в браузере и отображаются на странице «О себе».</p>
         <div className="space-y-4">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { mockMembers, currentUserId } from '@/data/mock-members';
+import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
 import type { FamilyMember } from '@/types';
 
 const generationLabels: Record<number, string> = {
@@ -38,7 +39,7 @@ export const MiniTree: React.FC<MiniTreeProps> = ({ onSelectPerson }) => {
                     className="relative overflow-hidden rounded-sm aspect-square border border-border/50 hover:border-foreground/30 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     <img
-                      src={`https://picsum.photos/seed/member${m.id}/200/200`}
+                      src={getDemoMemberPhotoUrl(m.id)}
                       alt=""
                       className="h-full w-full object-cover"
                       style={{ filter: m.isActive ? 'sepia(0.06)' : 'grayscale(0.5)' }}

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
 import { Mic, Type, MessageCircle, Image, Loader2, Sparkles, Send } from 'lucide-react';
 
 const AIDemoPage: React.FC = () => {
@@ -108,7 +109,7 @@ const AIDemoPage: React.FC = () => {
           <TabsContent value="photo" className="mt-4 space-y-4">
             <div className="rounded-2xl bg-card p-4 text-center">
               <div className="aspect-square max-w-[200px] mx-auto rounded-xl bg-muted mb-3 overflow-hidden">
-                <img src="https://picsum.photos/seed/angelo1/400/400" alt="Sample" className="h-full w-full object-cover" />
+                <img src={getDemoFeedPhotoUrl(1)} alt="Sample" className="h-full w-full object-cover" />
               </div>
               <p className="text-sm font-medium mb-3">Animate this photo</p>
               <Button className="rounded-xl" onClick={handleAnimate} disabled={animState === 'processing'}>

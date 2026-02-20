@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { UnreadMarker } from '@/components/UnreadMarker';
@@ -100,7 +101,7 @@ const Feed: React.FC = () => {
     const hasMedia = pub.media.length > 0 && pub.media[0]?.type === 'photo';
     const imgUrl = isFirst
       ? '/bg-4.png'
-      : (hasMedia ? (pub.media[0].url || pub.media[0].thumbnail) : `https://picsum.photos/seed/hero${pub.id}/800/1000`);
+      : (hasMedia ? (pub.media[0].url || pub.media[0].thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10)));
 
     return (
       <button
@@ -111,7 +112,7 @@ const Feed: React.FC = () => {
       >
         <img src={imgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 editorial-overlay" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-2">
+        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-2 photo-card-text">
           {!pub.isRead && (
             <div className="flex items-center gap-2">
               <UnreadMarker />
@@ -173,7 +174,7 @@ const Feed: React.FC = () => {
     }
 
     const firstPhoto = pub.media.find(m => m.type === 'photo');
-    const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : `https://picsum.photos/seed/ed${pub.id}/600/400`;
+    const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10));
 
     return (
       <button
@@ -189,7 +190,7 @@ const Feed: React.FC = () => {
           <div className="absolute top-0 left-0 w-0.5 h-full bg-primary" />
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
           <span className="editorial-caption text-white/50 block mb-1">{pub.topicTag}</span>
           <h3 className="editorial-title text-white text-lg leading-tight">{pub.title}</h3>
           {size === 'full' && (
@@ -231,13 +232,13 @@ const Feed: React.FC = () => {
 
     const albumCard = (pub: Publication, label: string, sublabel: string, big = false) => {
       const hasPhoto = pub.media.some(m => m.type === 'photo');
-      const imgUrl = hasPhoto ? (pub.media.find(m => m.type === 'photo')!.url || pub.media.find(m => m.type === 'photo')!.thumbnail) : `https://picsum.photos/seed/${pub.id}/600/400`;
+      const imgUrl = hasPhoto ? (pub.media.find(m => m.type === 'photo')!.url || pub.media.find(m => m.type === 'photo')!.thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10));
       return (
         <button key={pub.id} onClick={() => navigate(ROUTES.classic.publication(pub.id))} className={`content-card overflow-hidden text-left rounded-2xl ${big ? 'aspect-[3/4]' : 'aspect-square'}`}>
           <div className="relative w-full h-full">
             <img src={imgUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 editorial-overlay" />
-            <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
               <p className="editorial-caption text-white/80">{label}</p>
               <p className="text-white font-semibold text-lg">{sublabel}</p>
               <p className="text-white/70 text-sm mt-0.5">{pub.eventDate?.slice(0, 7) || ''}</p>
@@ -267,7 +268,7 @@ const Feed: React.FC = () => {
               <button type="button" className="touch-target p-2 rounded-xl hover:bg-primary/10 transition-colors" aria-label="Вперёд"><ChevronRight className="h-5 w-5" /></button>
             </div>
             <button onClick={() => navigate(ROUTES.classic.publication(main.id))} className="block w-full relative aspect-[16/10]">
-              <img src={main.media[0]?.type === 'photo' ? (main.media[0].url || main.media[0].thumbnail) : `https://picsum.photos/seed/${main.id}/800/500`} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={main.media[0]?.type === 'photo' ? (main.media[0].url || main.media[0].thumbnail) : getDemoFeedPhotoUrl(parseInt(main.id.replace(/\D/g, '') || '1', 10))} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 editorial-overlay" />
             </button>
           </div>
@@ -276,7 +277,7 @@ const Feed: React.FC = () => {
         {cardPub && (
           <button onClick={() => navigate(ROUTES.classic.publication(cardPub.id))} className="content-card w-full flex items-center gap-4 min-h-[96px] p-5 rounded-2xl text-left">
             <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-              <img src={cardPub.media[0]?.type === 'photo' ? (cardPub.media[0].url || cardPub.media[0].thumbnail) : `https://picsum.photos/seed/${cardPub.id}/200`} alt="" className="w-full h-full object-cover" />
+              <img src={cardPub.media[0]?.type === 'photo' ? (cardPub.media[0].url || cardPub.media[0].thumbnail) : getDemoFeedPhotoUrl(parseInt(cardPub.id.replace(/\D/g, '') || '1', 10))} alt="" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-foreground truncate">{cardPub.title}</p>
@@ -314,7 +315,7 @@ const Feed: React.FC = () => {
               {byDecade[decade].map(pub => {
                 const year = (pub.eventDate || pub.publishDate).slice(0, 4);
                 const firstPhoto = pub.media.find(m => m.type === 'photo');
-                const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : `https://picsum.photos/seed/${pub.id}/200`;
+                const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10));
                 return (
                   <button key={pub.id} onClick={() => navigate(ROUTES.classic.publication(pub.id))} className="content-card w-full flex items-center gap-4 min-h-[96px] p-5 rounded-2xl text-left">
                     <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/30">

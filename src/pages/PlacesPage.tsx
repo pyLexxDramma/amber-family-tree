@@ -6,6 +6,7 @@ import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { mockMembers } from '@/data/mock-members';
 import { ArrowLeft, Send, UserMinus, User } from 'lucide-react';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -30,9 +31,9 @@ const PlacesPage: React.FC = () => {
   return (
     <AppLayout>
       <div className="pt-4 pb-4 px-0 page-enter">
-        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
+        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
           <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium tracking-wide">Назад</span>
+          <span className="text-sm tracking-wide">Назад</span>
         </button>
 
         <h1 className="hero-title text-2xl mb-1 px-3">Места</h1>
@@ -43,7 +44,7 @@ const PlacesPage: React.FC = () => {
             <div key={m.id} className="content-card flex items-center gap-4 min-h-[96px] py-5 px-5">
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-primary/10">
                 {demoWithPhotos && (
-                  <img src={`https://picsum.photos/seed/member${m.id}/96/96`} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                  <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
                 )}
                 <div className={`h-full w-full flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
                   <User className="h-6 w-6 text-primary/60" />
