@@ -51,7 +51,9 @@ export const AiShell: React.FC = () => {
             intent = llmResult.intent;
             llmReply = llmResult.textReply;
           }
-        } catch {}
+        } catch {
+          // LLM optional; fallback to rule-based intent
+        }
         if (intent.type === 'unknown') {
           intent = routeIntent(trimmed, selectedContext);
         }
@@ -131,7 +133,9 @@ export const AiShell: React.FC = () => {
         sessionStorage.removeItem('ai-demo-voice-query');
         handleUserInputRef.current(query);
       }
-    } catch {}
+    } catch {
+      // sessionStorage not available
+    }
   }, []);
 
   const { isListening, isSupported, startListening, stopListening, speak, stopSpeaking } = useVoice(
@@ -156,6 +160,7 @@ export const AiShell: React.FC = () => {
       setTimeout(() => setIsSpeaking(false), 3000);
     }, 500);
     return () => { clearTimeout(t); stopSpeaking(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when lastAi identity changes
   }, [lastAi?.id, isThinking, speak, stopSpeaking, setIsSpeaking]);
 
   const [inputValue, setInputValue] = React.useState('');

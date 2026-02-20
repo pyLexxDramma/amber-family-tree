@@ -19,6 +19,8 @@ export const ROUTES = {
     store: `${CLASSIC_BASE}/store`,
     places: `${CLASSIC_BASE}/places`,
     settings: `${CLASSIC_BASE}/settings`,
+    terms: `${CLASSIC_BASE}/terms`,
+    privacy: `${CLASSIC_BASE}/privacy`,
     help: `${CLASSIC_BASE}/help`,
     /** Только в демо: выбор варианта UI для клиента */
     demoVariants: `${CLASSIC_BASE}/demo-variants`,

@@ -38,7 +38,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ images, initialInd
       return;
     }
     if (Math.abs(dx) > 50) {
-      dx > 0 ? prev() : next();
+      if (dx > 0) prev();
+      else next();
     }
   };
 

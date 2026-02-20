@@ -48,13 +48,17 @@ export const VoiceControl: React.FC = () => {
         if (path === '/ai-demo' && text) {
           try {
             sessionStorage.setItem('ai-demo-voice-query', text);
-          } catch {}
+          } catch {
+            // ignore
+          }
         }
       } else if (text) {
         navigate('/ai-demo');
         try {
           sessionStorage.setItem('ai-demo-voice-query', text);
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
     };
     rec.onend = () => setIsListening(false);
@@ -72,7 +76,9 @@ export const VoiceControl: React.FC = () => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch {
+        // ignore
+      }
       recognitionRef.current = null;
     }
     setIsListening(false);

@@ -78,7 +78,9 @@ export const VoiceControlGlobal: React.FC = () => {
         navigate(ROUTES.app);
         try {
           sessionStorage.setItem('ai-demo-voice-query', text);
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
     };
     rec.onend = () => setIsListening(false);
@@ -96,7 +98,9 @@ export const VoiceControlGlobal: React.FC = () => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch {
+        // ignore
+      }
       recognitionRef.current = null;
     }
     setIsListening(false);

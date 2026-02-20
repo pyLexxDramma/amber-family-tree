@@ -22,6 +22,8 @@ import InviteFlow from "./pages/InviteFlow";
 import StorePage from "./pages/StorePage";
 import PlacesPage from "./pages/PlacesPage";
 import Settings from "./pages/Settings";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import Help from "./pages/Help";
 import AIDemoPage from "./pages/AIDemoPage";
 import { AiShell } from "./ai/AiShell";
@@ -30,12 +32,16 @@ import NotFound from "./pages/NotFound";
 import DemoVariantsPage from "./pages/DemoVariantsPage";
 import { CLASSIC_BASE } from "./constants/routes";
 import { UIVariantProvider, UIVariantSync } from "./contexts/UIVariantContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { PrivacyVisibilityProvider } from "./contexts/PrivacyVisibilityContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" storageKey="angelo-theme" enableSystem={false}>
+      <LanguageProvider>
+      <PrivacyVisibilityProvider>
       <PlatformProvider>
         <TooltipProvider>
           <Toaster />
@@ -66,6 +72,8 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/store`} element={<StorePage />} />
             <Route path={`${CLASSIC_BASE}/places`} element={<PlacesPage />} />
             <Route path={`${CLASSIC_BASE}/settings`} element={<Settings />} />
+            <Route path={`${CLASSIC_BASE}/terms`} element={<TermsPage />} />
+            <Route path={`${CLASSIC_BASE}/privacy`} element={<PrivacyPage />} />
             <Route path={`${CLASSIC_BASE}/help`} element={<Help />} />
             <Route path={`${CLASSIC_BASE}/demo-variants`} element={<DemoVariantsPage />} />
             <Route path="/ai" element={<AIDemoPage />} />
@@ -75,6 +83,8 @@ const App = () => (
         </BrowserRouter>
         </TooltipProvider>
       </PlatformProvider>
+      </PrivacyVisibilityProvider>
+      </LanguageProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

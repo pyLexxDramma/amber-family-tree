@@ -93,7 +93,7 @@ const Feed: React.FC = () => {
     setFilterParticipantIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const mediaCount = (type: string, items: any[]) => items.filter(i => i.type === type).length;
+  const mediaCount = (type: string, items: { type: string }[]) => items.filter(i => i.type === type).length;
 
   /** Главная карточка ленты: первая использует bg-4.png, остальные — медиа публикации */
   const heroCard = (pub: typeof sorted[0], isFirst = false) => {

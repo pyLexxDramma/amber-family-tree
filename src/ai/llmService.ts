@@ -169,7 +169,9 @@ export async function getIntentFromLLM(
       let args: Record<string, unknown> = {};
       try {
         if (fn?.arguments) args = JSON.parse(fn.arguments) as Record<string, unknown>;
-      } catch {}
+      } catch {
+        // invalid JSON in tool arguments
+      }
       const intent = toolNameToIntent(name, args, selectedContext);
       return { intent, textReply };
     }
