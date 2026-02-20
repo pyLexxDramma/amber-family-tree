@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { getMember } from '@/data/mock-members';
+import { getMember, mockMembers } from '@/data/mock-members';
 import { TopBar } from '@/components/TopBar';
 import { AppLayout } from '@/components/AppLayout';
 import { usePlatform } from '@/platform/PlatformContext';

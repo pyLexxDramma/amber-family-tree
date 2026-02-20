@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { mockMembers, currentUserId } from '@/data/mock-members';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, UserPlus, Contact, Send, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+import { User, Plus, UserPlus, Contact, Send } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const generationConfig: Record<number, { label: string; subtitle: string }> = {
-  1: { label: 'Дедушки и бабушки', subtitle: 'Корни нашей истории' },
-  2: { label: 'Родители', subtitle: 'Связь поколений' },
-  3: { label: 'Наше поколение', subtitle: 'Пишем следующую главу' },
+const generationConfig: Record<number, { label: string }> = {
+  1: { label: 'Дедушки и бабушки' },
+  2: { label: 'Родители' },
+  3: { label: 'Наше поколение' },
 };
 
 const FamilyTree: React.FC = () => {
@@ -22,10 +22,6 @@ const FamilyTree: React.FC = () => {
   const generations: Record<number, typeof mockMembers> = {};
   mockMembers.forEach(m => { (generations[m.generation] ||= []).push(m); });
 
-  const totalMembers = mockMembers.length;
-  const activeMembers = mockMembers.filter(m => m.isActive).length;
-  const genCount = Object.keys(generations).length;
-
   /** Карточка участника: одна на всю ширину (горизонтальный блок — аватар слева, имя справа) */
   const memberCard = (m: typeof mockMembers[0]) => {
     const isCurrent = m.id === currentUserId;
@@ -34,6 +30,7 @@ const FamilyTree: React.FC = () => {
         key={m.id}
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
         className="person-card w-full flex items-center gap-4 text-left group min-h-[96px] p-4 hover:border-primary/40 hover:shadow-md hover:shadow-primary/10"
+        aria-label={`Открыть профиль: ${m.firstName} ${m.lastName}`}
       >
         <div className="relative h-16 w-16 flex-shrink-0 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
           {demoWithPhotos && (
@@ -55,6 +52,10 @@ const FamilyTree: React.FC = () => {
           </p>
           <p className="card-action text-base font-semibold text-primary mt-1 dark:text-[hsl(36,80%,58%)]">Смотреть фото</p>
         </div>
+
+        {/* Status dot */}
+        <div className={`h-4 w-4 flex-shrink-0 rounded-full ${m.isActive ? 'bg-green-500' : 'bg-muted-foreground/30'}`}
+             aria-label={m.isActive ? 'Активен' : 'Неактивен'} />
       </button>
     );
   };
@@ -97,29 +98,9 @@ const FamilyTree: React.FC = () => {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
 
-          <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
-            <div className="flex gap-6">
-              <div>
-                <p className="text-white text-2xl font-light">{totalMembers}</p>
-                <p className="editorial-caption text-white/40">участников</p>
-              </div>
-              <div>
-                <p className="text-white text-2xl font-light">{genCount}</p>
-                <p className="editorial-caption text-white/40">поколений</p>
-              </div>
-              <div>
-                <p className="text-white text-2xl font-light">{activeMembers}</p>
-                <p className="editorial-caption text-white/40">активных</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="page-enter pb-6">
         {[1, 2, 3].map(gen => {
-          const raw = generations[gen] || [];
-          const members = gen === 3
-            ? [...raw].sort((a, b) => (a.id === currentUserId ? -1 : b.id === currentUserId ? 1 : 0))
-            : raw;
+          const members = generations[gen] || [];
           const config = generationConfig[gen];
           const isLastGen = gen === 3;
 
@@ -127,7 +108,6 @@ const FamilyTree: React.FC = () => {
             <div key={gen} className="mt-8">
               <div className="px-3 mb-4">
                 <p className="section-title text-primary font-bold dark:text-[hsl(36,80%,58%)]">{config.label}</p>
-                <p className="card-subtitle text-base font-medium text-muted-foreground mt-1.5 italic dark:text-white/75">{config.subtitle}</p>
               </div>
 
               <div className="px-3 flex flex-col gap-3">
@@ -152,12 +132,15 @@ const FamilyTree: React.FC = () => {
           <p className="editorial-caption text-muted-foreground/30">
             Нажмите на портрет или скажите голосом: «дерево», «лента», «семья»
           </p>
+        </div>
+
+        <div className="px-4 mt-4">
           <button
-            type="button"
-            onClick={() => navigate(ROUTES.app)}
-            className="mt-3 text-sm font-light text-primary hover:underline"
+            onClick={() => navigate(ROUTES.classic.invite)}
+            className="w-full flex items-center justify-center gap-3 px-6 py-5 rounded-2xl border-2 border-dashed border-primary/40 text-primary text-xl font-bold active:bg-primary/10 transition-colors"
           >
-            Голосовой режим (демо)
+            <Plus className="h-7 w-7" />
+            Пригласить в семью
           </button>
         </div>
       </div>
