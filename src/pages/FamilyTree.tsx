@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, UserPlus, Contact, Send, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
 const generationConfig: Record<number, { label: string; subtitle: string }> = {
   1: { label: 'Дедушки и бабушки', subtitle: 'Корни нашей истории' },
@@ -15,6 +16,7 @@ const generationConfig: Record<number, { label: string; subtitle: string }> = {
 const FamilyTree: React.FC = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const demoWithPhotos = useDemoWithPhotos();
 
   const generations: Record<number, typeof mockMembers> = {};
   mockMembers.forEach(m => { (generations[m.generation] ||= []).push(m); });
@@ -33,8 +35,13 @@ const FamilyTree: React.FC = () => {
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
         className={`relative overflow-hidden group rounded-xl ${widthClass} aspect-square flex flex-col bg-card border border-border/50`}
       >
-        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-muted rounded-t-xl">
-          <User className={`h-1/2 w-1/2 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
+        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-muted rounded-t-xl overflow-hidden">
+          {demoWithPhotos && (
+            <img src={`https://picsum.photos/seed/member${m.id}/400/400`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+          )}
+          <div className={`h-full w-full flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
+            <User className={`h-1/2 w-1/2 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
+          </div>
           {isCurrent && (
             <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary border border-background" />
           )}
@@ -55,7 +62,10 @@ const FamilyTree: React.FC = () => {
     <AppLayout>
       <div className="pb-4">
         {/* Hero banner */}
-        <div className="relative w-full bg-muted/30" style={{ aspectRatio: '16/9' }}>
+        <div className="relative w-full bg-muted/30 overflow-hidden" style={{ aspectRatio: '16/9' }}>
+          {demoWithPhotos && (
+            <img src="https://picsum.photos/seed/sokolov/1200/675" alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { if (e.currentTarget.src !== '/placeholder.svg') e.currentTarget.src = '/placeholder.svg'; }} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
 
           <div className="absolute top-0 left-0 right-0 p-5 flex items-start justify-between">

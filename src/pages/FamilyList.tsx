@@ -4,9 +4,13 @@ import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { mockMembers, currentUserId, getCurrentUser } from '@/data/mock-members';
 import { Send, User } from 'lucide-react';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+
+const FALLBACK = '/placeholder.svg';
 
 const FamilyList: React.FC = () => {
   const navigate = useNavigate();
+  const demoWithPhotos = useDemoWithPhotos();
   const [sectionTab, setSectionTab] = useState<'about' | 'family'>('family');
   const [viewTab, setViewTab] = useState<'profiles' | 'groups'>('profiles');
   const [tab, setTab] = useState<'all' | 'active' | 'inactive'>('all');
@@ -16,8 +20,10 @@ const FamilyList: React.FC = () => {
   return (
     <AppLayout>
       <div className="pb-4">
-        {/* Header */}
         <div className="relative overflow-hidden bg-muted/50" style={{ height: '140px' }}>
+          {demoWithPhotos && (
+            <img src="https://picsum.photos/seed/familylist/800/300" alt="" className="absolute inset-0 h-full w-full object-cover" style={{ filter: 'sepia(0.3) brightness(0.5)' }} onError={(e) => { if (e.currentTarget.src !== FALLBACK) e.currentTarget.src = FALLBACK; }} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
             <h1 className="editorial-title text-white text-2xl">Семья</h1>
@@ -51,7 +57,10 @@ const FamilyList: React.FC = () => {
         {sectionTab === 'about' && (
           <div className="px-6 mt-2">
             <div className="p-5 bg-card rounded-sm flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              {demoWithPhotos ? (
+                <img src={`https://picsum.photos/seed/member${currentUser.id}/120/120`} alt="" className="h-16 w-16 rounded-full object-cover flex-shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+              ) : null}
+              <div className={`h-16 w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ${demoWithPhotos ? 'hidden' : ''}`}>
                 <User className="h-8 w-8 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
@@ -101,11 +110,16 @@ const FamilyList: React.FC = () => {
                 style={{ height: '72px' }}
               >
                 <div className="relative flex items-center gap-4 px-3 w-full">
-                  <div className="h-14 w-14 flex-shrink-0 rounded-full bg-muted flex items-center justify-center relative">
-                    <User className={`h-7 w-7 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
-                    {isCurrent && (
-                      <div className="absolute bottom-0.5 right-0.5 h-2 w-2 bg-foreground rounded-full border border-background" />
+                  <div className="h-14 w-14 flex-shrink-0 rounded-full bg-muted flex items-center justify-center relative overflow-hidden">
+                    {demoWithPhotos && (
+                      <img src={`https://picsum.photos/seed/member${m.id}/112/112`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
                     )}
+                    <div className={`h-full w-full flex items-center justify-center relative ${demoWithPhotos ? 'hidden' : ''}`}>
+                      <User className={`h-7 w-7 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
+                      {isCurrent && (
+                        <div className="absolute bottom-0.5 right-0.5 h-2 w-2 bg-foreground rounded-full border border-background" />
+                      )}
+                    </div>
                   </div>
 
                   {/* Info */}

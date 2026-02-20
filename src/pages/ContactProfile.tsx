@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { getMember } from '@/data/mock-members';
 import { ArrowLeft, Send, TreePine, Users, Trash2, Newspaper, Image, User } from 'lucide-react';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
 const ContactProfile: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const member = getMember(id || '');
+  const demoWithPhotos = useDemoWithPhotos();
 
   if (!member) return <div className="p-6 text-center text-muted-foreground font-light">Контакт не найден</div>;
 
@@ -24,8 +26,13 @@ const ContactProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="relative w-full bg-muted/50 flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
-        <User className={`h-24 w-24 ${member.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
+      <div className="relative w-full bg-muted/50 flex items-center justify-center overflow-hidden" style={{ aspectRatio: '4/3' }}>
+        {demoWithPhotos && (
+          <img src={`https://picsum.photos/seed/member${member.id}/800/600`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+        )}
+        <div className={`flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
+          <User className={`h-24 w-24 ${member.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
+        </div>
         <div className="absolute inset-0 editorial-overlay-top" />
         <div className="absolute inset-0 editorial-overlay" />
 

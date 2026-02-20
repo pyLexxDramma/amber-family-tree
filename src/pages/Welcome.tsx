@@ -43,8 +43,8 @@ const Welcome: React.FC = () => {
         </div>
 
         <p className="mt-8 text-xs text-white/40 text-center">
-          <button type="button" onClick={() => navigate(ROUTES.classic.tree)} className="underline underline-offset-2 hover:text-white/70 transition-colors">
-            Смотреть демо
+          <button type="button" onClick={() => navigate(`${ROUTES.classic.tree}?demo=full`)} className="underline underline-offset-2 hover:text-white/70 transition-colors">
+            Демо
           </button>
         </p>
       </div>

@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { mockMembers } from '@/data/mock-members';
 import { ArrowLeft, Send, UserMinus, User } from 'lucide-react';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -19,6 +20,7 @@ import {
 
 const PlacesPage: React.FC = () => {
   const navigate = useNavigate();
+  const demoWithPhotos = useDemoWithPhotos();
   const currentPlan = plans.find(p => p.id === currentSubscription.planId)!;
   const usedPlaces = currentSubscription.usedPlaces;
   const maxPlaces = currentPlan.maxPlaces;
@@ -39,8 +41,13 @@ const PlacesPage: React.FC = () => {
         <div className="space-y-0 mb-8">
           {occupyingMembers.map(m => (
             <div key={m.id} className="flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0">
-              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                <User className="h-6 w-6 text-muted-foreground" />
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {demoWithPhotos && (
+                  <img src={`https://picsum.photos/seed/member${m.id}/96/96`} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                )}
+                <div className={`h-full w-full flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
+                  <User className="h-6 w-6 text-muted-foreground" />
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-light tracking-wide">{m.nickname || m.firstName} {m.lastName}</p>

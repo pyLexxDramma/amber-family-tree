@@ -1,15 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
-import { getCurrentUser } from '@/data/mock-members';
+import { getCurrentUser, currentUserId } from '@/data/mock-members';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, User } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
 const MyProfile: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const plan = plans.find(p => p.id === currentSubscription.planId);
+  const demoWithPhotos = useDemoWithPhotos();
 
   const sections = [
     { label: 'Мои публикации', icon: Newspaper, path: ROUTES.classic.feed },
@@ -25,7 +27,12 @@ const MyProfile: React.FC = () => {
       <div className="pt-4 pb-4">
         {/* Hero-style profile header */}
         <div className="relative mx-6 mb-8 overflow-hidden bg-muted/50 flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
-          <User className="h-24 w-24 text-foreground" />
+          {demoWithPhotos && (
+            <img src={`https://picsum.photos/seed/member${currentUserId}/800/600`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+          )}
+          <div className={`flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
+            <User className="h-24 w-24 text-foreground" />
+          </div>
           <div className="absolute inset-0 editorial-overlay" />
           <div className="absolute bottom-0 left-0 right-0 p-5">
             <p className="editorial-caption text-white/40 mb-2">{plan?.name === 'Free' ? 'Бесплатный' : plan?.name === 'Premium' ? 'Премиум' : plan?.name} · план</p>
