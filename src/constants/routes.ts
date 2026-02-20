@@ -12,6 +12,7 @@ export const ROUTES = {
     create: `${CLASSIC_BASE}/create`,
     family: `${CLASSIC_BASE}/family`,
     myProfile: `${CLASSIC_BASE}/my-profile`,
+    editMyProfile: `${CLASSIC_BASE}/my-profile/edit`,
     profile: (id: string) => `${CLASSIC_BASE}/profile/${id}`,
     publication: (id: string) => `${CLASSIC_BASE}/publication/${id}`,
     invite: `${CLASSIC_BASE}/invite`,

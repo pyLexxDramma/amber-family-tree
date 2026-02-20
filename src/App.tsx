@@ -16,6 +16,7 @@ import PublicationDetails from "./pages/PublicationDetails";
 import CreatePublication from "./pages/CreatePublication";
 import FamilyList from "./pages/FamilyList";
 import MyProfile from "./pages/MyProfile";
+import EditMyProfile from "./pages/EditMyProfile";
 import ContactProfile from "./pages/ContactProfile";
 import InviteFlow from "./pages/InviteFlow";
 import StorePage from "./pages/StorePage";
@@ -59,6 +60,7 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/create`} element={<CreatePublication />} />
             <Route path={`${CLASSIC_BASE}/family`} element={<FamilyList />} />
             <Route path={`${CLASSIC_BASE}/my-profile`} element={<MyProfile />} />
+            <Route path={`${CLASSIC_BASE}/my-profile/edit`} element={<EditMyProfile />} />
             <Route path={`${CLASSIC_BASE}/profile/:id`} element={<ContactProfile />} />
             <Route path={`${CLASSIC_BASE}/invite`} element={<InviteFlow />} />
             <Route path={`${CLASSIC_BASE}/store`} element={<StorePage />} />

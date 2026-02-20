@@ -59,8 +59,8 @@ const PublicationDetails: React.FC = () => {
           </div>
         </div>
         <p className="text-center py-3 text-sm text-muted-foreground border-b border-border">— Свайпните фото вправо/влево —</p>
-        <div className="px-6 py-6 flex-1">
-          <div className="content-card p-5 rounded-2xl mb-4">
+        <div className="px-3 py-6 flex-1">
+          <div className="content-card p-5 rounded-2xl mb-4 min-h-[96px]">
             <p className="flex items-center gap-2 text-base font-semibold text-foreground mb-2">
               <MapPin className="h-4 w-4 text-primary" /> {pub.place || '—'}, {pub.eventDate?.slice(0, 4) || ''} год
             </p>
@@ -104,8 +104,8 @@ const PublicationDetails: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="px-6 py-6 flex-1 space-y-6">
-          <div className="content-card p-5 rounded-2xl">
+        <div className="px-3 py-6 flex-1 space-y-6">
+          <div className="content-card p-5 rounded-2xl min-h-[96px]">
             <button onClick={() => setAudioPlaying(!audioPlaying)} className="w-full flex items-center gap-4 text-left">
               <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                 {audioPlaying ? <span className="w-4 h-4 rounded-full bg-primary" /> : <Play className="h-7 w-7 text-primary ml-0.5" />}
@@ -117,7 +117,7 @@ const PublicationDetails: React.FC = () => {
               </div>
             </button>
           </div>
-          <div className="content-card p-5 rounded-2xl">
+          <div className="content-card p-5 rounded-2xl min-h-[96px]">
             <p className="editorial-caption text-muted-foreground mb-2">Подпись</p>
             <p className="text-lg font-medium text-foreground leading-snug">{pub.text}</p>
           </div>
@@ -128,11 +128,11 @@ const PublicationDetails: React.FC = () => {
             </button>
             <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Вперёд"><ChevronRight className="h-6 w-6" /></button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="rounded-xl min-h-touch font-semibold gap-2" onClick={() => navigate(ROUTES.classic.feed)}>
+          <div className="flex flex-col gap-3">
+            <Button variant="outline" className="w-full rounded-xl min-h-[96px] font-semibold gap-2" onClick={() => navigate(ROUTES.classic.feed)}>
               <ChevronLeft className="h-4 w-4" /> Поменять фото
             </Button>
-            <Button variant="outline" className="rounded-xl min-h-touch font-semibold gap-2">
+            <Button variant="outline" className="w-full rounded-xl min-h-[96px] font-semibold gap-2">
               <Download className="h-4 w-4" /> Сохранить в телефон
             </Button>
           </div>
@@ -193,8 +193,8 @@ const PublicationDetails: React.FC = () => {
         )}
       </div>
 
-      <div className="px-6 pt-6 pb-8 page-enter">
-        <div className="content-card flex items-center gap-3 p-4 mb-6">
+      <div className="px-0 pt-6 pb-8 page-enter">
+        <div className="content-card flex items-center gap-3 p-5 min-h-[96px] mb-6">
           <AvatarPlaceholder name={author ? `${author.firstName} ${author.lastName}` : ''} size="md" />
           <div className="flex-1">
             <p className="text-[15px] font-semibold text-foreground">{author?.firstName} {author?.lastName}</p>
@@ -205,7 +205,7 @@ const PublicationDetails: React.FC = () => {
           </button>
         </div>
 
-        <div className="content-card p-4 rounded-2xl max-w-prose mb-8">
+        <div className="content-card p-5 rounded-2xl max-w-prose mb-8 min-h-[96px]">
           <p className="editorial-body text-foreground/80">{pub.text}</p>
         </div>
 
@@ -268,7 +268,7 @@ const PublicationDetails: React.FC = () => {
 
         {/* Audio */}
         {audios.map(a => (
-          <div key={a.id} className="content-card mb-4 flex items-center gap-3 p-4">
+          <div key={a.id} className="content-card mb-4 flex items-center gap-3 p-5 min-h-[96px]">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Mic className="h-5 w-5 text-primary" />
             </div>
@@ -294,7 +294,7 @@ const PublicationDetails: React.FC = () => {
           </div>
         )}
 
-        <div className="content-card p-4 rounded-2xl mb-6">
+        <div className="content-card p-5 rounded-2xl mb-6 min-h-[96px]">
           <div className="flex items-center gap-6 pb-4 border-b border-border/80">
             <button onClick={() => setLiked(!liked)} className={`flex items-center gap-1.5 text-sm font-semibold ${liked ? 'text-primary' : 'text-muted-foreground'}`}>
               <Heart className={`h-4 w-4 ${liked ? 'fill-primary' : ''}`} /> {pub.likes.length + (liked ? 1 : 0)}

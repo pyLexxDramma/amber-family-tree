@@ -29,18 +29,18 @@ const PlacesPage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="pt-4 pb-4 px-6 page-enter">
-        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+      <div className="pt-4 pb-4 px-0 page-enter">
+        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium tracking-wide">Назад</span>
         </button>
 
-        <h1 className="hero-title text-2xl mb-1">Места</h1>
-        <p className="section-title text-primary/80 text-sm mb-6">занято {usedPlaces} из {maxPlaces}</p>
+        <h1 className="hero-title text-2xl mb-1 px-3">Места</h1>
+        <p className="section-title text-primary/80 text-sm mb-6 px-3">занято {usedPlaces} из {maxPlaces}</p>
 
         <div className="space-y-3 mb-8 page-enter-stagger">
           {occupyingMembers.map(m => (
-            <div key={m.id} className="content-card flex items-center gap-4 py-4 px-4">
+            <div key={m.id} className="content-card flex items-center gap-4 min-h-[96px] py-5 px-5">
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-primary/10">
                 {demoWithPhotos && (
                   <img src={`https://picsum.photos/seed/member${m.id}/96/96`} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
@@ -61,7 +61,7 @@ const PlacesPage: React.FC = () => {
         </div>
 
         {usedPlaces < maxPlaces && (
-          <Button onClick={() => navigate(ROUTES.classic.invite)} className="content-card w-full min-h-[52px] rounded-2xl border-2 flex items-center justify-center gap-2 font-semibold hover:border-primary/40 transition-all">
+          <Button onClick={() => navigate(ROUTES.classic.invite)} className="content-card w-full min-h-[96px] rounded-2xl border-2 flex items-center justify-center gap-2 font-semibold hover:border-primary/40 transition-all">
             <Send className="h-5 w-5" /> Пригласить на место
           </Button>
         )}

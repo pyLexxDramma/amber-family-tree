@@ -5,12 +5,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 
-const faqs = [
-  { q: 'How do I invite family members?', a: 'Go to the Family tab, tap "Invite", and share the generated link via any messenger.' },
-  { q: 'What media formats are supported?', a: 'Photos (JPG, PNG, WebP up to 20MB), Videos (MP4 up to 500MB), Audio (M4A, MP3 up to 100MB).' },
-  { q: 'How does the AI assistant work?', a: 'The AI can transcribe audio stories, polish raw text into readable narratives, and help you search through family memories.' },
-  { q: 'Can I export my data?', a: 'Yes! Go to Settings → Export Data. Your photos, stories, and family tree can be downloaded as a ZIP archive.' },
-  { q: 'Is my data private?', a: 'Absolutely. Angelo is a private family network. Your content is only visible to your invited family members.' },
+const faqs: { q: string; a: string }[] = [
+  { q: 'Как пригласить родственников?', a: 'Откройте вкладку «Семья», нажмите «Пригласить» и отправьте ссылку любым мессенджером.' },
+  { q: 'Какие форматы медиа поддерживаются?', a: 'Фото (JPG, PNG, WebP до 20 МБ), видео (MP4 до 500 МБ), аудио (M4A, MP3 до 100 МБ).' },
+  { q: 'Как работает голосовой помощник?', a: 'Помощник может расшифровывать аудиоистории, оформлять заметки в читаемые тексты и помогать искать по семейным воспоминаниям.' },
+  { q: 'Можно ли выгрузить свои данные?', a: 'Да. В настройках выберите «Экспорт данных». Фото, истории и дерево можно скачать архивом ZIP.' },
+  { q: 'Мои данные конфиденциальны?', a: 'Да. Angelo — приватная семейная сеть. Контент виден только приглашённым членам семьи.' },
 ];
 
 const Help: React.FC = () => {
@@ -20,50 +20,55 @@ const Help: React.FC = () => {
   const [sent, setSent] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+    <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-foreground/80 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
         <ArrowLeft className="h-5 w-5" />
-        <span className="text-sm font-medium tracking-wide">Назад</span>
+        <span className="text-base font-semibold tracking-wide">Назад</span>
       </button>
 
-      <h1 className="editorial-title text-2xl mb-8">Help & FAQ</h1>
+      <h1 className="editorial-title text-3xl font-bold text-foreground mb-8 px-3">Помощь и поддержка</h1>
 
+      <p className="section-title text-primary mb-4 px-3 text-lg">Частые вопросы</p>
       <Accordion type="single" collapsible className="mb-10 space-y-3">
         {faqs.map((faq, i) => (
-          <AccordionItem key={i} value={`faq-${i}`} className="content-card border-b-0 rounded-2xl overflow-hidden px-4">
-            <AccordionTrigger className="text-[15px] font-semibold text-left tracking-wide py-5 hover:no-underline [&[data-state=open]]:border-b-2 [&[data-state=open]]:border-border/50">{faq.q}</AccordionTrigger>
-            <AccordionContent className="text-sm font-medium text-muted-foreground editorial-body pb-5">{faq.a}</AccordionContent>
+          <AccordionItem key={i} value={`faq-${i}`} className="content-card border-2 border-border rounded-2xl overflow-hidden px-0 min-h-0 [&[data-state=open]]:border-primary/40 [&[data-state=open]]:bg-primary/5">
+            <AccordionTrigger className="w-full min-h-[72px] py-5 px-5 text-left cursor-pointer touch-target flex items-center justify-between gap-3 hover:no-underline hover:bg-foreground/5 rounded-2xl [&[data-state=open]]:bg-primary/10 [&[data-state=open]]:text-primary">
+              <span className="text-base font-bold text-foreground tracking-wide flex-1 pr-2">{faq.q}</span>
+            </AccordionTrigger>
+            <AccordionContent className="text-base font-medium text-foreground/90 editorial-body px-5 pb-5 pt-0">
+              {faq.a}
+            </AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
 
-      <p className="editorial-caption text-muted-foreground mb-6">Contact support</p>
+      <p className="section-title text-primary mb-4 px-3 text-lg">Написать в поддержку</p>
 
       {sent ? (
-        <div className="py-12 text-center">
-          <p className="editorial-title text-2xl mb-2">Message sent</p>
-          <p className="text-sm font-light text-muted-foreground">We'll get back to you soon.</p>
+        <div className="py-12 text-center px-3">
+          <p className="editorial-title text-2xl font-bold text-foreground mb-2">Сообщение отправлено</p>
+          <p className="text-base font-medium text-foreground/90">Мы ответим вам в ближайшее время.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 px-3">
           <Input
-            placeholder="Your email"
+            placeholder="Ваш email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="rounded-xl border-2 border-input"
+            className="rounded-xl border-2 border-input text-base font-medium min-h-[48px]"
           />
           <Textarea
-            placeholder="Describe your issue..."
+            placeholder="Опишите проблему..."
             value={message}
             onChange={e => setMessage(e.target.value)}
-            className="rounded-xl border-2 border-input min-h-[100px] resize-none"
+            className="rounded-xl border-2 border-input min-h-[100px] resize-none text-base font-medium"
           />
           <button
             onClick={() => setSent(true)}
             disabled={!message.trim()}
-            className="content-card w-full min-h-[52px] rounded-2xl border-2 border-foreground/25 text-[15px] font-semibold tracking-wide hover:bg-foreground hover:text-background transition-all duration-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground"
+            className="content-card w-full min-h-[56px] rounded-2xl border-2 border-primary text-base font-bold tracking-wide hover:bg-primary hover:text-primary-foreground transition-all duration-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground py-3"
           >
-            Send message
+            Отправить сообщение
           </button>
         </div>
       )}

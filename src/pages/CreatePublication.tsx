@@ -48,16 +48,16 @@ const CreatePublication: React.FC = () => {
 
   if (!type) {
     return (
-      <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
-        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+      <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
+        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium tracking-wide">Назад</span>
         </button>
-        <h1 className="hero-title text-2xl mb-2">Создать публикацию</h1>
-        <p className="text-sm font-medium text-muted-foreground mb-6">Что хотите добавить?</p>
-        <div className="grid grid-cols-2 gap-3 page-enter-stagger">
+        <h1 className="hero-title text-2xl mb-2 px-3">Создать публикацию</h1>
+        <p className="text-sm font-medium text-muted-foreground mb-6 px-3">Что хотите добавить?</p>
+        <div className="flex flex-col gap-3 page-enter-stagger">
           {types.map(t => (
-            <button key={t.id} onClick={() => setType(t.id)} className="content-card flex flex-col items-center gap-2 p-6 transition-all duration-300 hover:border-primary/40">
+            <button key={t.id} onClick={() => setType(t.id)} className="content-card w-full flex flex-row items-center justify-center gap-4 min-h-[96px] p-5 transition-all duration-300 hover:border-primary/40">
               <t.icon className="h-8 w-8 text-primary" />
               <span className="text-sm font-semibold text-foreground">{t.label}</span>
             </button>
@@ -68,23 +68,23 @@ const CreatePublication: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-6 pt-4 pb-8 page-enter">
-      <button onClick={() => setType(null)} className="touch-target mb-4 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+    <div className="min-h-screen bg-background px-0 pt-4 pb-8 page-enter">
+      <button onClick={() => setType(null)} className="touch-target mb-4 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
         <ArrowLeft className="h-5 w-5" />
         <span className="text-sm font-medium tracking-wide">Сменить тип</span>
       </button>
-      <h1 className="hero-title text-xl mb-4">{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
+      <h1 className="hero-title text-xl mb-4 px-3">{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
 
       <div className="space-y-4 page-enter-stagger">
-        <div className="content-card p-4 rounded-2xl">
+        <div className="content-card p-5 rounded-2xl min-h-[96px]">
           <Label className="text-sm font-semibold text-foreground">Заголовок (необязательно)</Label>
           <Input value={title} onChange={e => setTitle(e.target.value)} className="mt-2 rounded-xl border-2" placeholder="Название..." />
         </div>
-        <div className="content-card p-4 rounded-2xl">
+        <div className="content-card p-5 rounded-2xl min-h-[96px]">
           <Label className="text-sm font-semibold text-foreground">Описание</Label>
           <Textarea value={text} onChange={e => setText(e.target.value)} className="mt-2 rounded-xl border-2 min-h-[80px]" placeholder="Расскажите историю..." />
         </div>
-        <div className="content-card p-4 rounded-2xl flex gap-3 items-end">
+        <div className="content-card p-5 rounded-2xl min-h-[96px] flex gap-3 items-end">
           <div className="flex-1">
             <Label className="text-sm font-semibold text-foreground">Дата события</Label>
             <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-2 rounded-xl border-2" />
@@ -94,11 +94,11 @@ const CreatePublication: React.FC = () => {
             <span className="text-xs font-medium text-muted-foreground">приблизительно</span>
           </div>
         </div>
-        <div className="content-card p-4 rounded-2xl">
+        <div className="content-card p-5 rounded-2xl min-h-[96px]">
           <Label className="text-sm font-semibold text-foreground">Место</Label>
           <Input value={place} onChange={e => setPlace(e.target.value)} className="mt-2 rounded-xl border-2" placeholder="Где это было?" />
         </div>
-        <div className="content-card p-4 rounded-2xl">
+        <div className="content-card p-5 rounded-2xl min-h-[96px]">
           <Label className="text-sm font-semibold text-foreground">Тема *</Label>
           <Select value={topicTag} onValueChange={v => { setTopicTag(v); setTagError(''); }}>
             <SelectTrigger className="mt-2 rounded-xl border-2 h-12"><SelectValue placeholder="Выберите тему" /></SelectTrigger>
@@ -108,7 +108,7 @@ const CreatePublication: React.FC = () => {
         </div>
 
         {type !== 'text' && (
-          <div className="content-card p-4 rounded-2xl">
+          <div className="content-card p-5 rounded-2xl min-h-[96px]">
             <Label className="text-sm font-semibold text-foreground">Файлы</Label>
             <div className="mt-2 space-y-2">
               {files.map((f, i) => (
@@ -128,7 +128,7 @@ const CreatePublication: React.FC = () => {
           </div>
         )}
 
-        <div className="content-card p-4 rounded-2xl">
+        <div className="content-card p-5 rounded-2xl min-h-[96px]">
           <p className="text-sm font-semibold text-foreground mb-1">Видимость</p>
           <p className="text-xs font-medium text-muted-foreground">Всем участникам семьи. Нажмите, чтобы настроить.</p>
         </div>

@@ -1,15 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
-import { getCurrentUser, currentUserId } from '@/data/mock-members';
+import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
+import { currentUserId } from '@/data/mock-members';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
-import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, User } from 'lucide-react';
+import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, User, Pencil } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
 const MyProfile: React.FC = () => {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const user = getCurrentUserForDisplay();
   const plan = plans.find(p => p.id === currentSubscription.planId);
   const demoWithPhotos = useDemoWithPhotos();
 
@@ -43,10 +44,21 @@ const MyProfile: React.FC = () => {
 
         {/* About */}
         {user.about && (
-          <div className="px-6 mb-8">
+          <div className="px-6 mb-6">
             <p className="editorial-body text-foreground/70 text-sm">{user.about}</p>
           </div>
         )}
+
+        <div className="px-6 mb-6">
+          <button
+            onClick={() => navigate(ROUTES.classic.editMyProfile)}
+            className="link-row-warm w-full flex items-center gap-3"
+          >
+            <Pencil className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
+            <span className="text-[15px] font-medium text-foreground flex-1 text-left">Редактировать профиль</span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+          </button>
+        </div>
 
         <div className="px-6 space-y-1">
           {sections.map(s => (

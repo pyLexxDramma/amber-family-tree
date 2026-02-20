@@ -372,12 +372,19 @@
     line-height: 1.35;
   }
 
+  /* Все блоки: одинаковый минимальный размер, на всю ширину экрана; выделяются, анимация при наведении/тапе */
   .content-card {
-    @apply rounded-2xl overflow-hidden;
-    border: 2px solid hsl(var(--border) / 0.7);
+    @apply rounded-2xl overflow-hidden w-full;
+    min-height: 96px;
+    border: 2px solid hsl(var(--border) / 0.8);
     background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(34 36% 94%) 100%);
-    box-shadow: 0 1px 3px hsl(var(--primary) / 0.06);
-    transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.25s ease;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+  }
+  /* Карточки с aspect-ratio (фото в ленте) сохраняют пропорции */
+  .content-card.aspect-square,
+  .content-card[class*="aspect-"] {
+    min-height: 0;
   }
   .content-card:hover {
     transform: translateY(-2px);
@@ -447,24 +454,61 @@
   }
 
   .person-card {
-    @apply rounded-2xl overflow-hidden;
-    border: 2px solid hsl(var(--border) / 0.7);
+    @apply rounded-2xl overflow-hidden w-full;
+    min-height: 96px;
+    border: 2px solid hsl(var(--border) / 0.8);
     background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(34 36% 94%) 100%);
-    box-shadow: 0 1px 3px hsl(var(--primary) / 0.06);
-    transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.25s ease, background 0.3s ease;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease, background 0.2s ease;
   }
   .person-card:hover {
-    transform: translateY(-3px);
-    border-color: hsl(var(--primary) / 0.4);
-    box-shadow: 0 8px 18px hsl(var(--primary) / 0.14);
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.45);
+    box-shadow: 0 12px 24px hsl(var(--primary) / 0.18), 0 4px 8px hsl(var(--primary) / 0.08);
     background: linear-gradient(180deg, hsl(36 42% 96%) 0%, hsl(34 38% 95%) 100%);
   }
   .person-card:active {
-    transform: translateY(-1px) scale(0.99);
+    transform: translateY(-2px) scale(0.99);
     transition-duration: 0.1s;
   }
   .person-card .person-card-accent {
     border-left: 6px solid hsl(var(--primary) / 0.6);
+  }
+
+  /* Тёмная тема: блоки выделяются, контрастный текст, анимация при наведении/нажатии (и на мобильном при тапе) */
+  .dark .content-card,
+  .dark .person-card {
+    border-color: hsl(var(--border));
+    background: hsl(var(--card));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .dark .content-card:hover,
+  .dark .person-card:hover {
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px hsl(var(--primary) / 0.25);
+    background: hsl(var(--card));
+  }
+  .dark .content-card:active,
+  .dark .person-card:active {
+    transform: translateY(-2px) scale(0.99);
+    transition-duration: 0.1s;
+  }
+  /* Текст на карточках в тёмной теме — читаемый и контрастный */
+  .dark .person-card .card-name,
+  .dark .content-card .card-name {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 700;
+  }
+  .dark .person-card .card-subtitle,
+  .dark .content-card .card-subtitle {
+    color: hsl(30 20% 85%) !important;
+  }
+  .dark .person-card .card-action,
+  .dark .content-card .card-action {
+    color: hsl(var(--primary)) !important;
+    font-weight: 600;
   }
 
   .btn-inviting {
@@ -492,6 +536,22 @@
   }
   .animate-gentle-bounce {
     animation: gentle-bounce 2s ease-in-out infinite;
+  }
+
+  /* Индикатор «В сети»: зелёный мигающий */
+  @keyframes online-blink {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 hsl(142 76% 36% / 0.6); }
+    50% { opacity: 0.6; box-shadow: 0 0 8px 2px hsl(142 76% 36% / 0.4); }
+  }
+  .status-online-dot {
+    background-color: hsl(142 76% 36%);
+    animation: online-blink 1.5s ease-in-out infinite;
+  }
+  .status-online-text {
+    color: hsl(142 76% 42%);
+  }
+  .dark .status-online-text {
+    color: hsl(142 70% 52%);
   }
 
   /* === Варианты UI: стили компонентов, кнопки, расположение, шрифты как на скриншотах === */
@@ -769,4 +829,24 @@
   [data-ui-variant="calendar"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.35) !important; border-color: hsl(var(--primary) / 0.7) !important; }
   [data-ui-variant="classic"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.2) !important; border-color: hsl(var(--primary) / 0.6) !important; }
   [data-ui-variant="journal"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.25) !important; border-color: hsl(var(--primary) / 0.6) !important; }
+
+  /* TMA Card Mini-Album profile: max accessibility, high contrast, large tap targets */
+  .tma-profile {
+    --tma-bg: #fafafa;
+    --tma-surface: #ffffff;
+    --tma-text: #1a1a1a;
+    --tma-text-muted: #333333;
+    --tma-border: #e0e0e0;
+  }
+  .tma-profile,
+  .tma-profile * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.08);
+  }
+  .tma-family-btn {
+    min-height: 56px !important;
+    padding: 0 1.25rem;
+  }
+  .tma-family-btn:not(:disabled):active {
+    opacity: 0.9;
+  }
 }

@@ -1,101 +1,200 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { getMember } from '@/data/mock-members';
 import { TopBar } from '@/components/TopBar';
-import { Send, TreePine, Users, Trash2, Newspaper, Image, User } from 'lucide-react';
+import { AppLayout } from '@/components/AppLayout';
+import { usePlatform } from '@/platform/PlatformContext';
+import { ChevronLeft, ChevronRight, Users, User } from 'lucide-react';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
+/**
+ * Card Mini-Album profile for Family Album (TMA).
+ * Linear navigation: vertical scroll only; move via "View Parents" / "View Children" only.
+ * Accessibility: high contrast, large tap targets, legible serif for name, DOB/DOD visible.
+ */
 const ContactProfile: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const member = getMember(id || '');
   const demoWithPhotos = useDemoWithPhotos();
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const platform = usePlatform();
 
-  if (!member) return <div className="p-6 text-center text-muted-foreground font-light">Контакт не найден</div>;
+  if (!member) {
+    return (
+      <AppLayout>
+        <div className="p-6 text-center text-foreground font-medium min-h-touch flex items-center justify-center">
+          Контакт не найден
+        </div>
+      </AppLayout>
+    );
+  }
 
-  const relationLabel = member.relations[0]?.type === 'parent' ? 'Родитель' : member.relations[0]?.type === 'child' ? 'Ребёнок' : member.relations[0]?.type === 'spouse' ? 'Супруг(а)' : member.relations[0]?.type === 'sibling' ? 'Брат/сестра' : 'Член семьи';
+  const parentIds = member.relations.filter((r) => r.type === 'parent').map((r) => r.memberId);
+  const childIds = member.relations.filter((r) => r.type === 'child').map((r) => r.memberId);
+  const parents = parentIds.map((mid) => getMember(mid)).filter(Boolean);
+  const children = childIds.map((mid) => getMember(mid)).filter(Boolean);
 
-  const actions = [
-    { label: 'Пригласить', icon: Send },
-    { label: 'Добавить на дерево', icon: TreePine },
-    { label: 'Добавить в группу', icon: Users },
-  ];
+  const displayName = member.nickname || `${member.firstName} ${member.lastName}`.trim();
+  const formatDate = (d: string) => {
+    try {
+      const [y, m, day] = d.split('-');
+      return day && m && y ? `${day}.${m}.${y}` : d;
+    } catch {
+      return d;
+    }
+  };
 
-  const feedUrl = (params: string) => `${ROUTES.classic.feed}?${params}`;
+  const photoUrls = demoWithPhotos
+    ? [
+        `https://picsum.photos/seed/member${member.id}/800/600`,
+        `https://picsum.photos/seed/member${member.id}b/800/600`,
+        `https://picsum.photos/seed/member${member.id}c/800/600`,
+      ]
+    : [];
+
+  const goToParent = (parentId: string) => {
+    platform.hapticFeedback('light');
+    navigate(ROUTES.classic.profile(parentId));
+  };
+  const goToChild = (childId: string) => {
+    platform.hapticFeedback('light');
+    navigate(ROUTES.classic.profile(childId));
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar title={member.nickname || member.firstName} onBack={() => navigate(-1)} />
-      <div className="relative w-full bg-muted/50 flex items-center justify-center overflow-hidden" style={{ aspectRatio: '4/3' }}>
-        {demoWithPhotos && (
-          <img src={`https://picsum.photos/seed/member${member.id}/800/600`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
-        )}
-        <div className={`flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
-          <User className={`h-24 w-24 ${member.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
-        </div>
-        <div className="absolute inset-0 editorial-overlay-top" />
-        <div className="absolute inset-0 editorial-overlay" />
+    <AppLayout>
+      <TopBar title="" onBack={() => navigate(-1)} />
 
-        <div className="absolute bottom-0 left-0 right-0 p-6">
-          <p className="editorial-caption text-white/40 mb-1">{relationLabel}</p>
-          <h1 className="editorial-title text-white text-3xl">{member.nickname || member.firstName + ' ' + member.lastName}</h1>
-          {member.nickname && (
-            <p className="text-white/50 text-sm font-light mt-1">{member.firstName} {member.lastName}</p>
-          )}
-          {!member.nickname && (
-            <p className="text-white/60 text-xs font-light mt-2 bg-white/10 inline-block px-2 py-1 rounded">Заполните ник — так контакт отобразится на дереве</p>
-          )}
-          <div className="flex items-center gap-3 mt-2">
-            <span className={`text-xs tracking-wider uppercase font-light ${member.isActive ? 'text-white/50' : 'text-white/30'}`}>
-              {member.isActive ? 'Активный' : 'Неактивный'}
-            </span>
-            {member.city && (
-              <>
-                <span className="text-white/20">·</span>
-                <span className="text-white/40 text-xs font-light">{member.city}</span>
-              </>
-            )}
+      {/* Стиль как на скриншотах: тёмная тема, оранжевый акцент, высокий контраст */}
+      <div className="tma-profile tma-style-dark min-h-screen bg-[#1a1a1a] text-white flex flex-col">
+        {/* Section 1: Имя + даты — крупно, высокий контраст */}
+        <section className="px-3 pt-6 pb-5 border-b border-white/10">
+          <h1 className="text-[26px] font-bold leading-tight text-white mb-2">
+            {displayName}
+          </h1>
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[17px] text-white/80">
+            <span>Род.: {formatDate(member.birthDate)}</span>
+            {member.deathDate && <span>— Ум.: {formatDate(member.deathDate)}</span>}
           </div>
-        </div>
-      </div>
+          {member.city && (
+            <p className="text-[15px] text-white/60 mt-2">{member.city}</p>
+          )}
+        </section>
 
-      <div className="px-6 pt-6 pb-8 bg-card/50 rounded-t-2xl -mt-2 relative z-10 page-enter">
-        {member.about && (
-          <p className="editorial-body text-foreground/70 text-sm mb-6">{member.about}</p>
-        )}
+        {/* Section 2: Large touch-friendly photo gallery / carousel */}
+        <section className="px-0 py-6">
+          <h2 className="px-3 text-[13px] font-semibold uppercase tracking-wider text-white/50 mb-3">
+            Фото
+          </h2>
+          {photoUrls.length > 0 ? (
+            <div className="relative">
+              <div className="overflow-hidden">
+                {photoUrls.map((url, i) => (
+                  <div
+                    key={i}
+                    className="w-full flex-shrink-0"
+                    style={{
+                      display: i === galleryIndex ? 'block' : 'none',
+                      aspectRatio: '4/3',
+                    }}
+                  >
+                    <img
+                      src={url}
+                      alt=""
+                      className="w-full h-full object-cover bg-[#eee]"
+                    />
+                  </div>
+                ))}
+              </div>
+              {photoUrls.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setGalleryIndex((i) => (i - 1 + photoUrls.length) % photoUrls.length)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 text-white flex items-center justify-center touch-target min-w-[48px] min-h-[48px]"
+                    aria-label="Предыдущее фото"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGalleryIndex((i) => (i + 1) % photoUrls.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/50 text-white flex items-center justify-center touch-target min-w-[48px] min-h-[48px]"
+                    aria-label="Следующее фото"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                  <div className="flex justify-center gap-1.5 mt-3">
+                    {photoUrls.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setGalleryIndex(i)}
+                        className={`w-2.5 h-2.5 rounded-full touch-target min-w-[20px] min-h-[20px] ${
+                          i === galleryIndex ? 'bg-[#1a1a1a]' : 'bg-[#ccc]'
+                        }`}
+                        aria-label={`Фото ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div
+              className="mx-3 flex items-center justify-center bg-[#2a2a2a] rounded-xl border border-white/10"
+              style={{ aspectRatio: '4/3' }}
+            >
+              <User className="w-20 h-20 text-white/40" />
+            </div>
+          )}
+        </section>
 
-        <p className="text-xs font-semibold tracking-widest uppercase text-primary/80 mb-3">Публикации и медиа</p>
-        <div className="space-y-1 mb-6">
-          <button onClick={() => navigate(feedUrl(`author=${member.id}`))} className="link-row-warm">
-            <Newspaper className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
-            <span className="text-[15px] font-medium text-foreground">Публикации контакта</span>
-          </button>
-          <button onClick={() => navigate(feedUrl(`participant=${member.id}`))} className="link-row-warm">
-            <Newspaper className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
-            <span className="text-[15px] font-medium text-foreground">Публикации, где контакт участник</span>
-          </button>
-          <button onClick={() => navigate(feedUrl(`view=media&author=${member.id}`))} className="link-row-warm">
-            <Image className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
-            <span className="text-[15px] font-medium text-foreground">Медиа</span>
-          </button>
-        </div>
-
-        <p className="text-xs font-semibold tracking-widest uppercase text-primary/80 mb-3">Действия</p>
-        <div className="space-y-1 mb-6">
-          {actions.map(a => (
-            <button key={a.label} className="link-row-warm">
-              <a.icon className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
-              <span className="text-[15px] font-medium text-foreground">{a.label}</span>
+        {/* Section 3: Семья — две крупные оранжевые кнопки (стиль PROMME) */}
+        <section className="px-3 py-6 pb-12">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wider text-white/50 mb-4">
+            Семья
+          </h2>
+          <div className="flex flex-col gap-4">
+            <button
+              type="button"
+              onClick={() => parents[0] && goToParent(parents[0].id)}
+              disabled={parents.length === 0}
+              className="tma-family-btn min-h-[96px] w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#e85d04] to-[#d44a00] text-white text-[18px] font-semibold touch-target disabled:opacity-40 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
+              style={{ minHeight: '96px' }}
+            >
+              <Users className="w-6 h-6 shrink-0" />
+              {parents.length === 0
+                ? 'Родители не указаны'
+                : parents.length === 1
+                  ? `Родитель: ${parents[0].nickname || parents[0].firstName}`
+                  : `Родители (${parents.length})`}
             </button>
-          ))}
-          <button className="link-row-warm">
-            <Trash2 className="h-5 w-5 shrink-0 text-destructive/80" strokeWidth={1.8} />
-            <span className="text-[15px] font-medium text-destructive/90">Удалить контакт</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => children[0] && goToChild(children[0].id)}
+              disabled={children.length === 0}
+              className="tma-family-btn min-h-[96px] w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#e85d04] to-[#d44a00] text-white text-[18px] font-semibold touch-target disabled:opacity-40 disabled:cursor-not-allowed shadow-lg disabled:shadow-none"
+              style={{ minHeight: '96px' }}
+            >
+              <Users className="w-6 h-6 shrink-0" />
+              {children.length === 0
+                ? 'Дети не указаны'
+                : children.length === 1
+                  ? `Ребёнок: ${children[0].nickname || children[0].firstName}`
+                  : `Дети (${children.length})`}
+            </button>
+          </div>
+          {(parents.length > 1 || children.length > 1) && (
+            <p className="text-[13px] text-white/50 mt-4">
+              Откроется профиль первого в списке. Листайте вверх/вниз для навигации.
+            </p>
+          )}
+        </section>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

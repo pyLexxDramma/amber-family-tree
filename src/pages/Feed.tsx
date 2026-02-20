@@ -215,25 +215,8 @@ const Feed: React.FC = () => {
 
     let i = 0;
     while (i < rest.length) {
-      const pattern = Math.floor(i / 3) % 2;
-
-      if (pattern === 0) {
-        if (i + 1 < rest.length) {
-          items.push(
-            <div key={`pair-${i}`} className="grid grid-cols-2 gap-1">
-              {editorialCard(rest[i], 'half')}
-              {editorialCard(rest[i + 1], 'half')}
-            </div>
-          );
-          i += 2;
-        } else {
-          items.push(editorialCard(rest[i], 'full'));
-          i += 1;
-        }
-      } else {
-        items.push(editorialCard(rest[i], 'full'));
-        i += 1;
-      }
+      items.push(editorialCard(rest[i], 'full'));
+      i += 1;
     }
 
     return <div className="flex flex-col gap-1 pb-4">{items}</div>;
@@ -266,15 +249,15 @@ const Feed: React.FC = () => {
 
     return (
       <div className="space-y-6 pb-6">
-        <h2 className="section-title text-center tracking-widest py-2">СЕМЕЙНЫЙ АЛЬБОМ</h2>
+        <h2 className="section-title text-center tracking-widest py-2 px-3">СЕМЕЙНЫЙ АЛЬБОМ</h2>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-4">
           {feat1 && albumCard(feat1, 'ФОТО 2024', feat1.title, true)}
           {feat2 && albumCard(feat2, 'ЛЕТО 2023', feat2.title, true)}
         </div>
 
         {main && (
-          <div className="content-card rounded-2xl overflow-hidden">
+          <div className="content-card rounded-2xl overflow-hidden min-h-[96px]">
             <p className="editorial-caption text-primary px-4 pt-4">Главное событие месяца</p>
             <div className="flex items-center gap-2 px-4 pb-4">
               <button type="button" className="touch-target p-2 rounded-xl hover:bg-primary/10 transition-colors" aria-label="Назад"><ChevronLeft className="h-5 w-5" /></button>
@@ -291,7 +274,7 @@ const Feed: React.FC = () => {
         )}
 
         {cardPub && (
-          <button onClick={() => navigate(ROUTES.classic.publication(cardPub.id))} className="content-card w-full flex items-center gap-4 p-4 rounded-2xl text-left">
+          <button onClick={() => navigate(ROUTES.classic.publication(cardPub.id))} className="content-card w-full flex items-center gap-4 min-h-[96px] p-5 rounded-2xl text-left">
             <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
               <img src={cardPub.media[0]?.type === 'photo' ? (cardPub.media[0].url || cardPub.media[0].thumbnail) : `https://picsum.photos/seed/${cardPub.id}/200`} alt="" className="w-full h-full object-cover" />
             </div>
@@ -305,7 +288,7 @@ const Feed: React.FC = () => {
           </button>
         )}
 
-        <Button className="w-full min-h-[56px] text-lg font-semibold rounded-2xl gap-2" onClick={() => navigate(ROUTES.classic.create)}>
+        <Button className="w-full min-h-[96px] text-lg font-semibold rounded-2xl gap-2" onClick={() => navigate(ROUTES.classic.create)}>
           <Plus className="h-6 w-6" /> ДОБАВИТЬ ФОТО
         </Button>
       </div>
@@ -326,14 +309,14 @@ const Feed: React.FC = () => {
       <div className="space-y-8 pb-8">
         {decades.map(decade => (
           <div key={decade}>
-            <h2 className="section-title text-primary mb-4">{decade}</h2>
+            <h2 className="section-title text-primary mb-4 px-3">{decade}</h2>
             <div className="space-y-4">
               {byDecade[decade].map(pub => {
                 const year = (pub.eventDate || pub.publishDate).slice(0, 4);
                 const firstPhoto = pub.media.find(m => m.type === 'photo');
                 const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : `https://picsum.photos/seed/${pub.id}/200`;
                 return (
-                  <button key={pub.id} onClick={() => navigate(ROUTES.classic.publication(pub.id))} className="content-card w-full flex items-center gap-4 p-4 rounded-2xl text-left">
+                  <button key={pub.id} onClick={() => navigate(ROUTES.classic.publication(pub.id))} className="content-card w-full flex items-center gap-4 min-h-[96px] p-5 rounded-2xl text-left">
                     <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/30">
                       <img src={imgUrl} alt="" className="w-full h-full object-cover" />
                     </div>
@@ -347,7 +330,7 @@ const Feed: React.FC = () => {
             </div>
           </div>
         ))}
-        <Button variant="outline" className="w-full min-h-touch rounded-2xl font-semibold">
+        <Button variant="outline" className="w-full min-h-[96px] rounded-2xl font-semibold">
           ↓ ЗАГРУЗИТЬ СТАРЫЕ ФОТО
         </Button>
       </div>
@@ -392,21 +375,21 @@ const Feed: React.FC = () => {
           </div>
         }
       />
-      <div className="px-5 pt-2 pb-4 page-enter">
+      <div className="px-0 pt-2 pb-4 page-enter">
         {uiVariant !== 'current' && mode === 'publications' && (
-          <p className="text-sm font-semibold text-primary/90 mb-2 px-1" role="status">
+          <p className="text-sm font-semibold text-primary/90 mb-2 px-3" role="status">
             Вариант: {uiVariant === 'classic' ? 'Классический архив' : uiVariant === 'calendar' ? 'Календарь воспоминаний' : uiVariant === 'living' ? 'Живая история' : 'Журнал + Плеер'}
           </p>
         )}
         {(uiVariant === 'living' || uiVariant === 'journal') && mode === 'publications' && (
-          <p className="text-xs text-muted-foreground mb-3 px-1">Откройте любую публикацию — просмотр в выбранном стиле</p>
+          <p className="text-xs text-muted-foreground mb-3 px-3">Откройте любую публикацию — просмотр в выбранном стиле</p>
         )}
         {uiVariant !== 'classic' && uiVariant !== 'calendar' && (
-          <p className="section-title text-primary mb-3">{mode === 'publications' ? 'Публикации' : 'Медиа'}</p>
+          <p className="section-title text-primary mb-3 px-3">{mode === 'publications' ? 'Публикации' : 'Медиа'}</p>
         )}
 
         {(uiVariant !== 'classic' && uiVariant !== 'calendar') && (
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4 px-3">
           <button
             onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -425,7 +408,7 @@ const Feed: React.FC = () => {
         )}
 
         {mode === 'publications' && showNoResults && (
-          <div className="px-6 py-12 text-center">
+          <div className="px-3 py-12 text-center">
             <p className="editorial-caption text-muted-foreground">Нет результатов</p>
             <p className="text-sm font-light text-muted-foreground mt-1">Измените параметры фильтров</p>
             <Button variant="outline" className="mt-4 rounded-sm" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить фильтры</Button>
@@ -436,7 +419,7 @@ const Feed: React.FC = () => {
         {mode === 'publications' && !showNoResults && uiVariant !== 'classic' && uiVariant !== 'calendar' && renderMagazineLayout()}
 
         {mode === 'publications' && showEmptyFeed && (
-          <div className="px-6 py-12 text-center">
+          <div className="px-3 py-12 text-center">
             <p className="editorial-title text-lg">Создайте первую историю</p>
             <p className="text-sm font-light text-muted-foreground mt-2">Добавьте публикацию или пригласите близких</p>
             <div className="flex gap-3 justify-center mt-6">

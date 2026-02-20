@@ -11,6 +11,7 @@ export interface FamilyMember {
   middleName?: string;
   nickname?: string;
   birthDate: string;
+  deathDate?: string;
   city?: string;
   about?: string;
   avatar?: string;

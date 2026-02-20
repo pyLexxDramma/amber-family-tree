@@ -41,22 +41,22 @@ const InviteFlow: React.FC = () => {
 
   if (view === 'list') {
     return (
-      <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
-        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+      <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
+        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium tracking-wide">Назад</span>
         </button>
 
-        <h1 className="hero-title text-2xl mb-6">Приглашения</h1>
+        <h1 className="hero-title text-2xl mb-6 px-3">Приглашения</h1>
 
         {incomingList.length > 0 && (
           <div className="mb-8 page-enter-stagger">
-            <p className="section-title text-primary mb-3">Входящие</p>
+            <p className="section-title text-primary mb-3 px-3">Входящие</p>
             <div className="space-y-3">
               {incomingList.map(inv => {
                 const from = getMember(inv.fromId);
                 return (
-                  <div key={inv.id} className="content-card py-4 px-4 flex flex-col gap-2">
+                  <div key={inv.id} className="content-card py-5 px-5 flex flex-col gap-2 min-h-[96px]">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-[15px] font-semibold text-foreground">{from?.firstName} {from?.lastName}</p>
@@ -74,12 +74,12 @@ const InviteFlow: React.FC = () => {
           </div>
         )}
 
-        <p className="section-title text-primary mb-3">Отправленные</p>
+        <p className="section-title text-primary mb-3 px-3">Отправленные</p>
         <div className="space-y-3 mb-6 page-enter-stagger">
           {sentList.map(inv => {
             const from = getMember(inv.fromId);
             return (
-              <div key={inv.id} className="content-card py-4 px-4">
+              <div key={inv.id} className="content-card py-5 px-5 min-h-[96px]">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-semibold text-foreground">{inv.toEmail || inv.toPhone}</p>
@@ -105,7 +105,7 @@ const InviteFlow: React.FC = () => {
           })}
         </div>
 
-        <Button variant="outline" className="content-card w-full min-h-[48px] rounded-2xl border-2 font-semibold hover:border-primary/40 transition-all" onClick={() => setView('invite')}>
+        <Button variant="outline" className="content-card w-full min-h-[96px] rounded-2xl border-2 font-semibold hover:border-primary/40 transition-all" onClick={() => setView('invite')}>
           Создать новое приглашение
         </Button>
       </div>
@@ -113,30 +113,30 @@ const InviteFlow: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+    <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
         <ArrowLeft className="h-5 w-5" />
         <span className="text-sm font-medium tracking-wide">Назад</span>
       </button>
 
-      <h1 className="hero-title text-2xl mb-2">Пригласить</h1>
-      <p className="text-sm font-medium text-muted-foreground mb-8">Отправьте ссылку близкому человеку</p>
+      <h1 className="hero-title text-2xl mb-2 px-3">Пригласить</h1>
+      <p className="text-sm font-medium text-muted-foreground mb-8 px-3">Отправьте ссылку близкому человеку</p>
 
       <div className="mb-10 page-enter-stagger">
-        <p className="section-title text-primary mb-3">Ссылка</p>
-        <Input value={mockLink} readOnly className="rounded-xl border-2 mb-4 bg-muted/50 font-medium" />
+        <p className="section-title text-primary mb-3 px-3">Ссылка</p>
+        <div className="px-3"><Input value={mockLink} readOnly className="rounded-xl border-2 mb-4 bg-muted/50 font-medium w-full" /></div>
         <div className="flex gap-3">
-          <button onClick={() => handleCopy(mockLink)} className="content-card flex-1 min-h-[48px] rounded-2xl border-2 flex items-center justify-center gap-2 text-[15px] font-semibold hover:border-primary/40 hover:shadow-md transition-all">
+          <button onClick={() => handleCopy(mockLink)} className="content-card flex-1 min-h-[96px] rounded-2xl border-2 flex items-center justify-center gap-2 text-[15px] font-semibold hover:border-primary/40 hover:shadow-md transition-all">
             {copied === 'main' ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             {copied === 'main' ? 'Скопировано' : 'Скопировать'}
           </button>
-          <button onClick={handleShare} className="content-card flex-1 min-h-[48px] rounded-2xl border-2 flex items-center justify-center gap-2 text-[15px] font-semibold hover:border-primary/40 hover:shadow-md transition-all">
+          <button onClick={handleShare} className="content-card flex-1 min-h-[96px] rounded-2xl border-2 flex items-center justify-center gap-2 text-[15px] font-semibold hover:border-primary/40 hover:shadow-md transition-all">
             <Share2 className="h-4 w-4" /> Поделиться
           </button>
         </div>
       </div>
 
-      <button onClick={() => navigate(ROUTES.classic.family)} className="content-card w-full min-h-[52px] rounded-2xl border-2 bg-foreground text-background text-[15px] font-semibold hover:bg-foreground/90 transition-all mb-4">
+      <button onClick={() => navigate(ROUTES.classic.family)} className="content-card w-full min-h-[96px] rounded-2xl border-2 bg-foreground text-background text-[15px] font-semibold hover:bg-foreground/90 transition-all mb-4">
         Готово
       </button>
       <button onClick={() => setView('list')} className="link-row-warm w-full justify-center gap-2 py-3 text-sm font-semibold text-primary/90">
