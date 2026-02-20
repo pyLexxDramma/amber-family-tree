@@ -26,7 +26,9 @@ import AIDemoPage from "./pages/AIDemoPage";
 import { AiShell } from "./ai/AiShell";
 import { VoiceControlGlobal } from "./components/VoiceControlGlobal";
 import NotFound from "./pages/NotFound";
+import DemoVariantsPage from "./pages/DemoVariantsPage";
 import { CLASSIC_BASE } from "./constants/routes";
+import { UIVariantProvider, UIVariantSync } from "./contexts/UIVariantContext";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,8 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+          <UIVariantProvider>
+          <UIVariantSync />
           <VoiceControlGlobal />
           <Routes>
             <Route path="/" element={<Welcome />} />
@@ -61,9 +65,11 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/places`} element={<PlacesPage />} />
             <Route path={`${CLASSIC_BASE}/settings`} element={<Settings />} />
             <Route path={`${CLASSIC_BASE}/help`} element={<Help />} />
+            <Route path={`${CLASSIC_BASE}/demo-variants`} element={<DemoVariantsPage />} />
             <Route path="/ai" element={<AIDemoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </UIVariantProvider>
         </BrowserRouter>
         </TooltipProvider>
       </PlatformProvider>

@@ -27,7 +27,7 @@ export const BottomNav: React.FC = () => {
   const navItems = isFeedMediaView ? navItemsMediaView : navItemsDefault;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border/60 safe-area-pb">
+    <nav className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border/60 safe-area-pb">
       <div className="mx-auto flex max-w-md items-stretch justify-around min-h-[72px] py-2">
         {navItems.map(item => {
           const active = location.pathname.startsWith(item.path);

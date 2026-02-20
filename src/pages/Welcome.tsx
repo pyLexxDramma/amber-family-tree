@@ -1,12 +1,22 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { useUIVariant, type UIVariant } from '@/contexts/UIVariantContext';
+
+const VARIANT_LABELS: Record<UIVariant, string> = {
+  current: 'Текущий',
+  classic: 'Классика',
+  living: 'История',
+  calendar: 'Календарь',
+  journal: 'Журнал',
+};
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
+  const { variant, setVariant } = useUIVariant();
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+    <div className="page-welcome relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
       <div className="absolute inset-0">
         <img
           src="/welcome-bg.png"
@@ -43,12 +53,32 @@ const Welcome: React.FC = () => {
         <p className="mt-10 text-base text-white/60 text-center">
           <button
             type="button"
-            onClick={() => navigate(`${ROUTES.classic.tree}?demo=full`)}
+            onClick={() => navigate(`${ROUTES.classic.feed}?demo=full`)}
             className="touch-target inline-block py-3 px-4 rounded-xl underline underline-offset-4 hover:text-white hover:bg-white/15 transition-all duration-200 hover:scale-105"
           >
             Демо
           </button>
         </p>
+
+        <div className="mt-6 w-full">
+          <p className="text-center text-white/50 text-sm font-medium mb-3">Вариант интерфейса</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {(['current', 'classic', 'living', 'calendar', 'journal'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setVariant(v)}
+                className={`touch-target min-h-[40px] px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  variant === v
+                    ? 'bg-white/25 text-white border-2 border-white/50'
+                    : 'bg-white/10 text-white/80 border-2 border-white/20 hover:bg-white/15 hover:border-white/30'
+                }`}
+              >
+                {VARIANT_LABELS[v]}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="relative z-10 mt-auto pb-10 pt-14 flex gap-5 text-base font-medium text-white/50">

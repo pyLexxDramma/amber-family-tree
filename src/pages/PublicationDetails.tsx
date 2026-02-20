@@ -2,23 +2,27 @@ import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockPublications } from '@/data/mock-publications';
 import { getMember } from '@/data/mock-members';
+import { useUIVariant } from '@/contexts/UIVariantContext';
+import { ROUTES } from '@/constants/routes';
 import { AvatarPlaceholder } from '@/components/AvatarPlaceholder';
 import { PhotoLightbox } from '@/components/PhotoLightbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, MoreVertical, Heart, MessageCircle, UserPlus, MapPin, Calendar, Play, Mic, Edit, Trash2, EyeOff } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Heart, MessageCircle, UserPlus, MapPin, Calendar, Play, Mic, Edit, Trash2, EyeOff, ChevronLeft, ChevronRight, Share2, Download } from 'lucide-react';
 
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { variant: uiVariant } = useUIVariant();
   const pub = mockPublications.find(p => p.id === id);
   const [newComment, setNewComment] = useState('');
   const [liked, setLiked] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [audioPlaying, setAudioPlaying] = useState(false);
   const galleryRef = useRef<HTMLDivElement>(null);
 
-  if (!pub) return <div className="p-6 text-center text-muted-foreground">Publication not found</div>;
+  if (!pub) return <div className="p-6 text-center text-muted-foreground">Публикация не найдена</div>;
 
   const author = getMember(pub.authorId);
   const photos = pub.media.filter(m => m.type === 'photo');
@@ -34,6 +38,108 @@ const PublicationDetails: React.FC = () => {
     url: p.url || p.thumbnail || '',
     caption: p.name,
   }));
+
+  const currentIndex = mockPublications.findIndex(p => p.id === pub.id);
+  const prevPub = currentIndex > 0 ? mockPublications[currentIndex - 1] : null;
+  const nextPub = currentIndex >= 0 && currentIndex < mockPublications.length - 1 ? mockPublications[currentIndex + 1] : null;
+
+  /** Вариант 2: Живая история — просмотр с подписью, пред./след. */
+  if (uiVariant === 'living') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {lightboxIndex !== null && (
+          <PhotoLightbox images={lightboxImages} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
+        )}
+        <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '55vh' }}>
+          <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center">
+            <button onClick={() => navigate(-1)} className="touch-target p-2 text-white/90 hover:text-white rounded-lg hover:bg-black/20 transition-colors">
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        <p className="text-center py-3 text-sm text-muted-foreground border-b border-border">— Свайпните фото вправо/влево —</p>
+        <div className="px-6 py-6 flex-1">
+          <div className="content-card p-5 rounded-2xl mb-4">
+            <p className="flex items-center gap-2 text-base font-semibold text-foreground mb-2">
+              <MapPin className="h-4 w-4 text-primary" /> {pub.place || '—'}, {pub.eventDate?.slice(0, 4) || ''} год
+            </p>
+            <p className="editorial-body text-foreground/90 leading-relaxed">{pub.text}</p>
+          </div>
+          <div className="flex items-center gap-6 py-4">
+            <button className={`flex items-center gap-2 text-base font-semibold ${liked ? 'text-primary' : 'text-muted-foreground'}`} onClick={() => setLiked(!liked)}>
+              <Heart className={`h-5 w-5 ${liked ? 'fill-primary' : ''}`} /> {pub.likes.length + (liked ? 1 : 0)}
+            </button>
+            <span className="flex items-center gap-2 text-muted-foreground font-medium"><MessageCircle className="h-5 w-5" /> {pub.comments.length}</span>
+            <button className="flex items-center gap-2 text-muted-foreground font-medium hover:text-foreground transition-colors">
+              <Share2 className="h-5 w-5" /> Поделиться
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-4 mt-6">
+            <Button variant="outline" className="rounded-xl min-h-touch flex-1 gap-2" disabled={!prevPub} onClick={() => prevPub && navigate(ROUTES.classic.publication(prevPub.id))}>
+              <ChevronLeft className="h-5 w-5" /> Предыдущее
+            </Button>
+            <Button variant="outline" className="rounded-xl min-h-touch flex-1 gap-2" disabled={!nextPub} onClick={() => nextPub && navigate(ROUTES.classic.publication(nextPub.id))}>
+              Следующее <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+          <Button variant="outline" className="w-full mt-4 rounded-xl min-h-touch font-semibold" onClick={() => navigate(ROUTES.classic.feed)}>
+            КОЛЛЕКЦИЯ ВСЕХ ФОТО
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /** Вариант 4: Журнал + Плеер — озвучка, просмотр с аудио */
+  if (uiVariant === 'journal') {
+    const voiceLabel = author ? author.firstName : 'Мама';
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '50vh' }}>
+          <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute top-0 left-0 right-0 p-4">
+            <button onClick={() => navigate(-1)} className="touch-target p-2 text-white/90 hover:text-white rounded-lg hover:bg-black/20 transition-colors">
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        <div className="px-6 py-6 flex-1 space-y-6">
+          <div className="content-card p-5 rounded-2xl">
+            <button onClick={() => setAudioPlaying(!audioPlaying)} className="w-full flex items-center gap-4 text-left">
+              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                {audioPlaying ? <span className="w-4 h-4 rounded-full bg-primary" /> : <Play className="h-7 w-7 text-primary ml-0.5" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground text-lg">СЛУШАТЬ ИСТОРИЮ</p>
+                <p className="text-sm text-muted-foreground">голос: {voiceLabel}</p>
+                <p className="text-foreground/80 text-sm mt-1 italic line-clamp-2">«{pub.text.slice(0, 80)}…»</p>
+              </div>
+            </button>
+          </div>
+          <div className="content-card p-5 rounded-2xl">
+            <p className="editorial-caption text-muted-foreground mb-2">Подпись</p>
+            <p className="text-lg font-medium text-foreground leading-snug">{pub.text}</p>
+          </div>
+          <div className="flex items-center justify-center gap-6 py-4">
+            <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Назад"><ChevronLeft className="h-6 w-6" /></button>
+            <button onClick={() => setAudioPlaying(!audioPlaying)} className="touch-target w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+              {audioPlaying ? <span className="w-5 h-5 rounded-full bg-current" /> : <Play className="h-8 w-8 ml-0.5" />}
+            </button>
+            <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Вперёд"><ChevronRight className="h-6 w-6" /></button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="outline" className="rounded-xl min-h-touch font-semibold gap-2" onClick={() => navigate(ROUTES.classic.feed)}>
+              <ChevronLeft className="h-4 w-4" /> Поменять фото
+            </Button>
+            <Button variant="outline" className="rounded-xl min-h-touch font-semibold gap-2">
+              <Download className="h-4 w-4" /> Сохранить в телефон
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

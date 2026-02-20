@@ -38,6 +38,12 @@ export const VoiceControlGlobal: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isAiDemo = location.pathname === '/app' || location.pathname === '/ai-demo';
+  const isMainOrAuth =
+    location.pathname === '/' ||
+    location.pathname === ROUTES.login ||
+    location.pathname === ROUTES.register ||
+    location.pathname === '/confirm-code' ||
+    location.pathname === '/onboarding';
 
   const startListening = useCallback(() => {
     const API =
@@ -102,6 +108,7 @@ export const VoiceControlGlobal: React.FC = () => {
   }, [isListening, startListening, stopListening]);
 
   if (isAiDemo) return null;
+  if (isMainOrAuth) return null;
 
   return (
     <button

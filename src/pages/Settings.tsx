@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ROUTES } from '@/constants/routes';
-import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon } from 'lucide-react';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, Layout } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const isDemo = useDemoWithPhotos();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -64,6 +66,21 @@ const Settings: React.FC = () => {
           </div>
         </button>
       </div>
+
+      {isDemo && (
+        <>
+          <p className="section-title text-primary mb-3">Демо</p>
+          <div className="space-y-3 mb-6">
+            <button onClick={() => navigate(ROUTES.classic.demoVariants)} className="content-card w-full flex items-center gap-4 py-4 px-4 hover:border-primary/30 transition-colors text-left">
+              <Layout className="h-5 w-5 text-primary/70" strokeWidth={1.8} />
+              <div className="flex-1">
+                <p className="text-[15px] font-semibold tracking-wide text-foreground">Варианты интерфейса</p>
+                <p className="text-xs font-medium text-muted-foreground/70 mt-0.5">Для клиента · переключение оформления</p>
+              </div>
+            </button>
+          </div>
+        </>
+      )}
 
       <p className="section-title text-primary mb-3">Другое</p>
       <div className="space-y-3">

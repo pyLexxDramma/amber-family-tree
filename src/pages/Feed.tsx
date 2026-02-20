@@ -4,14 +4,24 @@ import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { UnreadMarker } from '@/components/UnreadMarker';
+import { useUIVariant } from '@/contexts/UIVariantContext';
 import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publications';
 import { getMember, mockMembers, currentUserId } from '@/data/mock-members';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { LayoutList, Grid3X3, SlidersHorizontal, ArrowUpDown, Heart, MessageCircle, Image, Video, Mic } from 'lucide-react';
+import { LayoutList, Grid3X3, SlidersHorizontal, ArrowUpDown, Heart, MessageCircle, Image, Video, Mic, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import type { Publication } from '@/types';
+
+/** Год из eventDate (например "1985-07-15" -> 1985) для группировки по десятилетиям */
+function getDecadeFromEventDate(eventDate: string): string {
+  const year = parseInt(eventDate.slice(0, 4), 10);
+  const decade = Math.floor(year / 10) * 10;
+  return `${decade}-е`;
+}
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
+  const { variant: uiVariant } = useUIVariant();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewParam = searchParams.get('view');
   const [mode, setMode] = useState<'publications' | 'media'>(viewParam === 'media' ? 'media' : 'publications');
@@ -229,16 +239,133 @@ const Feed: React.FC = () => {
     return <div className="flex flex-col gap-1 pb-4">{items}</div>;
   };
 
+  /** Вариант 1: Классический семейный архив — витрина (лента альбомов) */
+  const renderClassicShowcase = () => {
+    if (filtered.length === 0) return null;
+    const [feat1, feat2, mainEvent, ...rest] = filtered;
+    const main = mainEvent || feat2;
+    const cardPub = rest[0] || feat2;
+
+    const albumCard = (pub: Publication, label: string, sublabel: string, big = false) => {
+      const hasPhoto = pub.media.some(m => m.type === 'photo');
+      const imgUrl = hasPhoto ? (pub.media.find(m => m.type === 'photo')!.url || pub.media.find(m => m.type === 'photo')!.thumbnail) : `https://picsum.photos/seed/${pub.id}/600/400`;
+      return (
+        <button key={pub.id} onClick={() => navigate(ROUTES.classic.publication(pub.id))} className={`content-card overflow-hidden text-left rounded-2xl ${big ? 'aspect-[3/4]' : 'aspect-square'}`}>
+          <div className="relative w-full h-full">
+            <img src={imgUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 editorial-overlay" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <p className="editorial-caption text-white/80">{label}</p>
+              <p className="text-white font-semibold text-lg">{sublabel}</p>
+              <p className="text-white/70 text-sm mt-0.5">{pub.eventDate?.slice(0, 7) || ''}</p>
+            </div>
+          </div>
+        </button>
+      );
+    };
+
+    return (
+      <div className="space-y-6 pb-6">
+        <h2 className="section-title text-center tracking-widest py-2">СЕМЕЙНЫЙ АЛЬБОМ</h2>
+
+        <div className="grid grid-cols-2 gap-3">
+          {feat1 && albumCard(feat1, 'ФОТО 2024', feat1.title, true)}
+          {feat2 && albumCard(feat2, 'ЛЕТО 2023', feat2.title, true)}
+        </div>
+
+        {main && (
+          <div className="content-card rounded-2xl overflow-hidden">
+            <p className="editorial-caption text-primary px-4 pt-4">Главное событие месяца</p>
+            <div className="flex items-center gap-2 px-4 pb-4">
+              <button type="button" className="touch-target p-2 rounded-xl hover:bg-primary/10 transition-colors" aria-label="Назад"><ChevronLeft className="h-5 w-5" /></button>
+              <button onClick={() => navigate(ROUTES.classic.publication(main.id))} className="flex-1 text-left py-2">
+                <span className="font-semibold text-foreground">{main.title}</span>
+              </button>
+              <button type="button" className="touch-target p-2 rounded-xl hover:bg-primary/10 transition-colors" aria-label="Вперёд"><ChevronRight className="h-5 w-5" /></button>
+            </div>
+            <button onClick={() => navigate(ROUTES.classic.publication(main.id))} className="block w-full relative aspect-[16/10]">
+              <img src={main.media[0]?.type === 'photo' ? (main.media[0].url || main.media[0].thumbnail) : `https://picsum.photos/seed/${main.id}/800/500`} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 editorial-overlay" />
+            </button>
+          </div>
+        )}
+
+        {cardPub && (
+          <button onClick={() => navigate(ROUTES.classic.publication(cardPub.id))} className="content-card w-full flex items-center gap-4 p-4 rounded-2xl text-left">
+            <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
+              <img src={cardPub.media[0]?.type === 'photo' ? (cardPub.media[0].url || cardPub.media[0].thumbnail) : `https://picsum.photos/seed/${cardPub.id}/200`} alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-foreground truncate">{cardPub.title}</p>
+              <p className="text-sm text-muted-foreground mt-0.5">{cardPub.topicTag}</p>
+            </div>
+            <span className="flex items-center gap-1 text-muted-foreground font-medium">
+              <Heart className="h-4 w-4" /> {cardPub.likes.length}
+            </span>
+          </button>
+        )}
+
+        <Button className="w-full min-h-[56px] text-lg font-semibold rounded-2xl gap-2" onClick={() => navigate(ROUTES.classic.create)}>
+          <Plus className="h-6 w-6" /> ДОБАВИТЬ ФОТО
+        </Button>
+      </div>
+    );
+  };
+
+  /** Вариант 3: Календарь воспоминаний — лента по годам */
+  const renderCalendarByYears = () => {
+    const byDecade: Record<string, Publication[]> = {};
+    filtered.forEach(pub => {
+      const decade = getDecadeFromEventDate(pub.eventDate || pub.publishDate);
+      if (!byDecade[decade]) byDecade[decade] = [];
+      byDecade[decade].push(pub);
+    });
+    const decades = Object.keys(byDecade).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+    return (
+      <div className="space-y-8 pb-8">
+        {decades.map(decade => (
+          <div key={decade}>
+            <h2 className="section-title text-primary mb-4">{decade}</h2>
+            <div className="space-y-4">
+              {byDecade[decade].map(pub => {
+                const year = (pub.eventDate || pub.publishDate).slice(0, 4);
+                const firstPhoto = pub.media.find(m => m.type === 'photo');
+                const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : `https://picsum.photos/seed/${pub.id}/200`;
+                return (
+                  <button key={pub.id} onClick={() => navigate(ROUTES.classic.publication(pub.id))} className="content-card w-full flex items-center gap-4 p-4 rounded-2xl text-left">
+                    <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/30">
+                      <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground">{year}: {pub.title}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{pub.place}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <Button variant="outline" className="w-full min-h-touch rounded-2xl font-semibold">
+          ↓ ЗАГРУЗИТЬ СТАРЫЕ ФОТО
+        </Button>
+      </div>
+    );
+  };
+
   const showNoResults = hasActiveFilters && filtered.length === 0 && sorted.length > 0;
   const showEmptyFeed = sorted.length === 0;
 
   const masonry = allMediaItems.filter(m => m.type === 'photo' || m.type === 'video');
   const masonryAspects = ['aspect-square', 'aspect-[3/4]', 'aspect-[4/3]', 'aspect-square', 'aspect-[3/4]'];
 
+  const topBarTitle = uiVariant === 'classic' ? 'СЕМЕЙНЫЙ АЛЬБОМ' : uiVariant === 'calendar' ? 'Лента по годам' : 'Лента';
+
   return (
     <AppLayout>
       <TopBar
-        title="Лента"
+        title={topBarTitle}
         right={
           <div className="flex items-center gap-1">
             <button
@@ -266,8 +393,19 @@ const Feed: React.FC = () => {
         }
       />
       <div className="px-5 pt-2 pb-4 page-enter">
-        <p className="section-title text-primary mb-3">{mode === 'publications' ? 'Публикации' : 'Медиа'}</p>
+        {uiVariant !== 'current' && mode === 'publications' && (
+          <p className="text-sm font-semibold text-primary/90 mb-2 px-1" role="status">
+            Вариант: {uiVariant === 'classic' ? 'Классический архив' : uiVariant === 'calendar' ? 'Календарь воспоминаний' : uiVariant === 'living' ? 'Живая история' : 'Журнал + Плеер'}
+          </p>
+        )}
+        {(uiVariant === 'living' || uiVariant === 'journal') && mode === 'publications' && (
+          <p className="text-xs text-muted-foreground mb-3 px-1">Откройте любую публикацию — просмотр в выбранном стиле</p>
+        )}
+        {uiVariant !== 'classic' && uiVariant !== 'calendar' && (
+          <p className="section-title text-primary mb-3">{mode === 'publications' ? 'Публикации' : 'Медиа'}</p>
+        )}
 
+        {(uiVariant !== 'classic' && uiVariant !== 'calendar') && (
         <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
@@ -284,6 +422,7 @@ const Feed: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
         {mode === 'publications' && showNoResults && (
           <div className="px-6 py-12 text-center">
@@ -292,7 +431,9 @@ const Feed: React.FC = () => {
             <Button variant="outline" className="mt-4 rounded-sm" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить фильтры</Button>
           </div>
         )}
-        {mode === 'publications' && !showNoResults && renderMagazineLayout()}
+        {mode === 'publications' && !showNoResults && uiVariant === 'classic' && renderClassicShowcase()}
+        {mode === 'publications' && !showNoResults && uiVariant === 'calendar' && renderCalendarByYears()}
+        {mode === 'publications' && !showNoResults && uiVariant !== 'classic' && uiVariant !== 'calendar' && renderMagazineLayout()}
 
         {mode === 'publications' && showEmptyFeed && (
           <div className="px-6 py-12 text-center">
