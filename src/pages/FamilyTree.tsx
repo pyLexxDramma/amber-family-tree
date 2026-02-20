@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { mockMembers, currentUserId } from '@/data/mock-members';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, UserPlus, Contact, Send, ChevronRight } from 'lucide-react';
+import { Plus, UserPlus, Contact, Send, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 
@@ -23,10 +23,8 @@ const FamilyTree: React.FC = () => {
   const activeMembers = mockMembers.filter(m => m.isActive).length;
   const genCount = Object.keys(generations).length;
 
-  /* Профили — квадраты со скруглёнными углами; на иконках фото, под ними ник (без ника контакт на дерево не добавляется по ТЗ) */
   const memberCard = (m: typeof mockMembers[0], variant: 'portrait' | 'landscape' | 'scroll') => {
     const isCurrent = m.id === currentUserId;
-    const imgSeed = `member${m.id}`;
     const widthClass = variant === 'scroll' ? 'w-28 flex-shrink-0' : 'w-full';
 
     return (
@@ -35,18 +33,13 @@ const FamilyTree: React.FC = () => {
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
         className={`relative overflow-hidden group rounded-xl ${widthClass} aspect-square flex flex-col bg-card border border-border/50`}
       >
-        <div className="relative w-full flex-1 min-h-0">
-          <img
-            src={`https://picsum.photos/seed/${imgSeed}/400/400`}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-xl"
-            style={{ filter: m.isActive ? 'sepia(0.08)' : 'grayscale(0.6) sepia(0.1)' }}
-          />
+        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-muted rounded-t-xl">
+          <User className={`h-1/2 w-1/2 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
           {isCurrent && (
             <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary border border-background" />
           )}
           {!m.isActive && (
-            <span className="absolute top-1.5 left-1.5 text-[8px] tracking-widest uppercase text-white/40 font-light">offline</span>
+            <span className="absolute top-1.5 left-1.5 text-[8px] tracking-widest uppercase text-muted-foreground font-light">offline</span>
           )}
         </div>
         <div className="p-2 text-center bg-card/95 border-t border-border/30 rounded-b-xl">
@@ -62,13 +55,7 @@ const FamilyTree: React.FC = () => {
     <AppLayout>
       <div className="pb-4">
         {/* Hero banner */}
-        <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-          <img
-            src="https://picsum.photos/seed/rossifamily/800/450"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: 'sepia(0.25) brightness(0.7)' }}
-          />
+        <div className="relative w-full bg-muted/30" style={{ aspectRatio: '16/9' }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
 
           <div className="absolute top-0 left-0 right-0 p-5 flex items-start justify-between">

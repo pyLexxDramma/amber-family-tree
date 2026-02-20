@@ -2,4 +2,5 @@
 alwaysApply: true
 ---
 
-Always answer briefly and to the point, until I ask you to explain something in detail.
+- Answer briefly and to the point, until I ask you to explain in detail.
+- **Code style:** Write code without comments. Code must be maximally clean and "human-readable": clear names, simple logic, no redundant comments or decorative explanations in the code.

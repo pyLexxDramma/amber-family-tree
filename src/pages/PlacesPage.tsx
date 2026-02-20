@@ -4,7 +4,7 @@ import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { mockMembers } from '@/data/mock-members';
-import { ArrowLeft, Send, UserMinus } from 'lucide-react';
+import { ArrowLeft, Send, UserMinus, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -39,7 +39,9 @@ const PlacesPage: React.FC = () => {
         <div className="space-y-0 mb-8">
           {occupyingMembers.map(m => (
             <div key={m.id} className="flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0">
-              <img src={`https://picsum.photos/seed/member${m.id}/80/80`} alt="" className="h-12 w-12 rounded-full object-cover" />
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <User className="h-6 w-6 text-muted-foreground" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-light tracking-wide">{m.nickname || m.firstName} {m.lastName}</p>
                 <p className="text-xs text-muted-foreground/70">{m.firstName} {m.lastName}</p>

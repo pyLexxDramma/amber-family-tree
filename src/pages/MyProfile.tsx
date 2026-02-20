@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { getCurrentUser } from '@/data/mock-members';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
-import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight } from 'lucide-react';
+import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, User } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
 const MyProfile: React.FC = () => {
@@ -24,13 +24,8 @@ const MyProfile: React.FC = () => {
     <AppLayout>
       <div className="pt-4 pb-4">
         {/* Hero-style profile header */}
-        <div className="relative mx-6 mb-8 overflow-hidden" style={{ aspectRatio: '4/3' }}>
-          <img
-            src={`https://picsum.photos/seed/profile${user.id}/600/450`}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: 'sepia(0.15) brightness(0.85)' }}
-          />
+        <div className="relative mx-6 mb-8 overflow-hidden bg-muted/50 flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
+          <User className="h-24 w-24 text-foreground" />
           <div className="absolute inset-0 editorial-overlay" />
           <div className="absolute bottom-0 left-0 right-0 p-5">
             <p className="editorial-caption text-white/40 mb-2">{plan?.name === 'Free' ? 'Бесплатный' : plan?.name === 'Premium' ? 'Премиум' : plan?.name} · план</p>

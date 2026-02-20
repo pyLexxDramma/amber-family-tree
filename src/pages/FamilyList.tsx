@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { mockMembers, currentUserId, getCurrentUser } from '@/data/mock-members';
-import { Send } from 'lucide-react';
+import { Send, User } from 'lucide-react';
 
 const FamilyList: React.FC = () => {
   const navigate = useNavigate();
@@ -17,13 +17,7 @@ const FamilyList: React.FC = () => {
     <AppLayout>
       <div className="pb-4">
         {/* Header */}
-        <div className="relative overflow-hidden" style={{ height: '140px' }}>
-          <img
-            src="https://picsum.photos/seed/familylist/800/300"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ filter: 'sepia(0.3) brightness(0.5)' }}
-          />
+        <div className="relative overflow-hidden bg-muted/50" style={{ height: '140px' }}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
             <h1 className="editorial-title text-white text-2xl">Семья</h1>
@@ -57,7 +51,9 @@ const FamilyList: React.FC = () => {
         {sectionTab === 'about' && (
           <div className="px-6 mt-2">
             <div className="p-5 bg-card rounded-sm flex items-center gap-4">
-              <img src={`https://picsum.photos/seed/member${currentUser.id}/120/120`} alt="" className="h-16 w-16 rounded-full object-cover" />
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <User className="h-8 w-8 text-muted-foreground" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium tracking-wide">{currentUser.firstName} {currentUser.lastName}</p>
                 {currentUser.nickname && <p className="text-xs text-muted-foreground italic">"{currentUser.nickname}"</p>}
@@ -104,24 +100,9 @@ const FamilyList: React.FC = () => {
                 className="w-full flex items-center gap-4 text-left group relative overflow-hidden rounded-sm"
                 style={{ height: '72px' }}
               >
-                {/* Mini background blur */}
-                <div className="absolute inset-0 overflow-hidden">
-                  <img
-                    src={`https://picsum.photos/seed/member${m.id}/400/530`}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover blur-2xl scale-150 opacity-[0.07]"
-                  />
-                </div>
-
                 <div className="relative flex items-center gap-4 px-3 w-full">
-                  {/* Avatar */}
-                  <div className="h-14 w-14 flex-shrink-0 overflow-hidden relative">
-                    <img
-                      src={`https://picsum.photos/seed/member${m.id}/120/120`}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      style={{ filter: m.isActive ? 'sepia(0.05)' : 'grayscale(0.6)' }}
-                    />
+                  <div className="h-14 w-14 flex-shrink-0 rounded-full bg-muted flex items-center justify-center relative">
+                    <User className={`h-7 w-7 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
                     {isCurrent && (
                       <div className="absolute bottom-0.5 right-0.5 h-2 w-2 bg-foreground rounded-full border border-background" />
                     )}
