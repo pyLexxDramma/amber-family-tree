@@ -97,6 +97,7 @@ const FamilyTree: React.FC = () => {
             <img src="https://picsum.photos/seed/sokolov/1200/675" alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { if (e.currentTarget.src !== '/placeholder.svg') e.currentTarget.src = '/placeholder.svg'; }} />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
+        </div>
 
       <div className="page-enter pb-6">
         {[1, 2, 3].map(gen => {
@@ -143,6 +144,7 @@ const FamilyTree: React.FC = () => {
             Пригласить в семью
           </button>
         </div>
+      </div>
       </div>
     </AppLayout>
   );
