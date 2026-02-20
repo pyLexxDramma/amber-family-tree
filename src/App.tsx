@@ -32,7 +32,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" storageKey="angelo-theme" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="dark" storageKey="angelo-theme" enableSystem={false}>
       <PlatformProvider>
         <TooltipProvider>
           <Toaster />

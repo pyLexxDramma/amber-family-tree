@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
 import { mockMembers, currentUserId, getCurrentUser } from '@/data/mock-members';
 import { Send, User } from 'lucide-react';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
@@ -19,44 +20,47 @@ const FamilyList: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="pb-4">
-        <div className="relative overflow-hidden bg-muted/50" style={{ height: '140px' }}>
-          {demoWithPhotos && (
-            <img src="https://picsum.photos/seed/familylist/800/300" alt="" className="absolute inset-0 h-full w-full object-cover" style={{ filter: 'sepia(0.3) brightness(0.5)' }} onError={(e) => { if (e.currentTarget.src !== FALLBACK) e.currentTarget.src = FALLBACK; }} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
-            <h1 className="editorial-title text-white text-2xl">Семья</h1>
-            <button
-              onClick={() => navigate(ROUTES.classic.invite)}
-              className="flex items-center gap-2 text-[10px] tracking-widest uppercase font-light text-white/50 hover:text-white transition-colors border border-white/20 px-3 py-1.5 hover:bg-white hover:text-black duration-300"
-            >
-              <Send className="h-3 w-3" /> Пригласить
-            </button>
-          </div>
-        </div>
+      <TopBar
+        title="Семья"
+        right={
+          <button
+            onClick={() => navigate(ROUTES.classic.invite)}
+            className="touch-target flex items-center gap-2 min-h-touch px-3 py-2 text-xs font-medium tracking-wide text-current/90 hover:text-current rounded-xl hover:bg-white/10 transition-colors"
+          >
+            <Send className="h-4 w-4" /> Пригласить
+          </button>
+        }
+      />
+      <div className="px-6 pt-4 pb-4 page-enter">
+        <p className="section-title text-primary mb-4">Контакты</p>
 
-        {/* По ТЗ: вкладки Обо мне / Семья */}
-        <div className="px-6 flex gap-6 mt-5 mb-1">
+        <div className="flex gap-2 mt-4 mb-3">
           {(['about', 'family'] as const).map(t => (
-            <button key={t} onClick={() => setSectionTab(t)} className={`editorial-caption pb-2 transition-colors ${sectionTab === t ? 'text-foreground border-b border-foreground' : 'text-muted-foreground/40 hover:text-muted-foreground/60'}`}>
+            <button
+              key={t}
+              onClick={() => setSectionTab(t)}
+              className={`tab-warm touch-target min-h-touch flex items-center text-sm ${sectionTab === t ? 'tab-warm-active' : 'tab-warm-inactive'}`}
+            >
               {t === 'about' ? 'Обо мне' : 'Семья'}
             </button>
           ))}
         </div>
 
-        {/* По ТЗ: вкладки Профили / Группы */}
-        <div className="px-6 flex gap-6 mb-3">
+        <div className="flex gap-2 mb-4">
           {(['profiles', 'groups'] as const).map(t => (
-            <button key={t} onClick={() => setViewTab(t)} className={`text-xs font-light pb-1.5 transition-colors ${viewTab === t ? 'text-foreground border-b border-foreground' : 'text-muted-foreground/50 hover:text-muted-foreground/70'}`}>
+            <button
+              key={t}
+              onClick={() => setViewTab(t)}
+              className={`tab-warm touch-target min-h-touch flex items-center text-sm ${viewTab === t ? 'tab-warm-active' : 'tab-warm-inactive'}`}
+            >
               {t === 'profiles' ? 'Профили' : 'Группы'}
             </button>
           ))}
         </div>
 
         {sectionTab === 'about' && (
-          <div className="px-6 mt-2">
-            <div className="p-5 bg-card rounded-sm flex items-center gap-4">
+          <div className="mt-4">
+            <div className="content-card p-5 flex items-center gap-4">
               {demoWithPhotos ? (
                 <img src={`https://picsum.photos/seed/member${currentUser.id}/120/120`} alt="" className="h-16 w-16 rounded-full object-cover flex-shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
               ) : null}
@@ -74,7 +78,7 @@ const FamilyList: React.FC = () => {
         )}
 
         {sectionTab === 'family' && viewTab === 'groups' && (
-          <div className="px-6 py-8 text-center">
+          <div className="py-8 text-center">
             <p className="editorial-caption text-muted-foreground">Пока нет групп</p>
             <p className="text-xs font-light text-muted-foreground mt-1">Группы появятся в следующих версиях</p>
           </div>
@@ -82,66 +86,62 @@ const FamilyList: React.FC = () => {
 
         {sectionTab === 'family' && viewTab === 'profiles' && (
           <>
-        {/* Фильтр: все / активные / неактивные */}
-        <div className="px-6 flex gap-6 mb-2">
+        <div className="flex flex-wrap gap-2 mb-3">
           {(['all', 'active', 'inactive'] as const).map(t => {
             const labels = { all: 'Все', active: 'Активные', inactive: 'Неактивные' };
+            const count = mockMembers.filter(m => t === 'all' || (t === 'active' ? m.isActive : !m.isActive)).length;
             return (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`editorial-caption pb-2 transition-colors ${tab === t ? 'text-foreground border-b border-foreground' : 'text-muted-foreground/40 hover:text-muted-foreground/60'}`}
+                className={`tab-warm touch-target flex items-center text-sm ${tab === t ? 'tab-warm-active' : 'tab-warm-inactive'}`}
               >
-                {labels[t]} ({mockMembers.filter(m => t === 'all' || (t === 'active' ? m.isActive : !m.isActive)).length})
+                {labels[t]} ({count})
               </button>
             );
           })}
         </div>
 
-        {/* Members list */}
-        <div className="px-4 mt-4 space-y-2 pb-2">
+        <p className="text-xs font-semibold tracking-widest uppercase text-primary/70 mb-2">Выберите, чьи фото и ленту смотреть</p>
+        <div className="mt-2 space-y-3 pb-2">
           {filtered.map(m => {
             const isCurrent = m.id === currentUserId;
             return (
               <button
                 key={m.id}
                 onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-                className="w-full flex items-center gap-4 text-left group relative overflow-hidden rounded-sm"
-                style={{ height: '72px' }}
+                className="person-card person-card-accent w-full flex items-center gap-4 text-left group relative min-h-[76px] pl-4 pr-4 py-3"
               >
-                <div className="relative flex items-center gap-4 px-3 w-full">
-                  <div className="h-14 w-14 flex-shrink-0 rounded-full bg-muted flex items-center justify-center relative overflow-hidden">
-                    {demoWithPhotos && (
-                      <img src={`https://picsum.photos/seed/member${m.id}/112/112`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                <div className="h-14 w-14 flex-shrink-0 rounded-full bg-muted flex items-center justify-center relative overflow-hidden ring-4 ring-primary/15 group-hover:ring-primary/30 transition-all">
+                  {demoWithPhotos && (
+                    <img src={`https://picsum.photos/seed/member${m.id}/112/112`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                  )}
+                  <div className={`h-full w-full flex items-center justify-center relative ${demoWithPhotos ? 'hidden' : ''}`}>
+                    <User className={`h-7 w-7 ${m.isActive ? 'text-primary/80' : 'text-muted-foreground'}`} />
+                    {isCurrent && (
+                      <div className="absolute bottom-0.5 right-0.5 h-2 w-2 bg-primary rounded-full border-2 border-background" />
                     )}
-                    <div className={`h-full w-full flex items-center justify-center relative ${demoWithPhotos ? 'hidden' : ''}`}>
-                      <User className={`h-7 w-7 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
-                      {isCurrent && (
-                        <div className="absolute bottom-0.5 right-0.5 h-2 w-2 bg-foreground rounded-full border border-background" />
-                      )}
-                    </div>
                   </div>
+                </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-light tracking-wide">
-                      {m.firstName} {m.lastName}
-                      {isCurrent && <span className="text-muted-foreground/40 ml-1.5 text-[10px] tracking-widest uppercase">вы</span>}
-                    </p>
-                    <p className="text-[11px] font-light text-muted-foreground/50 truncate mt-0.5">
-                      {m.nickname && <span className="italic">"{m.nickname}" · </span>}
-                      {m.relations[0]?.type && <span className="capitalize">{m.relations[0].type}</span>}
-                      {m.city && <span> · {m.city}</span>}
-                    </p>
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-semibold text-foreground tracking-wide">
+                    {m.firstName} {m.lastName}
+                    {isCurrent && <span className="text-primary/80 ml-1.5 text-[10px] font-medium tracking-widest uppercase">вы</span>}
+                  </p>
+                  <p className="text-xs font-medium text-muted-foreground/80 truncate mt-0.5">
+                    {m.nickname && <span className="italic text-foreground/70">"{m.nickname}" · </span>}
+                    {m.relations[0]?.type && <span className="capitalize">{m.relations[0].type}</span>}
+                    {m.city && <span> · {m.city}</span>}
+                  </p>
+                  <p className="text-[10px] font-medium text-primary/70 mt-1">Смотреть фото и ленту →</p>
+                </div>
 
-                  {/* Status indicator */}
-                  <div className="flex flex-col items-end gap-1">
-                    <div className={`h-1.5 w-1.5 rounded-full ${m.isActive ? 'bg-foreground/30' : 'bg-muted-foreground/15'}`} />
-                    <span className="text-[8px] tracking-widest uppercase text-muted-foreground/30 font-light">
-                      {m.isActive ? 'в сети' : 'не в сети'}
-                    </span>
-                  </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <div className={`h-2 w-2 rounded-full ${m.isActive ? 'bg-primary/80' : 'bg-muted-foreground/30'}`} />
+                  <span className="text-[9px] tracking-widest uppercase font-medium text-muted-foreground/60">
+                    {m.isActive ? 'в сети' : 'не в сети'}
+                  </span>
                 </div>
               </button>
             );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { Check, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -17,14 +18,11 @@ const StorePage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="pt-4 pb-4">
-        <div className="px-6 mb-8">
-          <h1 className="editorial-title text-2xl mb-1">Подписка</h1>
-          <p className="text-sm font-light text-muted-foreground">Управление подпиской</p>
-        </div>
+      <TopBar title="Подписка" />
+      <div className="px-6 pt-4 pb-4 page-enter">
+        <p className="section-title text-primary mb-6">Управление подпиской</p>
 
-        {/* Current subscription */}
-        <div className="mx-6 mb-6 p-6 bg-card">
+        <div className="content-card mx-0 mb-6 p-6 page-enter-stagger">
           <p className="editorial-caption text-muted-foreground mb-3">Текущий план</p>
           <h2 className="editorial-title text-2xl mb-1">{currentPlan.name}</h2>
           <p className="text-sm font-light text-muted-foreground">
@@ -56,7 +54,7 @@ const StorePage: React.FC = () => {
             {plans.map(plan => {
               const isCurrent = plan.id === currentSubscription.planId;
               return (
-                <div key={plan.id} className={`p-6 ${isCurrent ? 'border border-foreground/20' : 'bg-card'}`}>
+                <div key={plan.id} className={`content-card p-6 ${isCurrent ? 'ring-2 ring-primary/40' : ''}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="editorial-title text-xl">{plan.name}</h3>

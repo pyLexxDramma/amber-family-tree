@@ -32,40 +32,42 @@ const ConfirmCode: React.FC = () => {
         <img src="/bg-3.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
         <div className="absolute inset-0 overlay-light" />
       </div>
-      <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6">
-      <button onClick={() => navigate(-1)} className="mb-12 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" />
-        <span className="text-xs tracking-widest uppercase font-light">Назад</span>
+      <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6 page-enter">
+      <button onClick={() => navigate(-1)} className="touch-target mb-12 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-black/5 px-2 py-1 -ml-2">
+        <ArrowLeft className="h-5 w-5" />
+        <span className="text-sm font-medium tracking-wide">Назад</span>
       </button>
 
-      <h1 className="editorial-title text-3xl mb-2">Подтвердите вход</h1>
-      <p className="text-sm font-light text-muted-foreground mb-10">
-        Мы отправили код на <span className="text-foreground">{contact || '…'}</span>
+      <h1 className="hero-title text-3xl mb-2">Подтвердите вход</h1>
+      <p className="text-sm font-medium text-muted-foreground mb-8">
+        Мы отправили код на <span className="text-foreground font-semibold">{contact || '…'}</span>
       </p>
 
-      <div className="flex flex-col items-center gap-8">
-        <InputOTP maxLength={6} value={code} onChange={v => { setCode(v); setError(''); }}>
-          <InputOTPGroup>
-            {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
-          </InputOTPGroup>
-        </InputOTP>
+      <div className="flex flex-col items-center gap-8 page-enter-stagger">
+        <div className="content-card p-4 rounded-2xl w-full max-w-[280px]">
+          <InputOTP maxLength={6} value={code} onChange={v => { setCode(v); setError(''); }}>
+            <InputOTPGroup className="justify-center gap-2">
+              {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} className="rounded-xl border-2 h-12 w-10 text-lg font-semibold" />)}
+            </InputOTPGroup>
+          </InputOTP>
+        </div>
 
-        {error && <p className="text-destructive text-sm font-light">{error}</p>}
+        {error && <p className="text-destructive text-sm font-semibold">{error}</p>}
 
-        <button onClick={handleConfirm} className="w-full h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300">
+        <button onClick={handleConfirm} className="content-card w-full min-h-[52px] rounded-2xl border-2 bg-foreground text-background text-[15px] font-semibold hover:bg-foreground/90 transition-all">
           Подтвердить
         </button>
 
-        <div className="text-center text-sm font-light text-muted-foreground">
+        <div className="text-center text-sm font-medium text-muted-foreground">
           {resendTimer > 0 ? (
             <span>Отправить код ещё раз через {resendTimer} с</span>
           ) : (
-            <button type="button" className="underline hover:text-foreground transition-colors" onClick={() => setResendTimer(30)}>
+            <button type="button" className="underline hover:text-foreground transition-colors font-semibold" onClick={() => setResendTimer(30)}>
               Отправить код ещё раз
             </button>
           )}
         </div>
-        <button type="button" className="text-xs font-light text-muted-foreground/70 underline hover:text-foreground transition-colors" onClick={() => navigate(-1)}>
+        <button type="button" className="touch-target text-sm font-medium text-primary/80 hover:text-primary transition-colors py-2 px-3 rounded-lg" onClick={() => navigate(-1)}>
           Изменить номер или email
         </button>
       </div>

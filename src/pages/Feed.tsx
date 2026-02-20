@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
 import { UnreadMarker } from '@/components/UnreadMarker';
 import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publications';
 import { getMember, mockMembers, currentUserId } from '@/data/mock-members';
@@ -236,39 +237,44 @@ const Feed: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="pt-2">
-        <div className="px-5 flex items-center justify-between mb-3">
-          <h1 className="editorial-title text-xl text-foreground">Лента</h1>
+      <TopBar
+        title="Лента"
+        right={
           <div className="flex items-center gap-1">
             <button
               onClick={() => setFeedMode('publications')}
-              className={`p-2 rounded-sm transition-colors ${mode === 'publications' ? 'text-foreground' : 'text-muted-foreground'}`}
+              className={`touch-target p-2 rounded-xl transition-colors ${mode === 'publications' ? 'text-current bg-white/15' : 'text-current/60 hover:text-current'}`}
+              aria-label="Публикации"
             >
-              <LayoutList className="h-4 w-4" />
+              <LayoutList className="h-5 w-5" />
             </button>
             <button
               onClick={() => setFeedMode('media')}
-              className={`p-2 rounded-sm transition-colors ${mode === 'media' ? 'text-foreground' : 'text-muted-foreground'}`}
+              className={`touch-target p-2 rounded-xl transition-colors ${mode === 'media' ? 'text-current bg-white/15' : 'text-current/60 hover:text-current'}`}
+              aria-label="Медиа"
             >
-              <Grid3X3 className="h-4 w-4" />
+              <Grid3X3 className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className="touch-target p-2 rounded-xl text-current/80 hover:text-current hover:bg-white/10 transition-colors"
+              aria-label="Фильтры"
+            >
+              <SlidersHorizontal className="h-5 w-5" />
             </button>
           </div>
-        </div>
+        }
+      />
+      <div className="px-5 pt-2 pb-4 page-enter">
+        <p className="section-title text-primary mb-3">{mode === 'publications' ? 'Публикации' : 'Медиа'}</p>
 
-        <div className="px-5 flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowUpDown className="h-3 w-3" />
             <span className="editorial-caption">{sortOrder === 'new' ? 'Сначала новые' : 'Сначала старые'}</span>
-          </button>
-          <button
-            onClick={() => setFiltersOpen(true)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <SlidersHorizontal className="h-3 w-3" />
-            <span className="editorial-caption">Фильтры</span>
           </button>
           {mode === 'media' && (
             <div className="ml-auto flex gap-1">

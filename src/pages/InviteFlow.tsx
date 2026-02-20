@@ -41,30 +41,30 @@ const InviteFlow: React.FC = () => {
 
   if (view === 'list') {
     return (
-      <div className="min-h-screen bg-background px-6 pt-6 pb-8">
-        <button onClick={() => setView('invite')} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" />
-          <span className="text-xs tracking-widest uppercase font-light">Назад</span>
+      <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
+        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm font-medium tracking-wide">Назад</span>
         </button>
 
-        <h1 className="editorial-title text-2xl mb-6">Приглашения</h1>
+        <h1 className="hero-title text-2xl mb-6">Приглашения</h1>
 
         {incomingList.length > 0 && (
-          <div className="mb-8">
-            <p className="editorial-caption text-muted-foreground mb-3">Входящие</p>
-            <div className="space-y-0">
+          <div className="mb-8 page-enter-stagger">
+            <p className="section-title text-primary mb-3">Входящие</p>
+            <div className="space-y-3">
               {incomingList.map(inv => {
                 const from = getMember(inv.fromId);
                 return (
-                  <div key={inv.id} className="py-4 border-b border-border/30 flex flex-col gap-2">
+                  <div key={inv.id} className="content-card py-4 px-4 flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-light tracking-wide">{from?.firstName} {from?.lastName}</p>
-                        <p className="text-xs font-light text-muted-foreground/50 mt-0.5">{new Date(inv.createdAt).toLocaleDateString()}</p>
+                        <p className="text-[15px] font-semibold text-foreground">{from?.firstName} {from?.lastName}</p>
+                        <p className="text-xs font-medium text-muted-foreground/70 mt-0.5">{new Date(inv.createdAt).toLocaleDateString()}</p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
-                        <Button variant="outline" size="sm" className="rounded-sm h-8 text-xs" onClick={() => handleAccept(inv)}>Принять</Button>
-                        <Button variant="ghost" size="sm" className="rounded-sm h-8 text-xs text-muted-foreground" onClick={() => handleDecline(inv.id)}>Отклонить</Button>
+                        <Button variant="default" size="sm" className="rounded-xl border-2 h-9 text-xs font-semibold" onClick={() => handleAccept(inv)}>Принять</Button>
+                        <Button variant="outline" size="sm" className="rounded-xl border-2 h-9 text-xs" onClick={() => handleDecline(inv.id)}>Отклонить</Button>
                       </div>
                     </div>
                   </div>
@@ -74,28 +74,28 @@ const InviteFlow: React.FC = () => {
           </div>
         )}
 
-        <p className="editorial-caption text-muted-foreground mb-3">Отправленные</p>
-        <div className="space-y-0 mb-6">
+        <p className="section-title text-primary mb-3">Отправленные</p>
+        <div className="space-y-3 mb-6 page-enter-stagger">
           {sentList.map(inv => {
             const from = getMember(inv.fromId);
             return (
-              <div key={inv.id} className="py-4 border-b border-border/30 last:border-b-0">
+              <div key={inv.id} className="content-card py-4 px-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-light tracking-wide">{inv.toEmail || inv.toPhone}</p>
-                    <p className="text-xs font-light text-muted-foreground/50 mt-0.5">
+                    <p className="text-[15px] font-semibold text-foreground">{inv.toEmail || inv.toPhone}</p>
+                    <p className="text-xs font-medium text-muted-foreground/70 mt-0.5">
                       {from?.firstName} · {new Date(inv.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <span className="editorial-caption text-muted-foreground capitalize">{inv.status === 'sent' ? 'отправлено' : inv.status === 'accepted' ? 'принято' : inv.status}</span>
+                  <span className="text-xs font-semibold text-primary/80 capitalize">{inv.status === 'sent' ? 'отправлено' : inv.status === 'accepted' ? 'принято' : inv.status}</span>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => handleCopy(inv.link, inv.id)} className="text-xs font-light text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <button onClick={() => handleCopy(inv.link, inv.id)} className="text-xs font-medium text-primary/80 hover:text-primary transition-colors flex items-center gap-1">
                     {copied === inv.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     {copied === inv.id ? 'Скопировано' : 'Скопировать ещё раз'}
                   </button>
                   {inv.status === 'sent' && (
-                    <button onClick={() => handleCancelInvite(inv.id)} className="text-xs font-light text-destructive/70 hover:text-destructive transition-colors flex items-center gap-1">
+                    <button onClick={() => handleCancelInvite(inv.id)} className="text-xs font-medium text-destructive/70 hover:text-destructive transition-colors flex items-center gap-1">
                       <XCircle className="h-3 w-3" /> Отменить
                     </button>
                   )}
@@ -105,7 +105,7 @@ const InviteFlow: React.FC = () => {
           })}
         </div>
 
-        <Button variant="outline" className="w-full rounded-sm h-11" onClick={() => { setView('invite'); }}>
+        <Button variant="outline" className="content-card w-full min-h-[48px] rounded-2xl border-2 font-semibold hover:border-primary/40 transition-all" onClick={() => setView('invite')}>
           Создать новое приглашение
         </Button>
       </div>
@@ -113,45 +113,35 @@ const InviteFlow: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-6 pt-6 pb-8">
-      <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" />
-        <span className="text-xs tracking-widest uppercase font-light">Назад</span>
+    <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+        <ArrowLeft className="h-5 w-5" />
+        <span className="text-sm font-medium tracking-wide">Назад</span>
       </button>
 
-      <h1 className="editorial-title text-2xl mb-2">Пригласить</h1>
-      <p className="text-sm font-light text-muted-foreground mb-10">Отправьте ссылку близкому человеку</p>
+      <h1 className="hero-title text-2xl mb-2">Пригласить</h1>
+      <p className="text-sm font-medium text-muted-foreground mb-8">Отправьте ссылку близкому человеку</p>
 
-      <div className="mb-10">
-        <p className="editorial-caption text-muted-foreground mb-3">Ссылка</p>
-        <Input
-          value={mockLink}
-          readOnly
-          className="rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 mb-4"
-        />
+      <div className="mb-10 page-enter-stagger">
+        <p className="section-title text-primary mb-3">Ссылка</p>
+        <Input value={mockLink} readOnly className="rounded-xl border-2 mb-4 bg-muted/50 font-medium" />
         <div className="flex gap-3">
-          <button onClick={() => handleCopy(mockLink)} className="flex-1 h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 flex items-center justify-center gap-2">
-            {copied === 'main' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          <button onClick={() => handleCopy(mockLink)} className="content-card flex-1 min-h-[48px] rounded-2xl border-2 flex items-center justify-center gap-2 text-[15px] font-semibold hover:border-primary/40 hover:shadow-md transition-all">
+            {copied === 'main' ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
             {copied === 'main' ? 'Скопировано' : 'Скопировать'}
           </button>
-          <button onClick={handleShare} className="flex-1 h-11 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 flex items-center justify-center gap-2">
-            <Share2 className="h-3.5 w-3.5" /> Поделиться
+          <button onClick={handleShare} className="content-card flex-1 min-h-[48px] rounded-2xl border-2 flex items-center justify-center gap-2 text-[15px] font-semibold hover:border-primary/40 hover:shadow-md transition-all">
+            <Share2 className="h-4 w-4" /> Поделиться
           </button>
         </div>
       </div>
 
-      <button
-        onClick={() => navigate(ROUTES.classic.family)}
-        className="w-full h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300 mb-4"
-      >
+      <button onClick={() => navigate(ROUTES.classic.family)} className="content-card w-full min-h-[52px] rounded-2xl border-2 bg-foreground text-background text-[15px] font-semibold hover:bg-foreground/90 transition-all mb-4">
         Готово
       </button>
-      <button
-        onClick={() => setView('list')}
-        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-light text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <Send className="h-3.5 w-3.5" />
-        <span className="tracking-wider">Отправленные приглашения</span>
+      <button onClick={() => setView('list')} className="link-row-warm w-full justify-center gap-2 py-3 text-sm font-semibold text-primary/90">
+        <Send className="h-4 w-4 link-row-icon" />
+        <span>Отправленные приглашения</span>
       </button>
     </div>
   );

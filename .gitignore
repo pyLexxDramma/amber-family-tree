@@ -28,3 +28,4 @@ dist-ssr
 
 # Kanban sync (generated JSON)
 docs/sync-evening-response.json
+.cursor

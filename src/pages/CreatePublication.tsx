@@ -48,17 +48,18 @@ const CreatePublication: React.FC = () => {
 
   if (!type) {
     return (
-      <div className="min-h-screen bg-background px-4 pt-4">
-        <button onClick={() => navigate(-1)} className="mb-6 flex items-center gap-1 text-muted-foreground text-sm">
-          <ArrowLeft className="h-4 w-4" /> Back
+      <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
+        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm font-medium tracking-wide">Назад</span>
         </button>
-        <h1 className="text-2xl font-bold mb-2">New Publication</h1>
-        <p className="text-muted-foreground text-sm mb-6">What would you like to share?</p>
-        <div className="grid grid-cols-2 gap-3">
+        <h1 className="hero-title text-2xl mb-2">Создать публикацию</h1>
+        <p className="text-sm font-medium text-muted-foreground mb-6">Что хотите добавить?</p>
+        <div className="grid grid-cols-2 gap-3 page-enter-stagger">
           {types.map(t => (
-            <button key={t.id} onClick={() => setType(t.id)} className="flex flex-col items-center gap-2 rounded-2xl bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
+            <button key={t.id} onClick={() => setType(t.id)} className="content-card flex flex-col items-center gap-2 p-6 transition-all duration-300 hover:border-primary/40">
               <t.icon className="h-8 w-8 text-primary" />
-              <span className="text-sm font-medium">{t.label}</span>
+              <span className="text-sm font-semibold text-foreground">{t.label}</span>
             </button>
           ))}
         </div>
@@ -67,60 +68,74 @@ const CreatePublication: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-4 pb-8">
-      <button onClick={() => setType(null)} className="mb-4 flex items-center gap-1 text-muted-foreground text-sm">
-        <ArrowLeft className="h-4 w-4" /> Change type
+    <div className="min-h-screen bg-background px-6 pt-4 pb-8 page-enter">
+      <button onClick={() => setType(null)} className="touch-target mb-4 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+        <ArrowLeft className="h-5 w-5" />
+        <span className="text-sm font-medium tracking-wide">Сменить тип</span>
       </button>
-      <h1 className="text-xl font-bold mb-4">New {type.charAt(0).toUpperCase() + type.slice(1)}</h1>
+      <h1 className="hero-title text-xl mb-4">{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
 
-      <div className="space-y-4">
-        <div><Label>Title (optional)</Label><Input value={title} onChange={e => setTitle(e.target.value)} className="mt-1" placeholder="Give it a name..." /></div>
-        <div><Label>Description</Label><Textarea value={text} onChange={e => setText(e.target.value)} className="mt-1" placeholder="Tell the story..." /></div>
-        <div className="flex gap-3">
-          <div className="flex-1"><Label>Event Date</Label><Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-1" /></div>
-          <div className="flex items-end gap-2 pb-0.5"><Switch checked={approximate} onCheckedChange={setApproximate} /><span className="text-xs text-muted-foreground">Approx.</span></div>
+      <div className="space-y-4 page-enter-stagger">
+        <div className="content-card p-4 rounded-2xl">
+          <Label className="text-sm font-semibold text-foreground">Заголовок (необязательно)</Label>
+          <Input value={title} onChange={e => setTitle(e.target.value)} className="mt-2 rounded-xl border-2" placeholder="Название..." />
         </div>
-        <div><Label>Place</Label><Input value={place} onChange={e => setPlace(e.target.value)} className="mt-1" placeholder="Where did it happen?" /></div>
-        <div>
-          <Label>Topic Tag *</Label>
+        <div className="content-card p-4 rounded-2xl">
+          <Label className="text-sm font-semibold text-foreground">Описание</Label>
+          <Textarea value={text} onChange={e => setText(e.target.value)} className="mt-2 rounded-xl border-2 min-h-[80px]" placeholder="Расскажите историю..." />
+        </div>
+        <div className="content-card p-4 rounded-2xl flex gap-3 items-end">
+          <div className="flex-1">
+            <Label className="text-sm font-semibold text-foreground">Дата события</Label>
+            <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-2 rounded-xl border-2" />
+          </div>
+          <div className="flex items-center gap-2 pb-0.5">
+            <Switch checked={approximate} onCheckedChange={setApproximate} />
+            <span className="text-xs font-medium text-muted-foreground">приблизительно</span>
+          </div>
+        </div>
+        <div className="content-card p-4 rounded-2xl">
+          <Label className="text-sm font-semibold text-foreground">Место</Label>
+          <Input value={place} onChange={e => setPlace(e.target.value)} className="mt-2 rounded-xl border-2" placeholder="Где это было?" />
+        </div>
+        <div className="content-card p-4 rounded-2xl">
+          <Label className="text-sm font-semibold text-foreground">Тема *</Label>
           <Select value={topicTag} onValueChange={v => { setTopicTag(v); setTagError(''); }}>
-            <SelectTrigger className="mt-1"><SelectValue placeholder="Choose a topic" /></SelectTrigger>
+            <SelectTrigger className="mt-2 rounded-xl border-2 h-12"><SelectValue placeholder="Выберите тему" /></SelectTrigger>
             <SelectContent>{topicTags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
-          {tagError && <p className="text-destructive text-xs mt-0.5">{tagError}</p>}
+          {tagError && <p className="text-destructive text-sm font-medium mt-1">{tagError}</p>}
         </div>
 
-        {/* Files */}
         {type !== 'text' && (
-          <div>
-            <Label>Files</Label>
-            <div className="mt-1 space-y-2">
+          <div className="content-card p-4 rounded-2xl">
+            <Label className="text-sm font-semibold text-foreground">Файлы</Label>
+            <div className="mt-2 space-y-2">
               {files.map((f, i) => (
-                <div key={i} className={`flex items-center gap-2 rounded-xl p-2.5 text-sm ${f.error ? 'bg-destructive/10 border border-destructive/30' : 'bg-card'}`}>
+                <div key={i} className={`flex items-center gap-2 rounded-xl p-3 text-sm border-2 ${f.error ? 'border-destructive/50 bg-destructive/5' : 'border-border/50'}`}>
                   <div className="flex-1">
-                    <p className="font-medium">{f.name}</p>
+                    <p className="font-semibold">{f.name}</p>
                     <p className="text-xs text-muted-foreground">{(f.size / 1_000_000).toFixed(1)} MB</p>
                     {f.error && <p className="text-xs text-destructive flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{f.error}</p>}
                   </div>
-                  <button onClick={() => setFiles(fs => fs.filter((_,j) => j !== i))}><X className="h-4 w-4 text-muted-foreground" /></button>
+                  <button onClick={() => setFiles(fs => fs.filter((_,j) => j !== i))} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4 text-muted-foreground" /></button>
                 </div>
               ))}
-              <Button variant="outline" size="sm" className="rounded-xl" onClick={addMockFile}>
-                <Upload className="h-3.5 w-3.5 mr-1" /> Add file (mock)
+              <Button variant="outline" size="sm" className="rounded-xl border-2 mt-2" onClick={addMockFile}>
+                <Upload className="h-3.5 w-3.5 mr-1" /> Добавить файл (мок)
               </Button>
             </div>
           </div>
         )}
 
-        {/* Visibility */}
-        <div className="rounded-xl bg-card p-3">
-          <p className="text-sm font-medium mb-1">Visibility</p>
-          <p className="text-xs text-muted-foreground">Visible to all family members. Tap to customize.</p>
+        <div className="content-card p-4 rounded-2xl">
+          <p className="text-sm font-semibold text-foreground mb-1">Видимость</p>
+          <p className="text-xs font-medium text-muted-foreground">Всем участникам семьи. Нажмите, чтобы настроить.</p>
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => navigate(-1)}>Cancel</Button>
-          <Button className="flex-1 rounded-xl h-11" onClick={handlePublish} disabled={files.some(f => !!f.error)}>Publish</Button>
+          <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 font-semibold" onClick={() => navigate(-1)}>Отмена</Button>
+          <Button className="flex-1 rounded-2xl h-12 font-semibold" onClick={handlePublish} disabled={files.some(f => !!f.error)}>Опубликовать</Button>
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ const MyProfile: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="pt-4 pb-4">
+      <div className="pt-4 pb-4 page-enter">
         {/* Hero-style profile header */}
         <div className="relative mx-6 mb-8 overflow-hidden bg-muted/50 flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
           {demoWithPhotos && (
@@ -48,17 +48,16 @@ const MyProfile: React.FC = () => {
           </div>
         )}
 
-        {/* Navigation sections */}
-        <div className="px-6">
-          {sections.map((s, i) => (
+        <div className="px-6 space-y-1">
+          {sections.map(s => (
             <button
               key={s.label}
               onClick={() => navigate(s.path)}
-              className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity"
+              className="link-row-warm w-full"
             >
-              <s.icon className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
-              <span className="text-sm font-light tracking-wide flex-1 text-left">{s.label}</span>
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/30" />
+              <s.icon className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
+              <span className="text-[15px] font-medium text-foreground flex-1 text-left">{s.label}</span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
             </button>
           ))}
         </div>

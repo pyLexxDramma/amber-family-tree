@@ -87,22 +87,19 @@ const PublicationDetails: React.FC = () => {
         )}
       </div>
 
-      {/* Content below hero */}
-      <div className="px-6 pt-6 pb-8">
-        {/* Author */}
-        <div className="flex items-center gap-3 mb-6">
+      <div className="px-6 pt-6 pb-8 page-enter">
+        <div className="content-card flex items-center gap-3 p-4 mb-6">
           <AvatarPlaceholder name={author ? `${author.firstName} ${author.lastName}` : ''} size="md" />
           <div className="flex-1">
-            <p className="text-sm font-medium">{author?.firstName} {author?.lastName}</p>
-            <p className="text-xs text-muted-foreground font-light">{new Date(pub.publishDate).toLocaleDateString()}</p>
+            <p className="text-[15px] font-semibold text-foreground">{author?.firstName} {author?.lastName}</p>
+            <p className="text-xs font-medium text-muted-foreground/70">{new Date(pub.publishDate).toLocaleDateString()}</p>
           </div>
-          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-            <UserPlus className="h-3 w-3" /> Co-author
+          <button className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors flex items-center gap-1 rounded-lg px-2 py-1">
+            <UserPlus className="h-3 w-3" /> Соавтор
           </button>
         </div>
 
-        {/* Story text */}
-        <div className="max-w-prose mb-8">
+        <div className="content-card p-4 rounded-2xl max-w-prose mb-8">
           <p className="editorial-body text-foreground/80">{pub.text}</p>
         </div>
 
@@ -165,7 +162,7 @@ const PublicationDetails: React.FC = () => {
 
         {/* Audio */}
         {audios.map(a => (
-          <div key={a.id} className="mb-4 flex items-center gap-3 rounded-sm bg-card p-4">
+          <div key={a.id} className="content-card mb-4 flex items-center gap-3 p-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Mic className="h-5 w-5 text-primary" />
             </div>
@@ -191,36 +188,35 @@ const PublicationDetails: React.FC = () => {
           </div>
         )}
 
-        {/* Likes & comments */}
-        <div className="flex items-center gap-6 py-4 border-t border-border">
-          <button onClick={() => setLiked(!liked)} className={`flex items-center gap-1.5 text-sm font-light ${liked ? 'text-primary' : 'text-muted-foreground'}`}>
-            <Heart className={`h-4 w-4 ${liked ? 'fill-primary' : ''}`} /> {pub.likes.length + (liked ? 1 : 0)}
-          </button>
-          <span className="flex items-center gap-1.5 text-sm font-light text-muted-foreground">
-            <MessageCircle className="h-4 w-4" /> {pub.comments.length}
-          </span>
-        </div>
+        <div className="content-card p-4 rounded-2xl mb-6">
+          <div className="flex items-center gap-6 pb-4 border-b border-border/80">
+            <button onClick={() => setLiked(!liked)} className={`flex items-center gap-1.5 text-sm font-semibold ${liked ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Heart className={`h-4 w-4 ${liked ? 'fill-primary' : ''}`} /> {pub.likes.length + (liked ? 1 : 0)}
+            </button>
+            <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              <MessageCircle className="h-4 w-4" /> {pub.comments.length}
+            </span>
+          </div>
 
-        {/* Comments */}
-        <div className="space-y-4 mt-4 mb-6">
-          {pub.comments.map(c => {
-            const ca = getMember(c.authorId);
-            return (
-              <div key={c.id} className="flex gap-3">
-                <AvatarPlaceholder name={ca ? `${ca.firstName} ${ca.lastName}` : ''} size="sm" />
-                <div>
-                  <p className="text-xs font-medium">{ca?.firstName}</p>
-                  <p className="text-sm font-light text-foreground/80">{c.text}</p>
+          <div className="space-y-4 mt-4 mb-4">
+            {pub.comments.map(c => {
+              const ca = getMember(c.authorId);
+              return (
+                <div key={c.id} className="flex gap-3">
+                  <AvatarPlaceholder name={ca ? `${ca.firstName} ${ca.lastName}` : ''} size="sm" />
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{ca?.firstName}</p>
+                    <p className="text-sm font-medium text-foreground/80">{c.text}</p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        {/* Add comment */}
-        <div className="flex gap-2">
-          <Input placeholder="Write a comment..." value={newComment} onChange={e => setNewComment(e.target.value)} className="flex-1 rounded-sm" />
-          <Button size="sm" className="rounded-sm" disabled={!newComment.trim()}>Send</Button>
+          <div className="flex gap-2">
+            <Input placeholder="Написать комментарий..." value={newComment} onChange={e => setNewComment(e.target.value)} className="flex-1 rounded-xl border-2 min-h-touch" />
+            <Button size="sm" className="rounded-xl border-2 min-h-touch font-semibold" disabled={!newComment.trim()}>Отправить</Button>
+          </div>
         </div>
       </div>
     </div>

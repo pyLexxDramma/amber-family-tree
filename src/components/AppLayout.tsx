@@ -5,7 +5,7 @@ import { BottomNav } from './BottomNav';
 export const AppLayout: React.FC<{ children: React.ReactNode; hideNav?: boolean }> = ({ children, hideNav }) => (
   <div className="relative flex min-h-screen flex-col overflow-hidden paper-texture">
     <div className="fixed inset-0 -z-10 bg-background" />
-    <main className={`flex-1 ${hideNav ? '' : 'pb-20'} relative z-0`}>
+    <main className={`flex-1 ${hideNav ? '' : 'pb-24'} relative z-0`}>
       {children}
     </main>
     {!hideNav && <BottomNav />}

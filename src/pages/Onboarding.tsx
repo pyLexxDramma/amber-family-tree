@@ -55,9 +55,17 @@ const Onboarding: React.FC = () => {
         <div className="absolute inset-0 overlay-light" />
       </div>
       <div className="relative z-10 flex min-h-screen flex-col px-6 pt-8 pb-8">
-      <h1 className="editorial-title text-3xl mb-2">Давайте настроим профиль</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex rounded-full bg-foreground/15 p-1">
+          <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">1 шаг</span>
+        </div>
+        <div className="h-0.5 flex-1 max-w-[80px] bg-foreground/20 rounded" />
+        <span className="text-xs font-light text-muted-foreground">2 шаг</span>
+      </div>
+      <h1 className="hero-title text-3xl mb-2">Давайте настроим профиль</h1>
+      <p className="text-muted-foreground text-sm font-light mb-8">Заполните основные данные — так близкие узнают вас в дереве</p>
 
-      <div className="flex justify-center my-10">
+      <div className="flex justify-center my-8">
         <div className="relative">
           <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
             <span className="text-2xl font-serif text-foreground/30">?</span>
@@ -77,18 +85,18 @@ const Onboarding: React.FC = () => {
         {field('about', 'О себе')}
       </div>
 
-      <div className="mt-12 flex gap-3">
+      <div className="mt-12 flex gap-4">
         <button
           type="button"
           onClick={() => navigate(ROUTES.classic.tree)}
-          className="flex-1 h-12 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300"
+          className="touch-target flex-1 min-h-[52px] rounded-2xl border-2 border-foreground/25 text-base font-medium hover:bg-foreground hover:text-background transition-all duration-200"
         >
           Пропустить
         </button>
         <button
           type="button"
           onClick={handleNext}
-          className="flex-1 h-12 bg-foreground text-background text-sm font-light tracking-widest uppercase hover:bg-foreground/80 transition-all duration-300"
+          className="touch-target flex-1 min-h-[52px] rounded-2xl bg-primary text-primary-foreground text-base font-medium hover:bg-primary/90 active:opacity-95 transition-all duration-200 shadow-md"
         >
           Далее
         </button>

@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
 import { mockMembers, currentUserId } from '@/data/mock-members';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Plus, UserPlus, Contact, Send, User } from 'lucide-react';
@@ -33,26 +34,27 @@ const FamilyTree: React.FC = () => {
       <button
         key={m.id}
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-        className={`relative overflow-hidden group rounded-xl ${widthClass} aspect-square flex flex-col bg-card border border-border/50`}
+        className={`person-card relative overflow-hidden group ${widthClass} aspect-square flex flex-col hover:border-primary/40 hover:shadow-md hover:shadow-primary/10`}
       >
-        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-muted rounded-t-xl overflow-hidden">
+        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-muted rounded-t-2xl overflow-hidden">
           {demoWithPhotos && (
-            <img src={`https://picsum.photos/seed/member${m.id}/400/400`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+            <img src={`https://picsum.photos/seed/member${m.id}/400/400`} alt="" className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
           )}
           <div className={`h-full w-full flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
-            <User className={`h-1/2 w-1/2 ${m.isActive ? 'text-foreground' : 'text-muted-foreground'}`} />
+            <User className={`h-1/2 w-1/2 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
           </div>
           {isCurrent && (
-            <div className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary border border-background" />
+            <div className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary border-2 border-background" />
           )}
           {!m.isActive && (
-            <span className="absolute top-1.5 left-1.5 text-[8px] tracking-widest uppercase text-muted-foreground font-light">offline</span>
+            <span className="absolute top-1.5 left-1.5 text-[8px] tracking-widest uppercase text-muted-foreground font-medium bg-black/20 px-1.5 py-0.5 rounded">offline</span>
           )}
         </div>
-        <div className="p-2 text-center bg-card/95 border-t border-border/30 rounded-b-xl">
-          <p className="text-foreground text-xs font-medium truncate" title={m.nickname || m.firstName}>
+        <div className="p-2.5 text-center bg-card/95 border-t border-primary/10 rounded-b-2xl group-hover:bg-primary/5 transition-colors">
+          <p className="text-foreground text-xs font-semibold truncate text-primary/90 group-hover:text-primary" title={m.nickname || m.firstName}>
             {m.nickname || m.firstName}
           </p>
+          <p className="text-[10px] font-medium text-primary/60 mt-0.5">Смотреть фото</p>
         </div>
       </button>
     );
@@ -60,40 +62,38 @@ const FamilyTree: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="pb-4">
-        {/* Hero banner */}
+      <TopBar
+        title="Дерево"
+        right={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="touch-target flex items-center gap-1.5 min-h-touch px-3 py-2 text-xs font-medium tracking-wide border border-current/30 rounded-xl hover:bg-white/15 transition-colors"
+              onClick={() => {}}
+            >
+              <UserPlus className="h-4 w-4" /> Создать контакт
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="touch-target flex h-10 w-10 items-center justify-center rounded-xl border border-current/30 hover:bg-white/15 transition-colors">
+                  <Plus className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm font-light" onClick={() => navigate(ROUTES.classic.invite)}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        }
+      />
+      <div className="pb-4 page-enter">
         <div className="relative w-full bg-muted/30 overflow-hidden" style={{ aspectRatio: '16/9' }}>
           {demoWithPhotos && (
             <img src="https://picsum.photos/seed/sokolov/1200/675" alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { if (e.currentTarget.src !== '/placeholder.svg') e.currentTarget.src = '/placeholder.svg'; }} />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
-
-          <div className="absolute top-0 left-0 right-0 p-5 flex items-start justify-between">
-            <div>
-              <p className="editorial-caption text-white/40">Семья</p>
-              <h1 className="editorial-title text-white text-4xl mt-0.5">Соколовы</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="h-9 px-3 flex items-center gap-1.5 border border-white/20 text-white/80 text-xs font-light tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300"
-              >
-                <UserPlus className="h-3.5 w-3.5" /> Создать контакт
-              </button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="h-9 w-9 flex items-center justify-center border border-white/20 text-white/60 hover:bg-white hover:text-black transition-all duration-300">
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
-                  <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
-                  <DropdownMenuItem className="text-sm font-light" onClick={() => navigate(ROUTES.classic.invite)}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
             <div className="flex gap-6">
@@ -113,7 +113,6 @@ const FamilyTree: React.FC = () => {
           </div>
         </div>
 
-        {/* Generations: в центре — текущий пользователь (в своём поколении он первый) */}
         {[1, 2, 3].map(gen => {
           const raw = generations[gen] || [];
           const members = gen === 3
@@ -124,16 +123,9 @@ const FamilyTree: React.FC = () => {
 
           return (
             <div key={gen} className="mt-8">
-              {/* Section header */}
               <div className="px-6 mb-4">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="editorial-caption text-muted-foreground">{`Поколение ${gen}`}</p>
-                    <h2 className="editorial-title text-xl mt-1 text-foreground">{config.label}</h2>
-                  </div>
-                  <p className="text-[11px] font-light text-muted-foreground italic">{config.subtitle}</p>
-                </div>
-                <div className="h-px bg-border/40 mt-3" />
+                <p className="section-title text-primary">{config.label}</p>
+                <p className="text-sm font-light text-muted-foreground mt-1 italic">{config.subtitle}</p>
               </div>
 
               {isLastGen ? (

@@ -2,7 +2,8 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { getMember } from '@/data/mock-members';
-import { ArrowLeft, Send, TreePine, Users, Trash2, Newspaper, Image, User } from 'lucide-react';
+import { TopBar } from '@/components/TopBar';
+import { Send, TreePine, Users, Trash2, Newspaper, Image, User } from 'lucide-react';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 
 const ContactProfile: React.FC = () => {
@@ -25,7 +26,7 @@ const ContactProfile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
+      <TopBar title={member.nickname || member.firstName} onBack={() => navigate(-1)} />
       <div className="relative w-full bg-muted/50 flex items-center justify-center overflow-hidden" style={{ aspectRatio: '4/3' }}>
         {demoWithPhotos && (
           <img src={`https://picsum.photos/seed/member${member.id}/800/600`} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
@@ -35,10 +36,6 @@ const ContactProfile: React.FC = () => {
         </div>
         <div className="absolute inset-0 editorial-overlay-top" />
         <div className="absolute inset-0 editorial-overlay" />
-
-        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 text-white/70 hover:text-white transition-colors z-10">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
 
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <p className="editorial-caption text-white/40 mb-1">{relationLabel}</p>
@@ -63,39 +60,38 @@ const ContactProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-6 pt-6 pb-8">
+      <div className="px-6 pt-6 pb-8 bg-card/50 rounded-t-2xl -mt-2 relative z-10 page-enter">
         {member.about && (
           <p className="editorial-body text-foreground/70 text-sm mb-6">{member.about}</p>
         )}
 
-        {/* По ТЗ: Публикации контакта, Медиа */}
-        <div className="space-y-0 mb-6">
-          <button onClick={() => navigate(feedUrl(`author=${member.id}`))} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity text-left">
-            <Newspaper className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
-            <span className="text-sm font-light tracking-wide">Публикации контакта</span>
+        <p className="text-xs font-semibold tracking-widest uppercase text-primary/80 mb-3">Публикации и медиа</p>
+        <div className="space-y-1 mb-6">
+          <button onClick={() => navigate(feedUrl(`author=${member.id}`))} className="link-row-warm">
+            <Newspaper className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
+            <span className="text-[15px] font-medium text-foreground">Публикации контакта</span>
           </button>
-          <button onClick={() => navigate(feedUrl(`participant=${member.id}`))} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity text-left">
-            <Newspaper className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
-            <span className="text-sm font-light tracking-wide">Публикации, где контакт участник</span>
+          <button onClick={() => navigate(feedUrl(`participant=${member.id}`))} className="link-row-warm">
+            <Newspaper className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
+            <span className="text-[15px] font-medium text-foreground">Публикации, где контакт участник</span>
           </button>
-          <button onClick={() => navigate(feedUrl(`view=media&author=${member.id}`))} className="w-full flex items-center gap-4 py-4 border-b border-border/30 hover:opacity-70 transition-opacity text-left">
-            <Image className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
-            <span className="text-sm font-light tracking-wide">Медиа</span>
+          <button onClick={() => navigate(feedUrl(`view=media&author=${member.id}`))} className="link-row-warm">
+            <Image className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
+            <span className="text-[15px] font-medium text-foreground">Медиа</span>
           </button>
         </div>
 
-        <p className="editorial-caption text-muted-foreground mb-2">Действия</p>
-        <div className="space-y-0 mb-6">
+        <p className="text-xs font-semibold tracking-widest uppercase text-primary/80 mb-3">Действия</p>
+        <div className="space-y-1 mb-6">
           {actions.map(a => (
-            <button key={a.label} className="w-full flex items-center gap-4 py-4 border-b border-border/30 last:border-b-0 hover:opacity-70 transition-opacity text-left">
-              <a.icon className="h-4 w-4 text-muted-foreground/50" strokeWidth={1.5} />
-              <span className="text-sm font-light tracking-wide">{a.label}</span>
+            <button key={a.label} className="link-row-warm">
+              <a.icon className="h-5 w-5 shrink-0 link-row-icon" strokeWidth={1.8} />
+              <span className="text-[15px] font-medium text-foreground">{a.label}</span>
             </button>
           ))}
-          <button className="w-full flex items-center gap-4 py-4 hover:opacity-70 transition-opacity text-left">
-            <Trash2 className="h-4 w-4 text-destructive/50" strokeWidth={1.5} />
-            <span className="text-sm font-light tracking-wide text-destructive/70">Удалить контакт</span>
+          <button className="link-row-warm">
+            <Trash2 className="h-5 w-5 shrink-0 text-destructive/80" strokeWidth={1.8} />
+            <span className="text-[15px] font-medium text-destructive/90">Удалить контакт</span>
           </button>
         </div>
       </div>

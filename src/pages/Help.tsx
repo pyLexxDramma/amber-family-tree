@@ -20,19 +20,19 @@ const Help: React.FC = () => {
   const [sent, setSent] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background px-6 pt-6 pb-8">
-      <button onClick={() => navigate(-1)} className="mb-8 flex items-center gap-2 text-muted-foreground/60 hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" />
-        <span className="text-xs tracking-widest uppercase font-light">Back</span>
+    <div className="min-h-screen bg-background px-6 pt-6 pb-8 page-enter">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-2 py-1 -ml-2">
+        <ArrowLeft className="h-5 w-5" />
+        <span className="text-sm font-medium tracking-wide">Назад</span>
       </button>
 
       <h1 className="editorial-title text-2xl mb-8">Help & FAQ</h1>
 
-      <Accordion type="single" collapsible className="mb-10">
+      <Accordion type="single" collapsible className="mb-10 space-y-3">
         {faqs.map((faq, i) => (
-          <AccordionItem key={i} value={`faq-${i}`} className="border-border/30">
-            <AccordionTrigger className="text-sm font-light text-left tracking-wide py-5">{faq.q}</AccordionTrigger>
-            <AccordionContent className="text-sm font-light text-muted-foreground editorial-body pb-5">{faq.a}</AccordionContent>
+          <AccordionItem key={i} value={`faq-${i}`} className="content-card border-b-0 rounded-2xl overflow-hidden px-4">
+            <AccordionTrigger className="text-[15px] font-semibold text-left tracking-wide py-5 hover:no-underline [&[data-state=open]]:border-b-2 [&[data-state=open]]:border-border/50">{faq.q}</AccordionTrigger>
+            <AccordionContent className="text-sm font-medium text-muted-foreground editorial-body pb-5">{faq.a}</AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
@@ -50,18 +50,18 @@ const Help: React.FC = () => {
             placeholder="Your email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 focus-visible:border-foreground"
+            className="rounded-xl border-2 border-input"
           />
           <Textarea
             placeholder="Describe your issue..."
             value={message}
             onChange={e => setMessage(e.target.value)}
-            className="rounded-none border-0 border-b border-border bg-transparent px-0 text-sm font-light focus-visible:ring-0 focus-visible:border-foreground resize-none"
+            className="rounded-xl border-2 border-input min-h-[100px] resize-none"
           />
           <button
             onClick={() => setSent(true)}
             disabled={!message.trim()}
-            className="w-full h-12 border border-foreground/20 text-sm font-light tracking-widest uppercase hover:bg-foreground hover:text-background transition-all duration-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground"
+            className="content-card w-full min-h-[52px] rounded-2xl border-2 border-foreground/25 text-[15px] font-semibold tracking-wide hover:bg-foreground hover:text-background transition-all duration-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground"
           >
             Send message
           </button>
