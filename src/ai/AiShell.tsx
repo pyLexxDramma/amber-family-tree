@@ -94,7 +94,7 @@ export const AiShell: React.FC = () => {
           case 'create_publication':
             reply = 'Чтобы создать публикацию, откройте полный режим по кнопке ниже или скажите «Классический режим» и перейдите в «Создать».';
             viewType = 'story';
-            viewPayload = { action: 'create_publication' };
+            viewPayload = 'create_publication';
             break;
           case 'help':
             reply = 'Я умею: показать дерево, рассказать про любого (дедушку, бабушку, по имени), показать ленту и галерею медиа, подсказать, как создать публикацию. Управляйте голосом или текстом; нажимайте на контент справа для подробностей.';
@@ -301,8 +301,7 @@ export const AiShell: React.FC = () => {
           {interfaceView.type === 'feed' && <MiniFeed />}
           {interfaceView.type === 'gallery' && <MiniGallery />}
           {interfaceView.type === 'story' &&
-            typeof interfaceView.payload === 'object' &&
-            interfaceView.payload?.action === 'create_publication' && (
+            interfaceView.payload === 'create_publication' && (
               <div className="animate-in fade-in duration-300 flex flex-col items-center justify-center min-h-[280px] text-center px-4">
                 <p className="editorial-title text-xl text-foreground/90 mb-2">Создать публикацию</p>
                 <p className="text-sm text-muted-foreground mb-6 max-w-xs">

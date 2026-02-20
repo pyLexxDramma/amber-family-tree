@@ -1,193 +1,123 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { mockMembers, currentUserId } from '@/data/mock-members';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, UserPlus, Contact, Send, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
+import { User, Plus } from 'lucide-react';
 
-const generationConfig: Record<number, { label: string; subtitle: string }> = {
-  1: { label: 'Дедушки и бабушки', subtitle: 'Корни нашей истории' },
-  2: { label: 'Родители', subtitle: 'Связь поколений' },
-  3: { label: 'Наше поколение', subtitle: 'Пишем следующую главу' },
+const generationConfig: Record<number, { label: string }> = {
+  1: { label: 'Дедушки и бабушки' },
+  2: { label: 'Родители' },
+  3: { label: 'Наше поколение' },
 };
 
 const FamilyTree: React.FC = () => {
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const demoWithPhotos = useDemoWithPhotos();
 
   const generations: Record<number, typeof mockMembers> = {};
   mockMembers.forEach(m => { (generations[m.generation] ||= []).push(m); });
 
-  const totalMembers = mockMembers.length;
-  const activeMembers = mockMembers.filter(m => m.isActive).length;
-  const genCount = Object.keys(generations).length;
-
-  const memberCard = (m: typeof mockMembers[0], variant: 'portrait' | 'landscape' | 'scroll') => {
+  const memberCard = (m: typeof mockMembers[0]) => {
     const isCurrent = m.id === currentUserId;
-    const widthClass = variant === 'scroll' ? 'w-28 flex-shrink-0' : 'w-full';
 
     return (
       <button
         key={m.id}
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-        className={`person-card relative overflow-hidden group ${widthClass} aspect-square flex flex-col hover:border-primary/40 hover:shadow-md hover:shadow-primary/10`}
+        className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl bg-card text-left border-2 border-border/60 active:bg-primary/10 active:border-primary/30 transition-colors"
+        aria-label={`Открыть профиль: ${m.firstName} ${m.lastName}`}
       >
-        <div className="relative w-full flex-1 min-h-0 flex items-center justify-center bg-muted rounded-t-2xl overflow-hidden">
-          {demoWithPhotos && (
-            <img src={`https://picsum.photos/seed/member${m.id}/400/400`} alt="" className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
-          )}
-          <div className={`h-full w-full flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
-            <User className={`h-1/2 w-1/2 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
-          </div>
-          {isCurrent && (
-            <div className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary border-2 border-background" />
-          )}
-          {!m.isActive && (
-            <span className="absolute top-1.5 left-1.5 text-[8px] tracking-widest uppercase text-muted-foreground font-medium bg-black/20 px-1.5 py-0.5 rounded">offline</span>
+        {/* Avatar — large for accessibility */}
+        <div className="h-16 w-16 flex-shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 border-border">
+          {demoWithPhotos ? (
+            <img
+              src={`https://picsum.photos/seed/member${m.id}/200/200`}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <User className={`h-8 w-8 ${m.isActive ? 'text-foreground/60' : 'text-muted-foreground'}`} />
           )}
         </div>
-        <div className="p-2.5 text-center bg-card/95 border-t border-primary/10 rounded-b-2xl group-hover:bg-primary/5 transition-colors">
-          <p className="text-foreground text-xs font-semibold truncate text-primary/90 group-hover:text-primary" title={m.nickname || m.firstName}>
-            {m.nickname || m.firstName}
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p
+            className="text-xl font-bold text-foreground truncate"
+            style={{ fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif" }}
+          >
+            {m.nickname || m.firstName} {m.lastName}
           </p>
-          <p className="text-[10px] font-medium text-primary/60 mt-0.5">Смотреть фото</p>
+          {m.birthDate && (
+            <p className="text-base text-muted-foreground mt-0.5">
+              {new Date(m.birthDate).getFullYear()} г.р.
+              {m.city ? ` · ${m.city}` : ''}
+            </p>
+          )}
+          {isCurrent && (
+            <span className="inline-block mt-1 text-sm font-semibold text-primary">Это вы</span>
+          )}
         </div>
+
+        {/* Status dot */}
+        <div className={`h-4 w-4 flex-shrink-0 rounded-full ${m.isActive ? 'bg-green-500' : 'bg-muted-foreground/30'}`} 
+             aria-label={m.isActive ? 'Активен' : 'Неактивен'} />
       </button>
     );
   };
 
   return (
     <AppLayout>
-      <TopBar
-        title="Дерево"
-        right={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="touch-target flex items-center gap-1.5 min-h-touch px-3 py-2 text-xs font-medium tracking-wide border border-current/30 rounded-xl hover:bg-white/15 transition-colors"
-              onClick={() => {}}
-            >
-              <UserPlus className="h-4 w-4" /> Создать контакт
-            </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="touch-target flex h-10 w-10 items-center justify-center rounded-xl border border-current/30 hover:bg-white/15 transition-colors">
-                  <Plus className="h-5 w-5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light" onClick={() => navigate(ROUTES.classic.invite)}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        }
-      />
-      <div className="pb-4 page-enter">
-        <div className="relative w-full bg-muted/30 overflow-hidden" style={{ aspectRatio: '16/9' }}>
-          {demoWithPhotos && (
-            <img src="https://picsum.photos/seed/sokolov/1200/675" alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { if (e.currentTarget.src !== '/placeholder.svg') e.currentTarget.src = '/placeholder.svg'; }} />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
+      <TopBar title="Семейное дерево" />
 
-          <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
-            <div className="flex gap-6">
-              <div>
-                <p className="text-white text-2xl font-light">{totalMembers}</p>
-                <p className="editorial-caption text-white/40">участников</p>
-              </div>
-              <div>
-                <p className="text-white text-2xl font-light">{genCount}</p>
-                <p className="editorial-caption text-white/40">поколений</p>
-              </div>
-              <div>
-                <p className="text-white text-2xl font-light">{activeMembers}</p>
-                <p className="editorial-caption text-white/40">активных</p>
-              </div>
-            </div>
+      <div className="page-enter pb-6">
+        {/* Stats */}
+        <div className="px-6 pt-6 pb-4 flex gap-6">
+          <div>
+            <p className="text-3xl font-bold text-foreground">{mockMembers.length}</p>
+            <p className="text-base text-muted-foreground">участников</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-foreground">{Object.keys(generations).length}</p>
+            <p className="text-base text-muted-foreground">поколений</p>
           </div>
         </div>
 
+        <p className="px-6 text-lg text-foreground/70 mb-6">
+          Нажмите на имя, чтобы открыть фотоальбом и связи
+        </p>
+
         {[1, 2, 3].map(gen => {
-          const raw = generations[gen] || [];
-          const members = gen === 3
-            ? [...raw].sort((a, b) => (a.id === currentUserId ? -1 : b.id === currentUserId ? 1 : 0))
-            : raw;
+          const members = generations[gen] || [];
           const config = generationConfig[gen];
-          const isLastGen = gen === 3;
 
           return (
-            <div key={gen} className="mt-8">
-              <div className="px-6 mb-4">
-                <p className="section-title text-primary">{config.label}</p>
-                <p className="text-sm font-light text-muted-foreground mt-1 italic">{config.subtitle}</p>
+            <div key={gen} className="mb-6">
+              <h2
+                className="px-6 text-2xl font-bold text-foreground mb-3"
+                style={{ fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif" }}
+              >
+                {config.label}
+              </h2>
+              <div className="px-4 space-y-2">
+                {members.map(m => memberCard(m))}
               </div>
-
-              {isLastGen ? (
-                /* Horizontal scroll for youngest generation */
-                <div className="relative">
-                  <div
-                    ref={scrollRef}
-                    className="flex gap-2 px-6 overflow-x-auto snap-x-mandatory pb-2 scrollbar-hide"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    {members.map(m => memberCard(m, 'scroll'))}
-                    {/* Invite card */}
-                    <button
-                      onClick={() => navigate(ROUTES.classic.invite)}
-                      className="w-28 flex-shrink-0 aspect-square rounded-xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-2 group hover:border-foreground/30 transition-colors"
-                    >
-                      <Plus className="h-5 w-5 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors" />
-                      <span className="text-[9px] tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Пригласить</span>
-                    </button>
-                  </div>
-                  <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-                </div>
-              ) : gen === 1 ? (
-                /* Grandparents: 2-column large portraits */
-                <div className="px-6 grid grid-cols-2 gap-2">
-                  {members.map(m => memberCard(m, 'portrait'))}
-                </div>
-              ) : (
-                /* Parents: mixed layout — first pair large, rest in grid */
-                <div className="px-6">
-                  {members.length <= 2 ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {members.map(m => memberCard(m, 'portrait'))}
-                    </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-2 gap-2 mb-2">
-                        {members.slice(0, 2).map(m => memberCard(m, 'portrait'))}
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {members.slice(2).map(m => memberCard(m, 'portrait'))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
 
-        {/* Footer hint */}
-        <div className="mt-10 mb-4 px-6 text-center">
-          <div className="h-px bg-border/30 mb-4" />
-          <p className="editorial-caption text-muted-foreground/30">
-            Нажмите на портрет или скажите голосом: «дерево», «лента», «семья»
-          </p>
+        {/* Invite CTA */}
+        <div className="px-4 mt-4">
           <button
-            type="button"
-            onClick={() => navigate(ROUTES.app)}
-            className="mt-3 text-sm font-light text-primary hover:underline"
+            onClick={() => navigate(ROUTES.classic.invite)}
+            className="w-full flex items-center justify-center gap-3 px-6 py-5 rounded-2xl border-2 border-dashed border-primary/40 text-primary text-xl font-bold active:bg-primary/10 transition-colors"
           >
-            Голосовой режим (демо)
+            <Plus className="h-7 w-7" />
+            Пригласить в семью
           </button>
         </div>
       </div>
