@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ROUTES } from '@/constants/routes';
-import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, ChevronRight, Layout } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -116,6 +116,15 @@ const Settings: React.FC = () => {
           <div className="flex-1">
             <p className="text-base font-bold tracking-wide text-foreground">{t('language')}</p>
             <p className="text-sm font-medium text-foreground/85 mt-0.5">{langLabel}</p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
+        </button>
+
+        <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+          <Layout className="h-6 w-6 text-primary" strokeWidth={1.8} />
+          <div className="flex-1">
+            <p className="text-base font-bold tracking-wide text-foreground">Вариант оформления</p>
+            <p className="text-sm font-medium text-foreground/85 mt-0.5">Классический архив, Живая история, Календарь воспоминаний, Журнал + Плеер</p>
           </div>
           <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
         </button>

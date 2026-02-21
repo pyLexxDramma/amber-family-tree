@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockPublications } from '@/data/mock-publications';
 import { getMember } from '@/data/mock-members';
 import { useUIVariant } from '@/contexts/UIVariantContext';
+import { useVoice } from '@/ai/useVoice';
 import { ROUTES } from '@/constants/routes';
 import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
 import { AvatarPlaceholder } from '@/components/AvatarPlaceholder';
@@ -16,12 +17,28 @@ const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { variant: uiVariant } = useUIVariant();
+  const { speak, stopSpeaking } = useVoice(() => {});
   const pub = mockPublications.find(p => p.id === id);
   const [newComment, setNewComment] = useState('');
   const [liked, setLiked] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const galleryRef = useRef<HTMLDivElement>(null);
+
+  const handlePlayPause = () => {
+    if (audioPlaying) {
+      stopSpeaking();
+      setAudioPlaying(false);
+    } else if (pub?.text?.trim()) {
+      speak(pub.text);
+      setAudioPlaying(true);
+    }
+  };
+
+  useEffect(() => {
+    setAudioPlaying(false);
+    return () => { stopSpeaking(); };
+  }, [id, stopSpeaking]);
 
   if (!pub) return <div className="p-6 text-center text-muted-foreground">Публикация не найдена</div>;
 
@@ -108,7 +125,7 @@ const PublicationDetails: React.FC = () => {
         </div>
         <div className="px-3 py-6 flex-1 space-y-6">
           <div className="content-card p-5 rounded-2xl min-h-[96px]">
-            <button onClick={() => setAudioPlaying(!audioPlaying)} className="w-full flex items-center gap-4 text-left">
+            <button onClick={handlePlayPause} className="w-full flex items-center gap-4 text-left">
               <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                 {audioPlaying ? <span className="w-4 h-4 rounded-full bg-primary" /> : <Play className="h-7 w-7 text-primary ml-0.5" />}
               </div>
@@ -125,7 +142,7 @@ const PublicationDetails: React.FC = () => {
           </div>
           <div className="flex items-center justify-center gap-6 py-4">
             <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Назад"><ChevronLeft className="h-6 w-6" /></button>
-            <button onClick={() => setAudioPlaying(!audioPlaying)} className="touch-target w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+            <button onClick={handlePlayPause} className="touch-target w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
               {audioPlaying ? <span className="w-5 h-5 rounded-full bg-current" /> : <Play className="h-8 w-8 ml-0.5" />}
             </button>
             <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Вперёд"><ChevronRight className="h-6 w-6" /></button>

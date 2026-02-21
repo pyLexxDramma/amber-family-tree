@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { UnreadMarker } from '@/components/UnreadMarker';
 import { useUIVariant } from '@/contexts/UIVariantContext';
+import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publications';
 import { getMember, mockMembers, currentUserId } from '@/data/mock-members';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ function getDecadeFromEventDate(eventDate: string): string {
 const Feed: React.FC = () => {
   const navigate = useNavigate();
   const { variant: uiVariant } = useUIVariant();
+  useDemoWithPhotos();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewParam = searchParams.get('view');
   const [mode, setMode] = useState<'publications' | 'media'>(viewParam === 'media' ? 'media' : 'publications');

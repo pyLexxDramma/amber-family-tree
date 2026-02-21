@@ -29,3 +29,8 @@ dist-ssr
 # Kanban sync (generated JSON)
 docs/sync-evening-response.json
 .cursor
+.cursor/agents/implementer.md
+.cursor/agents/orchestrator.md
+.cursor/agents/verifier.md
+.cursor/mcp.json
+.cursor/rules/general.mdc

@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
-import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 import { useUIVariant, type UIVariant } from '@/contexts/UIVariantContext';
-import { ROUTES } from '@/constants/routes';
 import { Check, BookOpen, History, Calendar, Headphones, Layout } from 'lucide-react';
 
 /** Превью: положите в public файлы «вариант 1.jpeg», «вариант 2.jpeg», «вариант 3.jpeg» (или variant1.jpg и т.д.) */
@@ -26,13 +24,7 @@ const VARIANTS: { id: UIVariant; title: string; subtitle: string; icon: React.El
 
 export default function DemoVariantsPage() {
   const navigate = useNavigate();
-  const isDemo = useDemoWithPhotos();
   const { variant, setVariant } = useUIVariant();
-
-  if (!isDemo) {
-    navigate(ROUTES.classic.tree, { replace: true });
-    return null;
-  }
 
   return (
     <AppLayout>
