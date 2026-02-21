@@ -6,61 +6,40 @@
 
 ---
 
-## Project info
+## Информация о проекте
 
-- **Live app:** https://amber-family-tree.lovable.app/
+- **Приложение:** https://amber-family-tree.lovable.app/
 - **GitHub:** https://github.com/pyLexxDramma/amber-family-tree
-- **Lovable:** откройте свой проект на [lovable.dev](https://lovable.dev) (URL вида `https://lovable.dev/projects/...`)
+- **Lovable:** откройте проект на [lovable.dev](https://lovable.dev) (URL вида `https://lovable.dev/projects/...`)
 
-## How can I edit this code?
+## Как редактировать код
 
-There are several ways of editing your application.
+**Через Lovable**
 
-**Use Lovable**
+Зайдите в [проект Lovable](https://lovable.dev) и редактируйте через промпты. Изменения автоматически коммитятся в репозиторий.
 
-Simply visit your [Lovable Project](https://lovable.dev) and start prompting.
+**Локально в IDE**
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Нужны Node.js и npm — [установка через nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <URL_РЕПОЗИТОРИЯ>
+cd <ИМЯ_ПРОЕКТА>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Изменения, запушенные в GitHub, отобразятся в Lovable.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+**Редактирование в GitHub**
 
-**Use GitHub Codespaces**
+Откройте нужный файл → «Edit» (иконка карандаша) → внесите изменения → Commit.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**GitHub Codespaces**
 
-## What technologies are used for this project?
+Repository → «Code» → вкладка Codespaces → «New codespace». Редактируйте в Codespace и пушьте изменения.
 
-This project is built with:
+## Стек технологий
 
 - Vite
 - TypeScript
@@ -68,20 +47,16 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Деплой
 
-Deploy and updates are done from Lovable only (not from GitHub):
+Деплой и обновления выполняются только из Lovable (не из GitHub):
 
-1. Open your project in [Lovable](https://lovable.dev).
-2. Click **Share** (top right) → **Publish** (first time) or **Update** (to deploy latest changes).
-3. Your app will be available at https://amber-family-tree.lovable.app/
+1. Откройте проект в [Lovable](https://lovable.dev)
+2. **Share** (справа сверху) → **Publish** (первый раз) или **Update** (обновление)
+3. Приложение доступно по адресу https://amber-family-tree.lovable.app/
 
-**Detailed steps (GitHub connection, first publish, updating):** see [DEPLOY.md](./DEPLOY.md).
+Подробнее: [DEPLOY.md](./DEPLOY.md)
 
-## Can I connect a custom domain to my Lovable project?
+## Подключение своего домена
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Проект → Settings → Domains → Connect Domain. Подробности: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
