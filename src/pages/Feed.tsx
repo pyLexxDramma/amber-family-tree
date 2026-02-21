@@ -381,10 +381,10 @@ const Feed: React.FC = () => {
       <div className="px-0 pt-2 pb-4 page-enter">
         {uiVariant !== 'current' && mode === 'publications' && (
           <p className="text-sm font-semibold text-primary/90 mb-2 px-3" role="status">
-            Вариант: {uiVariant === 'classic' ? 'Классический архив' : uiVariant === 'calendar' ? 'Календарь воспоминаний' : uiVariant === 'living' ? 'Живая история' : 'Журнал + Плеер'}
+            Вариант: {uiVariant === 'classic' ? 'Классический архив' : uiVariant === 'calendar' ? 'Календарь воспоминаний' : uiVariant === 'living' ? 'Живая история' : uiVariant === 'journal' ? 'Журнал + Плеер' : uiVariant === 'minimal' ? 'Минимализм' : uiVariant === 'retro' ? 'Ретро' : 'Текущий'}
           </p>
         )}
-        {(uiVariant === 'living' || uiVariant === 'journal') && mode === 'publications' && (
+        {(['living','journal','minimal','retro'] as const).includes(uiVariant) && mode === 'publications' && (
           <p className="text-xs text-muted-foreground mb-3 px-3">Откройте любую публикацию — просмотр в выбранном стиле</p>
         )}
         {uiVariant !== 'classic' && uiVariant !== 'calendar' && (

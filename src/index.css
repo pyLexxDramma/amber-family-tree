@@ -193,6 +193,54 @@
     --header-fg: 35 20% 92%;
     --radius: 0.625rem;
   }
+
+  /* Вариант 5: Минимализм (монохром, типографика, много воздуха) */
+  html:not(.dark)[data-ui-variant="minimal"] {
+    --background: 0 0% 99%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 12%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 15%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 12%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 12%;
+    --header-bg: 0 0% 8%;
+    --header-fg: 0 0% 98%;
+    --radius: 0.25rem;
+  }
+
+  /* Вариант 6: Ретро (винтаж 70-х, тёплые тона, поляроид) */
+  html:not(.dark)[data-ui-variant="retro"] {
+    --background: 35 45% 92%;
+    --foreground: 28 35% 15%;
+    --card: 38 40% 88%;
+    --card-foreground: 28 35% 15%;
+    --popover: 36 42% 90%;
+    --popover-foreground: 28 35% 15%;
+    --primary: 22 60% 42%;
+    --primary-foreground: 40 30% 98%;
+    --secondary: 30 35% 84%;
+    --secondary-foreground: 28 40% 18%;
+    --muted: 35 30% 86%;
+    --muted-foreground: 28 25% 38%;
+    --accent: 18 55% 65%;
+    --accent-foreground: 25 45% 20%;
+    --border: 32 35% 75%;
+    --input: 32 35% 75%;
+    --ring: 22 60% 42%;
+    --header-bg: 22 50% 28%;
+    --header-fg: 38 25% 95%;
+    --radius: 0;
+  }
 }
 
 @layer base {
@@ -600,6 +648,26 @@
     letter-spacing: 0.025em;
   }
   [data-ui-variant="journal"] .editorial-title { font-weight: 600; }
+  [data-ui-variant="minimal"] body {
+    font-family: system-ui, -apple-system, sans-serif;
+    letter-spacing: 0.01em;
+    font-weight: 400;
+  }
+  [data-ui-variant="minimal"] .editorial-title,
+  [data-ui-variant="minimal"] .section-title {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  [data-ui-variant="retro"] body {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: 0.03em;
+  }
+  [data-ui-variant="retro"] .editorial-title,
+  [data-ui-variant="retro"] .section-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
 
   /* ---- Кнопки (.app-btn) по вариантам ---- */
   [data-ui-variant="classic"] .app-btn {
@@ -633,6 +701,19 @@
     font-weight: 600;
     letter-spacing: 0.02em;
   }
+  [data-ui-variant="minimal"] .app-btn {
+    border-radius: 0.25rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  [data-ui-variant="retro"] .app-btn {
+    border-radius: 0;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-width: 2px;
+  }
 
   /* ---- Поля ввода ---- */
   [data-ui-variant="classic"] .app-input {
@@ -643,6 +724,8 @@
   [data-ui-variant="living"] .app-input { border-radius: 1rem; }
   [data-ui-variant="calendar"] .app-input { border-radius: 0.75rem; border-left: 4px solid hsl(var(--primary) / 0.4); }
   [data-ui-variant="journal"] .app-input { border-radius: 0.5rem; }
+  [data-ui-variant="minimal"] .app-input { border-radius: 0.25rem; border-color: hsl(0 0% 85%); }
+  [data-ui-variant="retro"] .app-input { border-radius: 0; border-width: 2px; }
 
   /* ---- Шапка (TopBar) ---- */
   [data-ui-variant="classic"] .app-topbar {
@@ -653,6 +736,8 @@
   [data-ui-variant="living"] .app-topbar { min-height: 56px; }
   [data-ui-variant="calendar"] .app-topbar { min-height: 56px; }
   [data-ui-variant="journal"] .app-topbar { min-height: 52px; }
+  [data-ui-variant="minimal"] .app-topbar { min-height: 48px; border-bottom: 1px solid hsl(0 0% 90%); }
+  [data-ui-variant="retro"] .app-topbar { min-height: 56px; }
 
   /* ---- Нижняя навигация ---- */
   [data-ui-variant="classic"] .app-bottom-nav {
@@ -678,6 +763,14 @@
   [data-ui-variant="journal"] .app-bottom-nav {
     border-top-color: hsl(var(--border));
   }
+  [data-ui-variant="minimal"] .app-bottom-nav {
+    border-top: 1px solid hsl(0 0% 90%);
+    box-shadow: none;
+  }
+  [data-ui-variant="retro"] .app-bottom-nav {
+    border-top-width: 3px;
+    border-top-color: hsl(var(--primary) / 0.5);
+  }
 
   /* ---- Строки-ссылки и табы ---- */
   [data-ui-variant="classic"] .link-row-warm {
@@ -687,6 +780,8 @@
   }
   [data-ui-variant="living"] .link-row-warm { border-radius: 1rem; }
   [data-ui-variant="calendar"] .link-row-warm { border-left-width: 6px; }
+  [data-ui-variant="minimal"] .link-row-warm { border-left: none; border-radius: 0; border-bottom: 1px solid hsl(0 0% 90%); }
+  [data-ui-variant="retro"] .link-row-warm { border-left-width: 4px; border-radius: 0; }
   [data-ui-variant="classic"] .tab-warm {
     border-radius: 0.375rem;
     text-transform: uppercase;
@@ -709,6 +804,9 @@
   [data-ui-variant="living"] .section-title { margin-bottom: 1rem; }
   [data-ui-variant="calendar"] .section-title { margin-bottom: 1rem; }
   [data-ui-variant="journal"] .section-title { margin-bottom: 0.875rem; }
+  [data-ui-variant="minimal"] .section-title { margin-bottom: 1.25rem; }
+  [data-ui-variant="minimal"] .page-enter { padding-left: 1.5rem; padding-right: 1.5rem; }
+  [data-ui-variant="retro"] .section-title { margin-bottom: 1rem; }
 
   /* Классика: журнал, крем, чёткие рамки */
   [data-ui-variant="classic"] .app-header {
@@ -803,6 +901,40 @@
     opacity: 0.06;
   }
 
+  [data-ui-variant="minimal"] .app-header {
+    font-weight: 600;
+    border-bottom: 1px solid hsl(0 0% 90%);
+    letter-spacing: 0.02em;
+  }
+  [data-ui-variant="minimal"] .content-card,
+  [data-ui-variant="minimal"] .person-card {
+    border: 1px solid hsl(0 0% 90%);
+    border-radius: 0.25rem;
+    box-shadow: none;
+    background: hsl(var(--card));
+  }
+  [data-ui-variant="minimal"] .section-title {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+  }
+
+  [data-ui-variant="retro"] .app-header {
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    box-shadow: 0 2px 8px hsl(0 0% 0% / 0.15);
+  }
+  [data-ui-variant="retro"] .content-card,
+  [data-ui-variant="retro"] .person-card {
+    border: 3px solid hsl(var(--border));
+    border-radius: 0;
+    box-shadow: 4px 4px 0 hsl(var(--primary) / 0.15);
+    background: hsl(var(--card));
+  }
+  [data-ui-variant="retro"] .section-title {
+    color: hsl(var(--primary));
+    font-weight: 700;
+  }
+
   /* Главная (Welcome): кнопки и выбор варианта в цветах выбранной схемы */
   [data-ui-variant="classic"] .page-welcome .touch-target.rounded-2xl.border-2 {
     border-color: hsl(var(--primary) / 0.5);
@@ -840,6 +972,26 @@
     background: hsl(var(--primary) / 0.22);
     border-color: hsl(var(--primary));
   }
+  [data-ui-variant="minimal"] .page-welcome .touch-target.rounded-2xl.border-2 {
+    border-color: hsl(0 0% 30%);
+    background: hsl(0 0% 100%);
+    color: hsl(0 0% 10%);
+  }
+  [data-ui-variant="minimal"] .page-welcome .touch-target.rounded-2xl.border-2:hover {
+    background: hsl(0 0% 95%);
+    border-color: hsl(0 0% 15%);
+  }
+  [data-ui-variant="retro"] .page-welcome .touch-target.rounded-2xl.border-2 {
+    border-color: hsl(var(--primary) / 0.6);
+    background: hsl(var(--primary) / 0.08);
+    color: hsl(var(--foreground));
+  }
+  [data-ui-variant="retro"] .page-welcome .touch-target.rounded-2xl.border-2:hover {
+    background: hsl(var(--primary) / 0.18);
+    border-color: hsl(var(--primary));
+  }
+  [data-ui-variant="minimal"] .page-welcome [class*="bg-white/25"] { background: hsl(0 0% 100% / 0.9) !important; border-color: hsl(0 0% 30%) !important; }
+  [data-ui-variant="retro"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.2) !important; border-color: hsl(var(--primary) / 0.6) !important; }
   [data-ui-variant="living"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.35) !important; border-color: hsl(var(--primary) / 0.7) !important; }
   [data-ui-variant="calendar"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.35) !important; border-color: hsl(var(--primary) / 0.7) !important; }
   [data-ui-variant="classic"] .page-welcome [class*="bg-white/25"] { background: hsl(var(--primary) / 0.2) !important; border-color: hsl(var(--primary) / 0.6) !important; }

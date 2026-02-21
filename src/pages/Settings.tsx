@@ -7,12 +7,24 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePrivacyVisibility, type PrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
+import { useUIVariant, type UIVariant } from '@/contexts/UIVariantContext';
+
+const VARIANT_LABELS: Record<UIVariant, string> = {
+  current: 'Текущий',
+  classic: 'Классический архив',
+  living: 'Живая история',
+  calendar: 'Календарь воспоминаний',
+  journal: 'Журнал + Плеер',
+  minimal: 'Минимализм',
+  retro: 'Ретро',
+};
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useLanguage();
   const { visibility, setVisibility } = usePrivacyVisibility();
+  const { variant } = useUIVariant();
   const [mounted, setMounted] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -122,9 +134,9 @@ const Settings: React.FC = () => {
 
         <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <Layout className="h-6 w-6 text-primary" strokeWidth={1.8} />
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <p className="text-base font-bold tracking-wide text-foreground">Вариант оформления</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5">Классический архив, Живая история, Календарь воспоминаний, Журнал + Плеер</p>
+            <p className="text-sm font-medium text-foreground/85 mt-0.5 truncate" title={VARIANT_LABELS[variant]}>Выбрано: {VARIANT_LABELS[variant]}</p>
           </div>
           <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
         </button>

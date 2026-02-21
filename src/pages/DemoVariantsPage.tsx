@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { useUIVariant, type UIVariant } from '@/contexts/UIVariantContext';
-import { Check, BookOpen, History, Calendar, Headphones, Layout } from 'lucide-react';
+import { Check, BookOpen, History, Calendar, Headphones, Layout, Square, Palette, Sun } from 'lucide-react';
 
-/** Превью: положите в public файлы «вариант 1.jpeg», «вариант 2.jpeg», «вариант 3.jpeg» (или variant1.jpg и т.д.) */
 const VARIANT_PREVIEWS: Record<UIVariant, string | null> = {
   current: null,
-  classic: '/вариант 1.jpeg',
-  living: '/вариант 2.jpeg',
-  calendar: '/вариант 3.jpeg',
+  classic: null,
+  living: null,
+  calendar: null,
   journal: null,
+  minimal: null,
+  retro: null,
 };
 
 const VARIANTS: { id: UIVariant; title: string; subtitle: string; icon: React.ElementType }[] = [
@@ -20,11 +22,17 @@ const VARIANTS: { id: UIVariant; title: string; subtitle: string; icon: React.El
   { id: 'living', title: 'Живая история', subtitle: 'Разворот с мемуарами · Просмотр фото с подписью', icon: History },
   { id: 'calendar', title: 'Календарь воспоминаний', subtitle: 'Интерактивная хронология · Лента по годам', icon: Calendar },
   { id: 'journal', title: 'Журнал + Плеер', subtitle: 'Озвучка для слабовидящих · Просмотр с аудио', icon: Headphones },
+  { id: 'minimal', title: 'Минимализм', subtitle: 'Монохром · Типографика · Много воздуха', icon: Square },
+  { id: 'retro', title: 'Ретро', subtitle: 'Винтаж 70-х · Тёплые тона · Поляроид', icon: Palette },
 ];
 
 export default function DemoVariantsPage() {
   const navigate = useNavigate();
   const { variant, setVariant } = useUIVariant();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && theme === 'dark';
 
   return (
     <AppLayout>
@@ -32,6 +40,12 @@ export default function DemoVariantsPage() {
       <div className="px-6 pt-4 pb-8 page-enter">
         <p className="section-title text-primary mb-2">Для клиента</p>
         <p className="text-base text-muted-foreground mb-6">Выберите вариант оформления. Изменения применяются сразу.</p>
+        {isDark && (
+          <p className="text-sm text-muted-foreground mb-6 flex items-center gap-2 rounded-xl bg-muted/50 px-4 py-3">
+            <Sun className="h-4 w-4 shrink-0 text-primary" />
+            Для лучшего отображения вариантов рекомендуем переключить тему на светлую (Настройки → Тема).
+          </p>
+        )}
 
         <div className="space-y-4">
           {VARIANTS.map(({ id, title, subtitle, icon: Icon }) => {

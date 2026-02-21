@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 
 const STORAGE_KEY = 'angelo-demo-ui-variant';
 
-export type UIVariant = 'current' | 'classic' | 'living' | 'calendar' | 'journal';
+export type UIVariant = 'current' | 'classic' | 'living' | 'calendar' | 'journal' | 'minimal' | 'retro';
 
 type UIVariantContextValue = {
   variant: UIVariant;
@@ -20,7 +20,8 @@ const UIVariantContext = createContext<UIVariantContextValue>(defaultValue);
 export function getStoredVariant(): UIVariant {
   if (typeof localStorage === 'undefined') return 'classic';
   const v = localStorage.getItem(STORAGE_KEY);
-  if (v === 'classic' || v === 'living' || v === 'calendar' || v === 'journal' || v === 'current') return v;
+  const valid: UIVariant[] = ['classic','living','calendar','journal','minimal','retro','current'];
+  if (valid.includes(v as UIVariant)) return v as UIVariant;
   return 'classic';
 }
 
