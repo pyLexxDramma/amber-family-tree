@@ -20,7 +20,9 @@ export async function speakWithOpenAI(
     throw new Error('No text');
   }
   const { voice = 'nova', model = 'tts-1', speed = 0.95, onAudio } = options;
-  const res = await fetch('/api/openai/v1/audio/speech', {
+  const base = import.meta.env.VITE_OPENAI_PROXY_URL
+    || (import.meta.env.VITE_SUPABASE_URL ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy` : '/api/openai');
+  const res = await fetch(`${base}/v1/audio/speech`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

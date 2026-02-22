@@ -34,7 +34,7 @@ const FamilyList: React.FC = () => {
         }
       />
       <div className="px-0 pt-4 pb-4 page-enter">
-        <p className="section-title text-primary mb-4 px-3">Контакты</p>
+        <p className="section-title text-base sm:text-lg text-primary mb-4 px-3">Контакты</p>
 
         <div className="flex gap-3 mt-4 mb-4 px-3">
           {(['about', 'family'] as const).map(t => (
@@ -64,7 +64,7 @@ const FamilyList: React.FC = () => {
           <div className="mt-4">
             <button
               onClick={() => navigate(ROUTES.classic.myProfile)}
-              className="content-card p-5 flex items-center gap-4 min-h-[96px] w-full text-left hover:border-primary/30 transition-colors"
+              className="content-card p-5 flex items-center gap-4 min-h-[144px] w-full text-left hover:border-primary/30 transition-colors"
             >
               {demoWithPhotos ? (
                 <img src={getDemoMemberPhotoUrl(currentUser.id)} alt="" className="h-16 w-16 rounded-full object-cover flex-shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
@@ -73,7 +73,7 @@ const FamilyList: React.FC = () => {
                 <User className="h-8 w-8 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium tracking-wide">{currentUser.firstName} {currentUser.lastName}</p>
+                <p className="text-base sm:text-lg font-medium tracking-wide">{currentUser.firstName} {currentUser.lastName}</p>
                 {currentUser.nickname && <p className="text-xs text-muted-foreground italic">"{currentUser.nickname}"</p>}
                 {currentUser.city && <p className="text-xs text-muted-foreground mt-0.5">{currentUser.city}</p>}
               </div>
@@ -107,7 +107,7 @@ const FamilyList: React.FC = () => {
           })}
         </div>
 
-        <p className="text-base font-bold tracking-widest uppercase text-primary mb-3 px-3 dark:text-[hsl(36,80%,58%)]">Выберите, чьи фото и ленту смотреть</p>
+        <p className="text-sm sm:text-base font-bold tracking-widest uppercase text-primary mb-3 px-3 dark:text-[hsl(36,80%,58%)]">Выберите, чьи фото и ленту смотреть</p>
         <div className="mt-2 space-y-4 pb-4">
           {filtered.map(m => {
             const isCurrent = m.id === currentUserId;
@@ -115,7 +115,7 @@ const FamilyList: React.FC = () => {
               <button
                 key={m.id}
                 onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-                className="person-card person-card-accent w-full flex items-center gap-5 text-left group relative min-h-[96px] pl-5 pr-5 py-4 touch-target"
+                className="person-card person-card-accent w-full flex items-center gap-5 text-left group relative min-h-[144px] pl-5 pr-5 py-4 touch-target"
               >
                 <div className="flex flex-col items-center gap-1.5 shrink-0">
                   <div className="flex items-center gap-1.5">
@@ -124,7 +124,7 @@ const FamilyList: React.FC = () => {
                       {m.isActive ? 'в сети' : 'не в сети'}
                     </span>
                   </div>
-                  <div className="h-[72px] w-[72px] rounded-full bg-muted flex items-center justify-center relative overflow-hidden ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                  <div className="h-[108px] w-[108px] rounded-full bg-muted flex items-center justify-center relative overflow-hidden ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
                     {demoWithPhotos && (
                       <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
                     )}
@@ -138,16 +138,10 @@ const FamilyList: React.FC = () => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="card-name text-[20px] font-bold text-foreground tracking-wide leading-tight dark:text-white">
+                  <p className="card-name text-xl sm:text-2xl md:text-3xl font-bold text-foreground tracking-wide leading-tight dark:text-white">
                     {m.firstName} {m.lastName}
                     {isCurrent && <span className="text-primary ml-2 text-sm font-bold tracking-widest uppercase">вы</span>}
                   </p>
-                  <p className="card-subtitle text-base font-medium text-foreground/90 truncate mt-1.5 dark:text-white/85">
-                    {m.nickname && <span className="italic">"{m.nickname}" · </span>}
-                    {m.relations[0]?.type && <span className="capitalize">{m.relations[0].type}</span>}
-                    {m.city && <span> · {m.city}</span>}
-                  </p>
-                  <p className="card-action text-base font-bold text-primary mt-2 dark:text-[hsl(36,80%,58%)]">Смотреть фото и ленту →</p>
                 </div>
               </button>
             );

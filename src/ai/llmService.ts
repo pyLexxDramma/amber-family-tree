@@ -128,7 +128,9 @@ export async function getIntentFromLLM(
 Если пользователь говорит «про него», «подробнее», «его фото» — имеется в виду уже выбранный человек (контекст).`;
 
   try {
-    const res = await fetch('/api/openai/v1/chat/completions', {
+    const base = import.meta.env.VITE_OPENAI_PROXY_URL
+      || (import.meta.env.VITE_SUPABASE_URL ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy` : '/api/openai');
+    const res = await fetch(`${base}/v1/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

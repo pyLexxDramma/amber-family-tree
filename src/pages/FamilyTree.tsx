@@ -30,15 +30,15 @@ const FamilyTree: React.FC = () => {
       <button
         key={m.id}
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-        className="person-card w-full flex items-center gap-4 text-left group min-h-[96px] p-4 hover:border-primary/40 hover:shadow-md hover:shadow-primary/10"
+        className="person-card w-full flex items-center gap-4 text-left group min-h-[144px] p-4 hover:border-primary/40 hover:shadow-md hover:shadow-primary/10"
         aria-label={`Открыть профиль: ${m.firstName} ${m.lastName}`}
       >
-        <div className="relative h-16 w-16 flex-shrink-0 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+        <div className="relative h-[108px] w-[108px] flex-shrink-0 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
           {demoWithPhotos && (
             <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
           )}
           <div className={`absolute inset-0 flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
-            <User className={`h-8 w-8 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
+            <User className={`h-9 w-9 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
           </div>
           {isCurrent && (
             <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
@@ -48,10 +48,9 @@ const FamilyTree: React.FC = () => {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="card-name text-lg font-bold text-foreground truncate text-primary/95 group-hover:text-primary dark:text-white" title={m.nickname || m.firstName}>
+          <p className="card-name text-xl sm:text-2xl font-bold text-foreground truncate text-primary/95 group-hover:text-primary dark:text-white" title={m.nickname || m.firstName}>
             {m.nickname || m.firstName}
           </p>
-          <p className="card-action text-base font-semibold text-primary mt-1 dark:text-[hsl(36,80%,58%)]">Смотреть фото</p>
         </div>
 
         {/* Status dot */}
@@ -109,7 +108,7 @@ const FamilyTree: React.FC = () => {
           return (
             <div key={gen} className="mt-8">
               <div className="px-3 mb-4">
-                <p className="section-title text-primary font-bold dark:text-[hsl(36,80%,58%)]">{config.label}</p>
+                <p className="section-title text-base sm:text-lg text-primary font-bold dark:text-[hsl(36,80%,58%)]">{config.label}</p>
               </div>
 
               <div className="px-3 flex flex-col gap-3">
@@ -117,10 +116,10 @@ const FamilyTree: React.FC = () => {
                 {isLastGen && (
                   <button
                     onClick={() => navigate(ROUTES.classic.invite)}
-                    className="content-card w-full min-h-[96px] rounded-2xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-2 group hover:border-foreground/30 transition-colors"
+                    className="content-card w-full min-h-[144px] rounded-2xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-2 group hover:border-foreground/30 transition-colors"
                   >
                     <Plus className="h-8 w-8 text-muted-foreground/30 group-hover:text-foreground/50 transition-colors" />
-                    <span className="text-sm tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Пригласить</span>
+                    <span className="text-xs sm:text-sm tracking-widest uppercase text-muted-foreground/30 group-hover:text-foreground/50 transition-colors">Пригласить</span>
                   </button>
                 )}
               </div>
@@ -139,7 +138,7 @@ const FamilyTree: React.FC = () => {
         <div className="px-4 mt-4">
           <button
             onClick={() => navigate(ROUTES.classic.invite)}
-            className="w-full flex items-center justify-center gap-3 px-6 py-5 rounded-2xl border-2 border-dashed border-primary/40 text-primary text-xl font-bold active:bg-primary/10 transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-6 py-5 rounded-2xl border-2 border-dashed border-primary/40 text-primary text-base sm:text-lg md:text-xl font-bold active:bg-primary/10 transition-colors"
           >
             <Plus className="h-7 w-7" />
             Пригласить в семью

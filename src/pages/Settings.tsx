@@ -55,88 +55,88 @@ const Settings: React.FC = () => {
 
       <h1 className="editorial-title text-3xl font-bold text-foreground mb-8 px-3">{t('settings')}</h1>
 
-      <p className="section-title text-primary mb-3 px-3 text-lg">{t('profile')}</p>
+      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('profile')}</p>
       <div className="space-y-3 mb-6">
-        <button onClick={() => navigate(ROUTES.classic.myProfile)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button onClick={() => navigate(ROUTES.classic.myProfile)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <User className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('profileDesc')}</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5">{t('profileDescLong')}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('profileDesc')}</p>
+            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{t('profileDescLong')}</p>
           </div>
         </button>
       </div>
 
-      <p className="section-title text-primary mb-3 px-3 text-lg">{t('security')}</p>
+      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('security')}</p>
       <div className="space-y-3 mb-6">
-        <button onClick={handleLogout} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button onClick={handleLogout} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <LogOut className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('logout')}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('logout')}</p>
           </div>
         </button>
       </div>
 
-      <p className="section-title text-primary mb-3 px-3 text-lg">{t('documents')}</p>
+      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('documents')}</p>
       <div className="space-y-3 mb-8">
-        <button onClick={() => navigate(ROUTES.classic.terms)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button onClick={() => navigate(ROUTES.classic.terms)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <FileText className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('termsOfUse')}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('termsOfUse')}</p>
           </div>
         </button>
-        <button onClick={() => navigate(ROUTES.classic.privacy)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button onClick={() => navigate(ROUTES.classic.privacy)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <FileText className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('privacyPolicy')}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('privacyPolicy')}</p>
           </div>
         </button>
       </div>
 
-      <p className="section-title text-primary mb-3 px-3 text-lg">{t('other')}</p>
+      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('other')}</p>
       <div className="space-y-3">
-        <div className="content-card flex items-center gap-4 min-h-[96px] py-5 px-5">
+        <div className="content-card flex items-center gap-4 min-h-[144px] py-5 px-5">
           <Palette className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('theme')}</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5 flex items-center gap-1.5">
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('theme')}</p>
+            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5 flex items-center gap-1.5">
               {mounted && (isDark ? <><Moon className="h-4 w-4" /> {t('themeDark')}</> : <><Sun className="h-4 w-4" /> {t('themeLight')}</>)}
             </p>
           </div>
           <Switch checked={isDark} onCheckedChange={toggleTheme} />
         </div>
 
-        <div className="content-card flex items-center gap-4 min-h-[96px] py-5 px-5">
+        <div className="content-card flex items-center gap-4 min-h-[144px] py-5 px-5">
           <Bell className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('notifications')}</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5">{t('notificationsDesc')}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('notifications')}</p>
+            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{t('notificationsDesc')}</p>
           </div>
           <Switch />
         </div>
 
-        <button type="button" onClick={() => setPrivacyOpen(true)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button type="button" onClick={() => setPrivacyOpen(true)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <Lock className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('privacy')}</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5">{privacyLabel[visibility]}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('privacy')}</p>
+            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{privacyLabel[visibility]}</p>
           </div>
           <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
         </button>
 
-        <button type="button" onClick={() => setLanguageOpen(true)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button type="button" onClick={() => setLanguageOpen(true)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <Globe className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1">
-            <p className="text-base font-bold tracking-wide text-foreground">{t('language')}</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5">{langLabel}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('language')}</p>
+            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{langLabel}</p>
           </div>
           <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
         </button>
 
-        <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="content-card w-full flex items-center gap-4 min-h-[96px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
+        <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
           <Layout className="h-6 w-6 text-primary" strokeWidth={1.8} />
           <div className="flex-1 min-w-0">
-            <p className="text-base font-bold tracking-wide text-foreground">Вариант оформления</p>
-            <p className="text-sm font-medium text-foreground/85 mt-0.5 truncate" title={VARIANT_LABELS[variant]}>Выбрано: {VARIANT_LABELS[variant]}</p>
+            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">Вариант оформления</p>
+            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5 truncate" title={VARIANT_LABELS[variant]}>Выбрано: {VARIANT_LABELS[variant]}</p>
           </div>
           <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
         </button>

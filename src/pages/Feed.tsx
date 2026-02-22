@@ -121,22 +121,22 @@ const Feed: React.FC = () => {
               <span className="text-white/60 editorial-caption">новое</span>
             </div>
           )}
-          <h2 className="editorial-title text-white text-2xl">{pub.title}</h2>
-          <p className="text-white/70 text-sm font-light line-clamp-2">{pub.text}</p>
+          <h2 className="editorial-title text-white text-xl sm:text-2xl">{pub.title}</h2>
+          <p className="text-white/70 text-sm sm:text-base font-light line-clamp-2">{pub.text}</p>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-white/50 text-xs font-light">
+            <span className="text-white/50 text-xs sm:text-sm font-light">
               {author?.firstName} {author?.lastName}
             </span>
             <span className="text-white/30">·</span>
-            <span className="text-white/50 text-xs font-light">
+            <span className="text-white/50 text-xs sm:text-sm font-light">
               {pub.place}
             </span>
             <span className="text-white/30">·</span>
-            <span className="text-white/50 text-xs font-light">
+            <span className="text-white/50 text-xs sm:text-sm font-light">
               {pub.eventDate}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-white/40 text-xs mt-1">
+          <div className="flex items-center gap-3 text-white/40 text-xs sm:text-sm mt-1">
             {mediaCount('photo', pub.media) > 0 && <span className="flex items-center gap-1"><Image className="h-3 w-3" />{mediaCount('photo', pub.media)}</span>}
             {mediaCount('video', pub.media) > 0 && <span className="flex items-center gap-1"><Video className="h-3 w-3" />{mediaCount('video', pub.media)}</span>}
             {mediaCount('audio', pub.media) > 0 && <span className="flex items-center gap-1"><Mic className="h-3 w-3" />{mediaCount('audio', pub.media)}</span>}
@@ -163,8 +163,8 @@ const Feed: React.FC = () => {
           <div className="p-6 flex flex-col gap-3" style={{ minHeight: size === 'full' ? '240px' : '200px' }}>
             {!pub.isRead && <UnreadMarker />}
             <span className="editorial-caption text-muted-foreground">{pub.topicTag}</span>
-            <h3 className="editorial-title text-xl leading-snug">{pub.title}</h3>
-            <p className="text-sm font-light text-foreground/70 line-clamp-3 editorial-body">{pub.text}</p>
+            <h3 className="editorial-title text-lg sm:text-xl leading-snug">{pub.title}</h3>
+            <p className="text-sm sm:text-base font-light text-foreground/70 line-clamp-3 editorial-body">{pub.text}</p>
             <div className="mt-auto flex items-center gap-2 text-xs text-muted-foreground font-light">
               <span>{author?.firstName} {author?.lastName}</span>
               <span>·</span>
@@ -194,11 +194,11 @@ const Feed: React.FC = () => {
 
         <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
           <span className="editorial-caption text-white/50 block mb-1">{pub.topicTag}</span>
-          <h3 className="editorial-title text-white text-lg leading-tight">{pub.title}</h3>
+          <h3 className="editorial-title text-white text-base sm:text-lg leading-tight">{pub.title}</h3>
           {size === 'full' && (
-            <p className="text-white/60 text-xs font-light mt-1.5 line-clamp-2">{pub.text}</p>
+            <p className="text-white/60 text-xs sm:text-sm font-light mt-1.5 line-clamp-2">{pub.text}</p>
           )}
-          <div className="flex items-center gap-3 mt-2 text-white/40 text-xs">
+          <div className="flex items-center gap-3 mt-2 text-white/40 text-xs sm:text-sm">
             <span>{author?.firstName}</span>
             <span className="flex items-center gap-0.5"><Heart className="h-2.5 w-2.5" />{pub.likes.length}</span>
             <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" />{pub.comments.length}</span>
