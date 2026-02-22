@@ -384,7 +384,7 @@ const Feed: React.FC = () => {
             Вариант: {uiVariant === 'classic' ? 'Классический архив' : uiVariant === 'calendar' ? 'Календарь воспоминаний' : uiVariant === 'living' ? 'Живая история' : uiVariant === 'journal' ? 'Журнал + Плеер' : uiVariant === 'minimal' ? 'Минимализм' : uiVariant === 'retro' ? 'Ретро' : 'Текущий'}
           </p>
         )}
-        {(['living','journal','minimal','retro'] as const).includes(uiVariant) && mode === 'publications' && (
+        {(['living','journal','minimal','retro'] as const).includes(uiVariant as 'living' | 'journal' | 'minimal' | 'retro') && mode === 'publications' && (
           <p className="text-xs text-muted-foreground mb-3 px-3">Откройте любую публикацию — просмотр в выбранном стиле</p>
         )}
         {uiVariant !== 'classic' && uiVariant !== 'calendar' && (
