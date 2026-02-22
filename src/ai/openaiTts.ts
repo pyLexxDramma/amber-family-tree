@@ -20,8 +20,11 @@ export async function speakWithOpenAI(
     throw new Error('No text');
   }
   const { voice = 'nova', model = 'tts-1', speed = 0.95, onAudio } = options;
-  const base = import.meta.env.VITE_OPENAI_PROXY_URL
-    || (import.meta.env.VITE_SUPABASE_URL ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy` : '/api/openai');
+  const base = import.meta.env.DEV
+    ? '/api/openai'
+    : (import.meta.env.VITE_OPENAI_PROXY_URL
+        || (import.meta.env.VITE_SUPABASE_URL ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy` : null)
+        || 'https://tocjbyeybddsfihvqbrk.supabase.co/functions/v1/openai-proxy');
   const res = await fetch(`${base}/v1/audio/speech`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
