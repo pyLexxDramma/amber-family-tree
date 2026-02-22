@@ -202,10 +202,9 @@ export const AiShell: React.FC = () => {
         </button>
       </header>
 
-      <div className="flex-1 flex flex-col-reverse md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
-        {/* Column: Chat */}
-        <section className="flex flex-col flex-shrink-0 w-full md:w-[320px] md:border-r border-primary/10 bg-card/50">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
+        <section className="order-2 md:order-1 flex flex-col flex-shrink-0 w-full md:w-[320px] md:border-r border-primary/10 bg-card/50">
+          <div className="flex-1 md:overflow-y-auto p-4 space-y-4">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -233,7 +232,7 @@ export const AiShell: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="flex-shrink-0 p-3 border-t border-border/50">
+          <div className="flex-shrink-0 p-3 border-t border-border/50 sticky bottom-0 bg-card/95 backdrop-blur-sm z-10">
             <form onSubmit={onSubmit} className="flex gap-2 items-end">
               <input
                 type="text"
@@ -277,8 +276,7 @@ export const AiShell: React.FC = () => {
           </div>
         </section>
 
-        {/* Zone: Interface (потыкать) */}
-        <section className="flex-1 min-h-0 md:overflow-y-auto p-4 md:p-6 bg-background">
+        <section className="order-1 md:order-2 md:flex-1 md:min-h-0 md:overflow-y-auto p-4 md:p-6 bg-background">
           {interfaceView.type === 'empty' && (
             <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-center px-4 animate-in fade-in duration-300 rounded-2xl border border-primary/10 bg-gradient-to-b from-primary/5 to-transparent">
               <p className="editorial-title text-xl text-foreground mb-2">Здесь будет контент</p>
