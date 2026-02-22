@@ -2,26 +2,35 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mic } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { useTheme } from 'next-themes';
+import { toast } from 'sonner';
 
 const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
 
-type VoiceAction = { type: 'navigate'; path: string } | { type: 'back' };
+type VoiceAction =
+  | { type: 'navigate'; path: string }
+  | { type: 'back' }
+  | { type: 'scroll'; direction: 'up' | 'down' }
+  | { type: 'theme'; value: 'dark' | 'light' | 'toggle' }
+  | { type: 'ai'; text: string };
 
 const VOICE_MAP: { patterns: RegExp[]; action: VoiceAction }[] = [
-  { patterns: [/(назад|вернуться|back)/], action: { type: 'back' } },
-  { patterns: [/(главная|на\s*главную|домой|демо|смотреть\s*демо)/], action: { type: 'navigate', path: ROUTES.app } },
-  { patterns: [/(дерево|древо|покажи\s*дерево)/], action: { type: 'navigate', path: ROUTES.classic.tree } },
-  { patterns: [/(лент[ау]|новости|публикации|что\s*нового)/], action: { type: 'navigate', path: ROUTES.classic.feed } },
-  { patterns: [/(семь[яи]|семью|список|контакты|члены\s*семьи)/], action: { type: 'navigate', path: ROUTES.classic.family } },
-  { patterns: [/(профиль|мой\s*профиль|обо\s*мне)/], action: { type: 'navigate', path: ROUTES.classic.myProfile } },
-  { patterns: [/(магазин|подписк[ау]|тарифы)/], action: { type: 'navigate', path: ROUTES.classic.store } },
-  { patterns: [/(создать|добавить|новая\s*публикация)/], action: { type: 'navigate', path: ROUTES.classic.create } },
-  { patterns: [/(настройки|настройки\s*аккаунта)/], action: { type: 'navigate', path: ROUTES.classic.settings } },
-  { patterns: [/(помощь|поддержка|faq)/], action: { type: 'navigate', path: ROUTES.classic.help } },
-  { patterns: [/(пригласить|приглашения|инвайт)/], action: { type: 'navigate', path: ROUTES.classic.invite } },
-  { patterns: [/(голос|анжело|помощник|ассистент|управление\s*голосом|расскажи)/, /(покажи\s*дедушку)/], action: { type: 'navigate', path: ROUTES.app } },
-  { patterns: [/(вход|войти|логин)/], action: { type: 'navigate', path: ROUTES.login } },
-  { patterns: [/(регистрация|создать\s*аккаунт)/], action: { type: 'navigate', path: ROUTES.register } },
+  { patterns: [/^(назад|вернись|вернуться|обратно|back)$/], action: { type: 'back' } },
+  { patterns: [/(пролистай|прокрути|листай|скролл)\s*(вверх|наверх|выше|up)/, /^(вверх|наверх|выше)$/], action: { type: 'scroll', direction: 'up' } },
+  { patterns: [/(пролистай|прокрути|листай|скролл)\s*(вниз|ниже|дальше|down)?/, /^(вниз|ниже|дальше)$/], action: { type: 'scroll', direction: 'down' } },
+  { patterns: [/(тёмн|темн|dark)\s*(тем|режим)?/], action: { type: 'theme', value: 'dark' } },
+  { patterns: [/(светл|light)\s*(тем|режим)?/], action: { type: 'theme', value: 'light' } },
+  { patterns: [/(смени|переключи|поменяй)\s*тем/], action: { type: 'theme', value: 'toggle' } },
+  { patterns: [/(главная|на\s*главную|домой)/], action: { type: 'navigate', path: ROUTES.classic.tree } },
+  { patterns: [/(открой|перейди)\s*(дерево|древо)/, /покажи\s*дерево/], action: { type: 'navigate', path: ROUTES.classic.tree } },
+  { patterns: [/(открой|перейди)\s*(лент|feed|новости)/], action: { type: 'navigate', path: ROUTES.classic.feed } },
+  { patterns: [/(открой|перейди)\s*(семь|контакт)/], action: { type: 'navigate', path: ROUTES.classic.family } },
+  { patterns: [/(открой|перейди)\s*(профиль|мой\s*профиль)/], action: { type: 'navigate', path: ROUTES.classic.myProfile } },
+  { patterns: [/(открой|перейди)\s*(магазин|store|подписк)/], action: { type: 'navigate', path: ROUTES.classic.store } },
+  { patterns: [/(открой|перейди)\s*(настройки|settings)/], action: { type: 'navigate', path: ROUTES.classic.settings } },
+  { patterns: [/(открой|перейди)\s*(помощь|поддержк|faq)/], action: { type: 'navigate', path: ROUTES.classic.help } },
+  { patterns: [/(открой|перейди)\s*(создать|создание)/], action: { type: 'navigate', path: ROUTES.classic.create } },
+  { patterns: [/(открой|перейди)\s*(пригла|invite)/], action: { type: 'navigate', path: ROUTES.classic.invite } },
 ];
 
 function matchVoiceAction(text: string): VoiceAction | null {
@@ -35,6 +44,7 @@ function matchVoiceAction(text: string): VoiceAction | null {
 export const VoiceControlGlobal: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isAiDemo = location.pathname === '/app' || location.pathname === '/ai-demo';
@@ -55,32 +65,46 @@ export const VoiceControlGlobal: React.FC = () => {
     rec.interimResults = false;
     rec.lang = 'ru-RU';
     rec.onresult = (e: SpeechRecognitionEvent) => {
-      // Собираем итоговый текст из всех результатов (в части браузеров приходит несколько сегментов)
       let text = '';
       for (let i = 0; i < e.results.length; i++) {
         const r = e.results[i];
         if (r?.[0]?.transcript) text += r[0].transcript;
       }
       text = text.trim() || (e.results[0]?.[0]?.transcript ?? '').trim();
+      if (!text) return;
 
       const onApp = location.pathname === '/app' || location.pathname.startsWith('/ai-demo');
       if (onApp) return;
 
-      // Явная команда «назад» — возврат, без открытия помощника
       const action = matchVoiceAction(text);
-      if (action?.type === 'back' && text) {
-        navigate(-1);
-        return;
+      if (action) {
+        switch (action.type) {
+          case 'back':
+            toast('Назад');
+            navigate(-1);
+            return;
+          case 'navigate':
+            toast(`Открываю…`);
+            navigate(action.path);
+            return;
+          case 'scroll':
+            window.scrollBy({ top: (action.direction === 'up' ? -1 : 1) * window.innerHeight * 0.7, behavior: 'smooth' });
+            toast(action.direction === 'up' ? 'Листаю вверх' : 'Листаю вниз');
+            return;
+          case 'theme': {
+            const newTheme = action.value === 'toggle' ? (theme === 'dark' ? 'light' : 'dark') : action.value;
+            setTheme(newTheme);
+            toast(`Тема: ${newTheme === 'dark' ? 'тёмная' : 'светлая'}`);
+            return;
+          }
+        }
       }
 
-      // Нажатие на микрофон и любой сказанный запрос — открываем голосового помощника с этим запросом
-      if (text) {
-        navigate(ROUTES.app);
-        try {
-          sessionStorage.setItem('ai-demo-voice-query', text);
-        } catch {
-          // ignore
-        }
+      navigate(ROUTES.app);
+      try {
+        sessionStorage.setItem('ai-demo-voice-query', text);
+      } catch {
+        // ignore
       }
     };
     rec.onend = () => setIsListening(false);

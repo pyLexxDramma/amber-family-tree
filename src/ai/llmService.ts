@@ -69,6 +69,56 @@ const TOOLS: Array<{
       parameters: { type: 'object', properties: {} },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'navigate_to',
+      description: 'Перейти на страницу приложения. Вызывать при запросах: открой настройки, перейди в ленту, открой дерево, магазин, профиль, семья, создать публикацию, помощь, приглашения.',
+      parameters: {
+        type: 'object',
+        properties: {
+          page: { type: 'string', description: 'Страница: tree, feed, family, settings, profile, store, create, help, invite, app' },
+        },
+        required: ['page'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'go_back',
+      description: 'Вернуться на предыдущую страницу. Вызывать при запросах: назад, вернись, обратно.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'scroll',
+      description: 'Прокрутить страницу. Вызывать при запросах: пролистай вниз, вверх, наверх, прокрути.',
+      parameters: {
+        type: 'object',
+        properties: {
+          direction: { type: 'string', description: 'Направление: up или down' },
+        },
+        required: ['direction'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'toggle_theme',
+      description: 'Переключить тему оформления. Вызывать при запросах: тёмная тема, светлая тема, смени тему.',
+      parameters: {
+        type: 'object',
+        properties: {
+          theme: { type: 'string', description: 'Тема: dark или light' },
+        },
+        required: ['theme'],
+      },
+    },
+  },
 ];
 
 export interface LLMResult {
@@ -106,6 +156,20 @@ function toolNameToIntent(
       if (selectedContext) return { type: 'show_person', entity: selectedContext };
       return { type: 'show_person' };
     }
+    case 'navigate_to': {
+      const page = args.page as string | undefined;
+      return { type: 'navigate_to', entity: page || '' };
+    }
+    case 'go_back':
+      return { type: 'go_back' };
+    case 'scroll': {
+      const dir = args.direction as string | undefined;
+      return { type: 'scroll', entity: dir || 'down' };
+    }
+    case 'toggle_theme': {
+      const theme = args.theme as string | undefined;
+      return { type: 'toggle_theme', entity: theme || 'dark' };
+    }
     default:
       return { type: 'unknown' };
   }
@@ -125,7 +189,9 @@ export async function getIntentFromLLM(
   const systemPrompt = `Ты помощник семейного приложения Angelo. Пользователь общается голосом или текстом на русском.
 Твоя задача — определить намерение (intent) и вызвать соответствующую функцию.
 Участники семьи: по именам (Николай, Мария, Ольга, Александр, Дмитрий, Елена, Анна и др.) или по родству (дедушка, бабушка).
-Если пользователь говорит «про него», «подробнее», «его фото» — имеется в виду уже выбранный человек (контекст).`;
+Если пользователь говорит «про него», «подробнее», «его фото» — имеется в виду уже выбранный человек (контекст).
+Ты также умеешь: навигировать по страницам (navigate_to), возвращаться назад (go_back), прокручивать страницу (scroll), менять тему (toggle_theme).
+Страницы: tree (дерево), feed (лента), family (семья), settings (настройки), profile (мой профиль), store (магазин), create (создать), help (помощь), invite (приглашения), app (голосовой помощник).`;
 
   try {
     const base = import.meta.env.DEV

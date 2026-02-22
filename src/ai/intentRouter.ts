@@ -146,5 +146,49 @@ export function routeIntent(userText: string, selectedContext?: string | null): 
     return { type: 'help' };
   }
 
+  // Navigate to page
+  if (/(открой|перейди|перейти|покажи)\s*(настройки|settings)/.test(text)) {
+    return { type: 'navigate_to', entity: 'settings' };
+  }
+  if (/(открой|перейди|перейти|покажи)\s*(магазин|store|подписк)/.test(text)) {
+    return { type: 'navigate_to', entity: 'store' };
+  }
+  if (/(открой|перейди|перейти|покажи)\s*(профиль|мой\s*профиль)/.test(text)) {
+    return { type: 'navigate_to', entity: 'profile' };
+  }
+  if (/(открой|перейди|перейти|покажи)\s*(семь|контакт|список\s*семьи)/.test(text)) {
+    return { type: 'navigate_to', entity: 'family' };
+  }
+  if (/(открой|перейди|перейти)\s*(лент|новости|feed)/.test(text)) {
+    return { type: 'navigate_to', entity: 'feed' };
+  }
+  if (/(открой|перейди|перейти)\s*(пригла|invite)/.test(text)) {
+    return { type: 'navigate_to', entity: 'invite' };
+  }
+
+  // Go back
+  if (/^(назад|вернись|вернуться|обратно|back)$/.test(text)) {
+    return { type: 'go_back' };
+  }
+
+  // Scroll
+  if (/(пролистай|прокрути|скролл|листай)\s*(вниз|ниже|дальше|down)?/.test(text) || /^(вниз|ниже|дальше)$/.test(text)) {
+    return { type: 'scroll', entity: 'down' };
+  }
+  if (/(пролистай|прокрути|скролл|листай)\s*(вверх|наверх|выше|up)/.test(text) || /^(вверх|наверх|выше)$/.test(text)) {
+    return { type: 'scroll', entity: 'up' };
+  }
+
+  // Toggle theme
+  if (/(тёмн|темн|dark)\s*(тем|режим|mode)?/.test(text)) {
+    return { type: 'toggle_theme', entity: 'dark' };
+  }
+  if (/(светл|light)\s*(тем|режим|mode)?/.test(text)) {
+    return { type: 'toggle_theme', entity: 'light' };
+  }
+  if (/(смени|переключи|поменяй)\s*тем/.test(text)) {
+    return { type: 'toggle_theme', entity: 'toggle' };
+  }
+
   return { type: 'unknown' };
 }

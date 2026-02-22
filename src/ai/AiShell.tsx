@@ -12,9 +12,24 @@ import { MiniFeed } from './responses/MiniFeed';
 import { MiniGallery } from './responses/MiniGallery';
 import type { InterfaceViewType } from './types';
 import { ROUTES } from '@/constants/routes';
+import { useTheme } from 'next-themes';
+
+const PAGE_ROUTES: Record<string, string> = {
+  tree: ROUTES.classic.tree,
+  feed: ROUTES.classic.feed,
+  family: ROUTES.classic.family,
+  settings: ROUTES.classic.settings,
+  profile: ROUTES.classic.myProfile,
+  store: ROUTES.classic.store,
+  create: ROUTES.classic.create,
+  help: ROUTES.classic.help,
+  invite: ROUTES.classic.invite,
+  app: ROUTES.app,
+};
 
 export const AiShell: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
     messages,
@@ -99,10 +114,41 @@ export const AiShell: React.FC = () => {
             viewPayload = 'create_publication';
             break;
           case 'help':
-            reply = 'Я умею: показать дерево, рассказать про любого (дедушку, бабушку, по имени), показать ленту и галерею медиа, подсказать, как создать публикацию. Управляйте голосом или текстом; нажимайте на контент справа для подробностей.';
+            reply = 'Я умею: показать дерево, рассказать про любого, показать ленту, галерею, создать публикацию. Навигация: «открой настройки», «перейди в ленту», «назад». Скролл: «пролистай вниз/вверх». Тема: «тёмная тема», «светлая тема».';
             break;
+          case 'navigate_to': {
+            const path = PAGE_ROUTES[intent.entity || ''];
+            if (path) {
+              reply = `Открываю ${intent.entity === 'tree' ? 'дерево' : intent.entity === 'feed' ? 'ленту' : intent.entity === 'family' ? 'семью' : intent.entity === 'settings' ? 'настройки' : intent.entity === 'profile' ? 'профиль' : intent.entity === 'store' ? 'магазин' : intent.entity === 'create' ? 'создание публикации' : intent.entity === 'help' ? 'помощь' : intent.entity || 'страницу'}.`;
+              setTimeout(() => navigate(path), 600);
+            } else {
+              reply = 'Не знаю такую страницу. Скажите: «открой дерево», «настройки», «ленту», «магазин» или «профиль».';
+            }
+            break;
+          }
+          case 'go_back':
+            reply = 'Возвращаюсь назад.';
+            setTimeout(() => navigate(-1), 600);
+            break;
+          case 'scroll': {
+            const dir = intent.entity === 'up' ? -1 : 1;
+            window.scrollBy({ top: dir * window.innerHeight * 0.7, behavior: 'smooth' });
+            reply = intent.entity === 'up' ? 'Листаю вверх.' : 'Листаю вниз.';
+            break;
+          }
+          case 'toggle_theme': {
+            const val = intent.entity;
+            if (val === 'toggle') {
+              setTheme(theme === 'dark' ? 'light' : 'dark');
+              reply = `Переключаю тему на ${theme === 'dark' ? 'светлую' : 'тёмную'}.`;
+            } else {
+              setTheme(val === 'light' ? 'light' : 'dark');
+              reply = `Включаю ${val === 'light' ? 'светлую' : 'тёмную'} тему.`;
+            }
+            break;
+          }
           default:
-            reply = 'Попробуйте: «Покажи дерево», «Расскажи про дедушку», «Что нового?», «Покажи фото» или «Помощь».';
+            reply = 'Попробуйте: «Покажи дерево», «Расскажи про дедушку», «Что нового?», «Покажи фото», «Открой настройки», «Пролистай вниз» или «Помощь».';
         }
 
         if (llmReply) reply = llmReply;

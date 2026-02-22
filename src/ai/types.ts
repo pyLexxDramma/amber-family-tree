@@ -41,10 +41,14 @@ export type IntentType =
   | 'search_media'
   | 'create_publication'
   | 'help'
+  | 'navigate_to'
+  | 'go_back'
+  | 'scroll'
+  | 'toggle_theme'
   | 'unknown';
 
 export interface Intent {
   type: IntentType;
-  /** Extracted entity, e.g. person name or id */
+  /** Extracted entity: person id, route path, scroll direction, theme value */
   entity?: string;
 }
