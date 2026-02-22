@@ -38,7 +38,8 @@ Deno.serve(async (req) => {
     const responseHeaders = new Headers(corsHeaders);
     responseHeaders.set("Content-Type", res.headers.get("Content-Type") || "application/octet-stream");
 
-    return new Response(res.body, {
+    const body = await res.arrayBuffer();
+    return new Response(body, {
       status: res.status,
       headers: responseHeaders,
     });
