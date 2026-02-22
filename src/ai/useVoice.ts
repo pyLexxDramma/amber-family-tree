@@ -87,16 +87,11 @@ export function useVoice(onResult: (text: string) => void) {
   const speak = useCallback((text: string) => {
     if (!text?.trim()) return;
     openAiAudioRef.current = null;
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
-    if (apiKey?.trim()) {
-      speakWithOpenAI(text, apiKey.trim(), {
-        voice: 'nova',
-        speed: 0.95,
-        onAudio: (audio) => { openAiAudioRef.current = audio; },
-      }).catch(() => fallbackSpeak(text));
-    } else {
-      fallbackSpeak(text);
-    }
+    speakWithOpenAI(text, '', {
+      voice: 'nova',
+      speed: 0.95,
+      onAudio: (audio) => { openAiAudioRef.current = audio; },
+    }).catch(() => fallbackSpeak(text));
   }, [fallbackSpeak]);
 
   const stopSpeaking = useCallback(() => {
