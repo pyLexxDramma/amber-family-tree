@@ -118,12 +118,6 @@ const FamilyList: React.FC = () => {
                 className="person-card person-card-accent w-full flex items-center gap-5 text-left group relative min-h-[144px] pl-5 pr-5 py-4 touch-target"
               >
                 <div className="flex flex-col items-center gap-1.5 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <div className={`h-3.5 w-3.5 rounded-full ${m.isActive ? 'status-online-dot' : 'bg-muted-foreground/60'}`} />
-                    <span className={`text-[11px] tracking-widest uppercase font-bold whitespace-nowrap ${m.isActive ? 'status-online-text' : 'text-foreground/90 dark:text-white/90'}`}>
-                      {m.isActive ? 'в сети' : 'не в сети'}
-                    </span>
-                  </div>
                   <div className="h-[108px] w-[108px] rounded-full bg-muted flex items-center justify-center relative overflow-hidden ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
                     {demoWithPhotos && (
                       <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />

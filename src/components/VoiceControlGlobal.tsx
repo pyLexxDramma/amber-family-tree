@@ -31,6 +31,7 @@ const VOICE_MAP: { patterns: RegExp[]; action: VoiceAction }[] = [
   { patterns: [/(открой|перейди)\s*(помощь|поддержк|faq)/], action: { type: 'navigate', path: ROUTES.classic.help } },
   { patterns: [/(открой|перейди)\s*(создать|создание)/], action: { type: 'navigate', path: ROUTES.classic.create } },
   { patterns: [/(открой|перейди)\s*(пригла|invite)/], action: { type: 'navigate', path: ROUTES.classic.invite } },
+  { patterns: [/(голос|анжело|помощник|ассистент|управление\s*голосом)/], action: { type: 'navigate', path: ROUTES.app } },
 ];
 
 function matchVoiceAction(text: string): VoiceAction | null {
@@ -56,10 +57,14 @@ export const VoiceControlGlobal: React.FC = () => {
     location.pathname === '/onboarding';
 
   const startListening = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('voice-control-start'));
     const API =
       (window as unknown as { SpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition ||
       (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition;
-    if (!API) return;
+    if (!API) {
+      toast.error('Голос не поддерживается. Используйте Chrome или Edge.');
+      return;
+    }
     const rec = new API();
     rec.continuous = false;
     rec.interimResults = false;
@@ -108,15 +113,23 @@ export const VoiceControlGlobal: React.FC = () => {
       }
     };
     rec.onend = () => setIsListening(false);
-    rec.onerror = () => setIsListening(false);
+    rec.onerror = (e: SpeechRecognitionErrorEvent) => {
+      setIsListening(false);
+      if (e.error === 'not-allowed') {
+        toast.error('Доступ к микрофону запрещён. Разрешите в настройках сайта.');
+      } else if (e.error === 'no-speech') {
+        toast('Речь не распознана. Попробуйте ещё раз.');
+      }
+    };
     recognitionRef.current = rec;
     try {
       rec.start();
       setIsListening(true);
-    } catch {
+    } catch (err) {
       setIsListening(false);
+      toast.error('Не удалось запустить микрофон. Разрешите доступ в настройках браузера.');
     }
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, theme, setTheme]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {

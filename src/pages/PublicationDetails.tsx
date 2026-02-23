@@ -40,6 +40,15 @@ const PublicationDetails: React.FC = () => {
     return () => { stopSpeaking(); };
   }, [id, stopSpeaking]);
 
+  useEffect(() => {
+    const handler = () => {
+      stopSpeaking();
+      setAudioPlaying(false);
+    };
+    window.addEventListener('voice-control-start', handler);
+    return () => window.removeEventListener('voice-control-start', handler);
+  }, [stopSpeaking]);
+
   if (!pub) return <div className="p-6 text-center text-muted-foreground">Публикация не найдена</div>;
 
   const author = getMember(pub.authorId);

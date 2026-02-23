@@ -43,19 +43,12 @@ const FamilyTree: React.FC = () => {
           {isCurrent && (
             <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
           )}
-          {!m.isActive && (
-            <span className="absolute top-0.5 left-0.5 text-[8px] tracking-widest uppercase text-muted-foreground font-medium bg-black/30 px-1 py-0.5 rounded">offline</span>
-          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="card-name text-xl sm:text-2xl font-bold text-foreground truncate text-primary/95 group-hover:text-primary dark:text-white" title={m.nickname || m.firstName}>
             {m.nickname || m.firstName}
           </p>
         </div>
-
-        {/* Status dot */}
-        <div className={`h-4 w-4 flex-shrink-0 rounded-full ${m.isActive ? 'bg-green-500' : 'bg-muted-foreground/30'}`}
-             aria-label={m.isActive ? 'Активен' : 'Неактивен'} />
       </button>
     );
   };
