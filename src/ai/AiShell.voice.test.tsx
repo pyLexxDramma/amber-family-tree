@@ -3,7 +3,10 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AiShell } from './AiShell';
 
-vi.mock('./llmService', () => ({ getIntentFromLLM: vi.fn().mockResolvedValue(null) }));
+vi.mock('./llmService', () => ({
+  getIntentFromLLM: vi.fn().mockResolvedValue(null),
+  runAgentLoop: vi.fn().mockResolvedValue(null),
+}));
 
 let mockRecInstance: {
   start: () => void;

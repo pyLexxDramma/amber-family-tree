@@ -4,7 +4,7 @@ import { Mic, Send, Loader2, Volume2, Settings, ArrowLeft } from 'lucide-react';
 import { useConversation } from './useConversation';
 import { useVoice } from './useVoice';
 import { routeIntent } from './intentRouter';
-import { getIntentFromLLM } from './llmService';
+import { runAgentLoop } from './llmService';
 import { getMember } from '@/data/mock-members';
 import { MiniTree } from './responses/MiniTree';
 import { PersonCard } from './responses/PersonCard';
@@ -56,108 +56,100 @@ export const AiShell: React.FC = () => {
       addUserMessage(trimmed);
       setIsThinking(true);
 
-      // LLM (if key set) or rule-based intent
       const delayMs = 800;
       setTimeout(async () => {
-        let intent: { type: string; entity?: string } = { type: 'unknown' };
-        let llmReply: string | undefined;
-        try {
-          const llmResult = await getIntentFromLLM(trimmed, selectedContext);
-          if (llmResult) {
-            intent = llmResult.intent;
-            llmReply = llmResult.textReply;
-          }
-        } catch {
-          // LLM optional; fallback to rule-based intent
-        }
-        if (intent.type === 'unknown') {
-          intent = routeIntent(trimmed, selectedContext);
-        }
-
+        let intents: { type: string; entity?: string }[] = [];
         let reply = '';
         let viewType: InterfaceViewType = 'empty';
         let viewPayload: string | undefined;
 
-        switch (intent.type) {
-          case 'greeting':
-            reply = 'Добрый день! Чем могу помочь? Можете сказать «Покажи дерево» или «Расскажи про дедушку».';
-            break;
-          case 'show_tree':
-            reply = 'Вот ваше семейное дерево. Нажмите на любого человека — потом скажите «расскажи про него».';
-            viewType = 'tree';
-            break;
-          case 'show_person':
-            if (intent.entity) {
-              const person = getMember(intent.entity);
-              if (person) {
-                reply = `${person.firstName} ${person.lastName}${person.nickname ? ` («${person.nickname}»)` : ''}. ${person.city ? person.city + '. ' : ''}${person.about || ''}`;
-                viewType = 'person';
-                viewPayload = intent.entity;
-                selectEntity(intent.entity);
-              } else {
-                reply = 'Не нашёл такого человека. Попробуйте: «Покажи дерево» и нажмите на кого нужно.';
-              }
-            } else {
-              reply = 'О ком рассказать? Скажите, например: «Расскажи про дедушку» или нажмите на человека в дереве.';
-            }
-            break;
-          case 'show_feed':
-            reply = 'Вот последние публикации семьи. Нажмите на запись или «Открыть полную ленту» — откроется полная лента.';
-            viewType = 'feed';
-            break;
-          case 'search_media':
-            reply = 'Вот галерея фото и медиа семьи. Можно открыть полную ленту с вкладкой «Медиа» для просмотра всего архива.';
-            viewType = 'gallery';
-            break;
-          case 'create_publication':
-            reply = 'Чтобы создать публикацию, откройте полный режим по кнопке ниже или скажите «Классический режим» и перейдите в «Создать».';
-            viewType = 'story';
-            viewPayload = 'create_publication';
-            break;
-          case 'help':
-            reply = 'Я умею: показать дерево, рассказать про любого, показать ленту, галерею, создать публикацию, пригласить родственников, сменить оформление. Навигация: «открой настройки», «покажи ленту», «создай публикацию», «пригласи присоединиться», «назад». Скролл: «пролистай вниз/вверх». Тема: «тёмная тема», «светлая тема».';
-            break;
-          case 'navigate_to': {
-            const path = PAGE_ROUTES[intent.entity || ''];
-            if (path) {
-              const labels: Record<string, string> = {
-  tree: 'дерево', feed: 'ленту', family: 'семью', settings: 'настройки', profile: 'профиль',
-  store: 'магазин', create: 'создание публикации', help: 'помощь', invite: 'приглашения',
-  demoVariants: 'варианты оформления',
-};
-reply = `Открываю ${labels[intent.entity || ''] || intent.entity || 'страницу'}.`;
-              setTimeout(() => navigate(path), 600);
-            } else {
-              reply = 'Не знаю такую страницу. Скажите: «открой дерево», «настройки», «ленту», «магазин» или «профиль».';
-            }
-            break;
+        try {
+          const agentResult = await runAgentLoop(trimmed, selectedContext);
+          if (agentResult) {
+            reply = agentResult.reply;
+            intents = agentResult.intents;
           }
-          case 'go_back':
-            reply = 'Возвращаюсь назад.';
-            setTimeout(() => navigate(-1), 600);
-            break;
-          case 'scroll': {
-            const dir = intent.entity === 'up' ? -1 : 1;
-            window.scrollBy({ top: dir * window.innerHeight * 0.7, behavior: 'smooth' });
-            reply = intent.entity === 'up' ? 'Листаю вверх.' : 'Листаю вниз.';
-            break;
-          }
-          case 'toggle_theme': {
-            const val = intent.entity;
-            if (val === 'toggle') {
-              setTheme(theme === 'dark' ? 'light' : 'dark');
-              reply = `Переключаю тему на ${theme === 'dark' ? 'светлую' : 'тёмную'}.`;
-            } else {
-              setTheme(val === 'light' ? 'light' : 'dark');
-              reply = `Включаю ${val === 'light' ? 'светлую' : 'тёмную'} тему.`;
-            }
-            break;
-          }
-          default:
-            reply = 'Попробуйте: «Покажи дерево», «Расскажи про дедушку», «Что нового?», «Покажи фото», «Открой настройки», «Пролистай вниз» или «Помощь».';
+        } catch {
+          // agent optional
         }
 
-        if (llmReply) reply = llmReply;
+        if (intents.length === 0) {
+          const intent = routeIntent(trimmed, selectedContext);
+          intents = [intent];
+        }
+
+        const applyIntent = (intent: { type: string; entity?: string }) => {
+          switch (intent.type) {
+            case 'show_tree':
+              viewType = 'tree';
+              if (!reply) reply = 'Вот ваше семейное дерево. Нажмите на любого человека — потом скажите «расскажи про него».';
+              break;
+            case 'show_person':
+              if (intent.entity) {
+                const person = getMember(intent.entity);
+                if (person) {
+                  viewType = 'person';
+                  viewPayload = intent.entity;
+                  selectEntity(intent.entity);
+                  if (!reply) reply = `${person.firstName} ${person.lastName}${person.nickname ? ` («${person.nickname}»)` : ''}. ${person.city ? person.city + '. ' : ''}${person.about || ''}`;
+                } else if (!reply) reply = 'Не нашёл такого человека. Попробуйте: «Покажи дерево» и нажмите на кого нужно.';
+              } else if (!reply) reply = 'О ком рассказать? Скажите, например: «Расскажи про дедушку» или нажмите на человека в дереве.';
+              break;
+            case 'show_feed':
+              viewType = 'feed';
+              if (!reply) reply = 'Вот последние публикации семьи. Нажмите на запись или «Открыть полную ленту» — откроется полная лента.';
+              break;
+            case 'search_media':
+              viewType = 'gallery';
+              if (!reply) reply = 'Вот галерея фото и медиа семьи. Можно открыть полную ленту с вкладкой «Медиа» для просмотра всего архива.';
+              break;
+            case 'create_publication':
+              viewType = 'story';
+              viewPayload = 'create_publication';
+              if (!reply) reply = 'Чтобы создать публикацию, откройте полный режим по кнопке ниже или скажите «Классический режим» и перейдите в «Создать».';
+              break;
+            case 'help':
+              if (!reply) reply = 'Я умею: показать дерево, рассказать про любого, показать ленту, галерею, создать публикацию, пригласить родственников, сменить оформление. Навигация: «открой настройки», «покажи ленту», «создай публикацию», «пригласи присоединиться», «назад». Скролл: «пролистай вниз/вверх». Тема: «тёмная тема», «светлая тема».';
+              break;
+            case 'greeting':
+              if (!reply) reply = 'Добрый день! Чем могу помочь? Можете сказать «Покажи дерево» или «Расскажи про дедушку».';
+              break;
+            case 'navigate_to': {
+              const path = PAGE_ROUTES[intent.entity || ''];
+              if (path) {
+                const labels: Record<string, string> = {
+                  tree: 'дерево', feed: 'ленту', family: 'семью', settings: 'настройки', profile: 'профиль',
+                  store: 'магазин', create: 'создание публикации', help: 'помощь', invite: 'приглашения',
+                  demoVariants: 'варианты оформления',
+                };
+                if (!reply) reply = `Открываю ${labels[intent.entity || ''] || intent.entity || 'страницу'}.`;
+                setTimeout(() => navigate(path), 600);
+              } else if (!reply) reply = 'Не знаю такую страницу. Скажите: «открой дерево», «настройки», «ленту», «магазин» или «профиль».';
+              break;
+            }
+            case 'go_back':
+              if (!reply) reply = 'Возвращаюсь назад.';
+              setTimeout(() => navigate(-1), 600);
+              break;
+            case 'scroll': {
+              const dir = intent.entity === 'up' ? -1 : 1;
+              window.scrollBy({ top: dir * window.innerHeight * 0.7, behavior: 'smooth' });
+              if (!reply) reply = intent.entity === 'up' ? 'Листаю вверх.' : 'Листаю вниз.';
+              break;
+            }
+            case 'toggle_theme': {
+              const val = intent.entity;
+              if (val === 'toggle') setTheme(theme === 'dark' ? 'light' : 'dark');
+              else setTheme(val === 'light' ? 'light' : 'dark');
+              if (!reply) reply = `Переключаю тему на ${(val === 'toggle' ? (theme === 'dark' ? 'light' : 'dark') : val) === 'light' ? 'светлую' : 'тёмную'}.`;
+              break;
+            }
+            default:
+              if (!reply) reply = 'Попробуйте: «Покажи дерево», «Расскажи про дедушку», «Что нового?», «Покажи фото», «Открой настройки», «Пролистай вниз» или «Помощь».';
+          }
+        };
+
+        for (const intent of intents) applyIntent(intent);
         if (!reply) reply = 'Попробуйте: «Покажи дерево», «Расскажи про дедушку», «Что нового?», «Покажи фото» или «Помощь».';
         addAiMessage(reply);
         setView(viewType, viewPayload);
@@ -173,6 +165,9 @@ reply = `Открываю ${labels[intent.entity || ''] || intent.entity || 'с�
       setIsThinking,
       setIsSpeaking,
       selectedContext,
+      navigate,
+      theme,
+      setTheme,
     ]
   );
 

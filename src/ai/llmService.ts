@@ -1,5 +1,21 @@
 import type { Intent } from './types';
 import { resolvePersonQuery } from './intentRouter';
+import { getMember, mockMembers } from '@/data/mock-members';
+import { ROUTES } from '@/constants/routes';
+
+const PAGE_ROUTES: Record<string, string> = {
+  tree: ROUTES.classic.tree,
+  feed: ROUTES.classic.feed,
+  family: ROUTES.classic.family,
+  settings: ROUTES.classic.settings,
+  profile: ROUTES.classic.myProfile,
+  store: ROUTES.classic.store,
+  create: ROUTES.classic.create,
+  help: ROUTES.classic.help,
+  invite: ROUTES.classic.invite,
+  demoVariants: ROUTES.classic.demoVariants,
+  app: ROUTES.app,
+};
 
 const TOOLS: Array<{
   type: 'function';
@@ -66,6 +82,14 @@ const TOOLS: Array<{
     function: {
       name: 'greeting',
       description: 'Приветствие. Вызывать при приветствии без конкретного запроса.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_family_members',
+      description: 'Получить список членов семьи. Вызывать когда нужно узнать кто в семье, перечислить родственников, найти кого-то по имени.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -145,6 +169,8 @@ function toolNameToIntent(
       return { type: 'help' };
     case 'greeting':
       return { type: 'greeting' };
+    case 'get_family_members':
+      return { type: 'unknown' };
     case 'show_person': {
       const memberId = args.member_id as string | undefined;
       const nameOrRelation = args.name_or_relation as string | undefined;
@@ -173,6 +199,171 @@ function toolNameToIntent(
     default:
       return { type: 'unknown' };
   }
+}
+
+function getToolResult(intent: Intent, selectedContext: string | null): string {
+  switch (intent.type) {
+    case 'show_tree':
+      return 'Семейное дерево отображено. Пользователь может нажать на любого человека.';
+    case 'show_person': {
+      const id = intent.entity ?? selectedContext;
+      if (!id) return 'Не указан человек. Спросите: о ком рассказать?';
+      const m = getMember(id);
+      if (!m) return `Человек с id ${id} не найден.`;
+      return `${m.firstName} ${m.lastName}${m.nickname ? ` («${m.nickname}»)` : ''}. ${m.city ? m.city + '. ' : ''}${m.about || ''}`;
+    }
+    case 'show_feed':
+      return 'Лента публикаций семьи отображена.';
+    case 'search_media':
+      return 'Галерея фото и медиа отображена.';
+    case 'create_publication':
+      return 'Открыт экран создания публикации. Пользователь может добавить фото, видео или историю.';
+    case 'help':
+      return 'Помощь: дерево, персона, лента, галерея, создать публикацию, пригласить, сменить оформление. Навигация: открой настройки/ленту/дерево. Скролл: пролистай вниз/вверх. Тема: тёмная/светлая.';
+    case 'greeting':
+      return 'Приветствие отправлено.';
+    case 'navigate_to': {
+      const path = PAGE_ROUTES[intent.entity || ''];
+      if (path) return `Переход на страницу: ${intent.entity}.`;
+      return `Страница «${intent.entity}» не найдена. Доступны: tree, feed, family, settings, profile, store, create, help, invite, demoVariants.`;
+    }
+    case 'go_back':
+      return 'Возврат на предыдущую страницу.';
+    case 'scroll':
+      return `Прокрутка ${intent.entity === 'up' ? 'вверх' : 'вниз'}.`;
+    case 'toggle_theme':
+      return `Тема переключена на ${intent.entity === 'light' ? 'светлую' : 'тёмную'}.`;
+    case 'unknown':
+      return 'Действие не распознано.';
+    default:
+      return 'Выполнено.';
+  }
+}
+
+function getFamilyListContext(): string {
+  return mockMembers
+    .slice(0, 12)
+    .map((m) => `${m.firstName} ${m.lastName}${m.nickname ? ` (${m.nickname})` : ''}`)
+    .join(', ');
+}
+
+export interface AgentResult {
+  reply: string;
+  intents: Intent[];
+}
+
+const MAX_AGENT_ITERATIONS = 5;
+
+export async function runAgentLoop(
+  userText: string,
+  selectedContext: string | null
+): Promise<AgentResult | null> {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey || typeof apiKey !== 'string') return null;
+
+  const familyList = getFamilyListContext();
+  const systemPrompt = `Ты Angelo — умный помощник семейного приложения. Пользователь общается голосом или текстом на русском.
+Твоя задача — понять запрос, при необходимости вызвать инструменты, и дать полезный ответ.
+Ты можешь вызывать несколько инструментов подряд, чтобы выполнить сложный запрос.
+Участники семьи (примеры): ${familyList}. Для «про него», «подробнее», «его фото» — используй выбранного человека (selectedContext).
+Страницы: tree (дерево), feed (лента), family (семья), settings (настройки), profile (профиль), store (магазин), create (создать), help (помощь), invite (приглашения), demoVariants (оформление).
+Отвечай кратко и по делу. Если запрос неясен — уточни. Если не можешь выполнить — честно скажи.`;
+
+  const base = import.meta.env.DEV
+    ? '/api/openai'
+    : (import.meta.env.VITE_OPENAI_PROXY_URL
+        || (import.meta.env.VITE_SUPABASE_URL ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai-proxy` : null)
+        || 'https://tocjbyeybddsfihvqbrk.supabase.co/functions/v1/openai-proxy');
+
+  type Message =
+    | { role: 'user' | 'system'; content: string }
+    | { role: 'assistant'; content: string; tool_calls?: Array<{ id: string; type: 'function'; function: { name: string; arguments: string } }> }
+    | { role: 'tool'; content: string; tool_call_id: string };
+  const messages: Message[] = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `Контекст: выбранный человек ${selectedContext || 'не выбран'}. Запрос пользователя: ${userText}` },
+  ];
+
+  const intents: Intent[] = [];
+
+  for (let i = 0; i < MAX_AGENT_ITERATIONS; i++) {
+    const res = await fetch(`${base}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages,
+        tools: TOOLS,
+        tool_choice: 'auto',
+        max_tokens: 500,
+      }),
+    });
+
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      choices?: Array<{
+        message?: {
+          content?: string | null;
+          tool_calls?: Array<{
+            id?: string;
+            function?: { name?: string; arguments?: string };
+          }>;
+        };
+      }>;
+    };
+
+    const choice = data.choices?.[0];
+    const msg = choice?.message;
+    if (!msg) return null;
+
+    const textReply = msg.content?.trim();
+    const toolCalls = msg.tool_calls;
+
+    if (toolCalls?.length && !textReply) {
+      const assistantMsg: Message = {
+        role: 'assistant',
+        content: '',
+        tool_calls: toolCalls.map((tc) => ({
+          id: tc.id || `call_${i}_${tc.function?.name}`,
+          type: 'function' as const,
+          function: { name: tc.function?.name || '', arguments: tc.function?.arguments || '{}' },
+        })),
+      };
+      messages.push(assistantMsg);
+
+      for (const tc of toolCalls) {
+        const fn = tc.function;
+        const name = fn?.name || '';
+        let args: Record<string, unknown> = {};
+        try {
+          if (fn?.arguments) args = JSON.parse(fn.arguments) as Record<string, unknown>;
+        } catch {
+          // ignore
+        }
+        const intent = name === 'get_family_members'
+          ? { type: 'unknown' as const, _tool: 'get_family_members' }
+          : toolNameToIntent(name, args, selectedContext);
+        if (intent.type !== 'unknown' || !('_tool' in intent)) {
+          intents.push(intent);
+        }
+        const result = name === 'get_family_members'
+          ? mockMembers.map((m) => `${m.firstName} ${m.lastName}${m.nickname ? ` («${m.nickname}»)` : ''} [${m.id}]`).join('; ')
+          : getToolResult(intent, selectedContext);
+        messages.push({
+          role: 'tool',
+          content: result,
+          tool_call_id: tc.id || `call_${i}_${name}`,
+        } as Message);
+      }
+      continue;
+    }
+
+    if (textReply) {
+      return { reply: textReply, intents };
+    }
+    return null;
+  }
+  return null;
 }
 
 /**

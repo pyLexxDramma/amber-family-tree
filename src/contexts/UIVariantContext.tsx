@@ -10,19 +10,18 @@ type UIVariantContextValue = {
 };
 
 const defaultValue: UIVariantContextValue = {
-  variant: 'classic',
+  variant: 'journal',
   setVariant: () => {},
 };
 
 const UIVariantContext = createContext<UIVariantContextValue>(defaultValue);
 
-/** По умолчанию запускается текущий (классический) интерфейс без выбора варианта. */
 export function getStoredVariant(): UIVariant {
-  if (typeof localStorage === 'undefined') return 'classic';
+  if (typeof localStorage === 'undefined') return 'journal';
   const v = localStorage.getItem(STORAGE_KEY);
   const valid: UIVariant[] = ['classic','living','calendar','journal','minimal','retro','current'];
   if (valid.includes(v as UIVariant)) return v as UIVariant;
-  return 'classic';
+  return 'journal';
 }
 
 export function UIVariantProvider({ children }: { children: React.ReactNode }) {
