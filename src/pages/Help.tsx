@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Volume2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+
+const QUICK_GUIDE = `Краткая инструкция по Angelo. 
+Дерево семьи: откройте вкладку «Дерево» или скажите «Покажи дерево». Нажмите на человека — появится карточка. 
+Лента: вкладка «Лента» или команда «Покажи ленту», «Что нового». 
+Создать публикацию: вкладка «Создать» или «Создай публикацию». 
+Пригласить родственников: вкладка «Семья» — кнопка «Пригласить» или «Пригласи присоединиться». 
+Голосовой помощник: кнопка с микрофоном или страница «Angelo» — говорите команды или пишите текст. 
+Навигация: «Открой настройки», «Смени оформление», «Назад». 
+Тема: «Тёмная тема» или «Светлая тема».`;
 
 const faqs: { q: string; a: string }[] = [
   { q: 'Как пригласить родственников?', a: 'Откройте вкладку «Семья», нажмите «Пригласить» и отправьте ссылку любым мессенджером.' },
@@ -18,6 +27,25 @@ const Help: React.FC = () => {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const speakGuide = useCallback(() => {
+    if (!('speechSynthesis' in window)) return;
+    const synth = window.speechSynthesis;
+    if (isSpeaking) {
+      synth.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(QUICK_GUIDE);
+    u.lang = 'ru-RU';
+    u.rate = 0.9;
+    u.onend = () => setIsSpeaking(false);
+    u.onerror = () => setIsSpeaking(false);
+    synth.speak(u);
+    setIsSpeaking(true);
+  }, [isSpeaking]);
 
   return (
     <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
@@ -27,6 +55,19 @@ const Help: React.FC = () => {
       </button>
 
       <h1 className="editorial-title text-3xl font-bold text-foreground mb-8 px-3">Помощь и поддержка</h1>
+
+      <p className="section-title text-primary mb-4 px-3 text-lg">Краткая инструкция</p>
+      <div className="content-card border-2 border-border rounded-2xl p-5 mb-8 mx-3">
+        <p className="text-base font-medium text-foreground/90 editorial-body whitespace-pre-line mb-4">{QUICK_GUIDE}</p>
+        <button
+          type="button"
+          onClick={speakGuide}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+        >
+          <Volume2 className="h-5 w-5" />
+          {isSpeaking ? 'Остановить озвучку' : 'Слушать инструкцию'}
+        </button>
+      </div>
 
       <p className="section-title text-primary mb-4 px-3 text-lg">Частые вопросы</p>
       <Accordion type="single" collapsible className="mb-10 space-y-3">

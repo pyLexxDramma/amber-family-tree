@@ -77,7 +77,7 @@ const TOOLS: Array<{
       parameters: {
         type: 'object',
         properties: {
-          page: { type: 'string', description: 'Страница: tree, feed, family, settings, profile, store, create, help, invite, app' },
+          page: { type: 'string', description: 'Страница: tree, feed, family, settings, profile, store, create, help, invite, demoVariants, app' },
         },
         required: ['page'],
       },
@@ -191,7 +191,7 @@ export async function getIntentFromLLM(
 Участники семьи: по именам (Николай, Мария, Ольга, Александр, Дмитрий, Елена, Анна и др.) или по родству (дедушка, бабушка).
 Если пользователь говорит «про него», «подробнее», «его фото» — имеется в виду уже выбранный человек (контекст).
 Ты также умеешь: навигировать по страницам (navigate_to), возвращаться назад (go_back), прокручивать страницу (scroll), менять тему (toggle_theme).
-Страницы: tree (дерево), feed (лента), family (семья), settings (настройки), profile (мой профиль), store (магазин), create (создать), help (помощь), invite (приглашения), app (голосовой помощник).`;
+Страницы: tree (дерево), feed (лента), family (семья), settings (настройки), profile (мой профиль), store (магазин), create (создать), help (помощь), invite (приглашения), demoVariants (сменить оформление/стиль), app (голосовой помощник).`;
 
   try {
     const base = import.meta.env.DEV

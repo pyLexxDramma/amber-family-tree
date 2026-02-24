@@ -127,7 +127,10 @@ export function routeIntent(userText: string, selectedContext?: string | null): 
   // (убрано: иначе "покажи дерево" могло давать show_person)
 
   // Show feed (без \b для кириллицы)
-  if (/(что\s*нового|лента|новости|публикации|feed|что\s*новенького)/.test(text)) {
+  if (
+    /(что\s*нового|лента|новости|публикации|feed|что\s*новенького)/.test(text) ||
+    /(покажи|открой)\s*(лент|новости|feed)/.test(text)
+  ) {
     return { type: 'show_feed' };
   }
 
@@ -137,13 +140,23 @@ export function routeIntent(userText: string, selectedContext?: string | null): 
   }
 
   // Create publication
-  if (/(создать\s*публикацию|добавить\s*пост|новая\s*публикация|создать\s*пост|добавить\s*историю)/.test(text)) {
+  if (/(создай|создать)\s*(публикацию|пост|историю)|добавить\s*(пост|историю)|новая\s*публикация/.test(text)) {
     return { type: 'create_publication' };
   }
 
   // Help (без \b для кириллицы)
-  if (/(помоги|помощь|help|что\s*умеешь|какие\s*команды)/.test(text)) {
+  if (/(помоги|помощь|help|что\s*умеешь|что\s*ты\s*умеешь|что\s*ты\s*можешь|какие\s*команды)/.test(text)) {
     return { type: 'help' };
+  }
+
+  // Change UI variant / оформление
+  if (/(смени|переключи|поменяй|выбери)\s*(оформление|интерфейс|стиль|вариант)/.test(text)) {
+    return { type: 'navigate_to', entity: 'demoVariants' };
+  }
+
+  // Invite
+  if (/(пригласи|пригласить)\s*(присоединиться|родственн|в\s*семью)?/.test(text)) {
+    return { type: 'navigate_to', entity: 'invite' };
   }
 
   // Navigate to page

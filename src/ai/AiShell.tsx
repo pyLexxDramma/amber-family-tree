@@ -24,6 +24,7 @@ const PAGE_ROUTES: Record<string, string> = {
   create: ROUTES.classic.create,
   help: ROUTES.classic.help,
   invite: ROUTES.classic.invite,
+  demoVariants: ROUTES.classic.demoVariants,
   app: ROUTES.app,
 };
 
@@ -114,12 +115,17 @@ export const AiShell: React.FC = () => {
             viewPayload = 'create_publication';
             break;
           case 'help':
-            reply = 'Я умею: показать дерево, рассказать про любого, показать ленту, галерею, создать публикацию. Навигация: «открой настройки», «перейди в ленту», «назад». Скролл: «пролистай вниз/вверх». Тема: «тёмная тема», «светлая тема».';
+            reply = 'Я умею: показать дерево, рассказать про любого, показать ленту, галерею, создать публикацию, пригласить родственников, сменить оформление. Навигация: «открой настройки», «покажи ленту», «создай публикацию», «пригласи присоединиться», «назад». Скролл: «пролистай вниз/вверх». Тема: «тёмная тема», «светлая тема».';
             break;
           case 'navigate_to': {
             const path = PAGE_ROUTES[intent.entity || ''];
             if (path) {
-              reply = `Открываю ${intent.entity === 'tree' ? 'дерево' : intent.entity === 'feed' ? 'ленту' : intent.entity === 'family' ? 'семью' : intent.entity === 'settings' ? 'настройки' : intent.entity === 'profile' ? 'профиль' : intent.entity === 'store' ? 'магазин' : intent.entity === 'create' ? 'создание публикации' : intent.entity === 'help' ? 'помощь' : intent.entity || 'страницу'}.`;
+              const labels: Record<string, string> = {
+  tree: 'дерево', feed: 'ленту', family: 'семью', settings: 'настройки', profile: 'профиль',
+  store: 'магазин', create: 'создание публикации', help: 'помощь', invite: 'приглашения',
+  demoVariants: 'варианты оформления',
+};
+reply = `Открываю ${labels[intent.entity || ''] || intent.entity || 'страницу'}.`;
               setTimeout(() => navigate(path), 600);
             } else {
               reply = 'Не знаю такую страницу. Скажите: «открой дерево», «настройки», «ленту», «магазин» или «профиль».';
@@ -187,6 +193,24 @@ export const AiShell: React.FC = () => {
   const { isListening, isSupported, startListening, stopListening, speak, stopSpeaking } = useVoice(
     (text) => handleUserInput(text)
   );
+
+  const WELCOME_SPEECH =
+    'Здравствуйте! Я Angelo — помощник вашей семьи. Умею показать дерево, рассказать про родственников, показать ленту, создать публикацию, пригласить в семью, сменить оформление. Говорите или пишите команды. Подробная инструкция с озвучкой — в разделе «Помощь»: скажите «Открой помощь» или нажмите «Настройки» и выберите «Помощь».';
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('ai-demo-play-welcome') === '1') {
+        sessionStorage.removeItem('ai-demo-play-welcome');
+        const t = setTimeout(() => {
+          speak(WELCOME_SPEECH);
+          setIsSpeaking(true);
+        }, 400);
+        return () => clearTimeout(t);
+      }
+    } catch {
+      // ignore
+    }
+  }, [speak, setIsSpeaking]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
