@@ -30,6 +30,7 @@ import { AiShell } from "./ai/AiShell";
 import { VoiceControlGlobal } from "./components/VoiceControlGlobal";
 import NotFound from "./pages/NotFound";
 import DemoVariantsPage from "./pages/DemoVariantsPage";
+import DesignShowcasePage from "./pages/DesignShowcasePage";
 import { CLASSIC_BASE } from "./constants/routes";
 import { UIVariantProvider, UIVariantSync } from "./contexts/UIVariantContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -76,6 +77,7 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/privacy`} element={<PrivacyPage />} />
             <Route path={`${CLASSIC_BASE}/help`} element={<Help />} />
             <Route path={`${CLASSIC_BASE}/demo-variants`} element={<DemoVariantsPage />} />
+            <Route path={`${CLASSIC_BASE}/design-showcase`} element={<DesignShowcasePage />} />
             <Route path="/ai" element={<AIDemoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
