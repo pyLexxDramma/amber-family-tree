@@ -49,12 +49,7 @@ const Onboarding: React.FC = () => {
   );
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden">
-      <div className="absolute inset-0">
-        <img src="/bg-6.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
-        <div className="absolute inset-0 overlay-light" />
-      </div>
-      <div className="relative z-10 flex min-h-screen flex-col px-6 pt-8 pb-8">
+    <div className="flex min-h-screen flex-col bg-background px-6 pt-8 pb-8">
       <div className="flex items-center gap-3 mb-6">
         <div className="flex rounded-full bg-foreground/15 p-1">
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">1 шаг</span>
@@ -62,7 +57,7 @@ const Onboarding: React.FC = () => {
         <div className="h-0.5 flex-1 max-w-[80px] bg-foreground/20 rounded" />
         <span className="text-xs font-light text-muted-foreground">2 шаг</span>
       </div>
-      <h1 className="hero-title text-3xl mb-2">Давайте настроим профиль</h1>
+      <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Давайте настроим профиль</h1>
       <p className="text-muted-foreground text-sm font-light mb-8">Заполните основные данные — так близкие узнают вас в дереве</p>
 
       <div className="flex justify-center my-8">
@@ -100,7 +95,6 @@ const Onboarding: React.FC = () => {
         >
           Далее
         </button>
-      </div>
       </div>
     </div>
   );

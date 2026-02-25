@@ -112,13 +112,13 @@ const EditMyProfile: React.FC = () => {
         <div className="mt-8 flex gap-3">
           <button
             onClick={handleSave}
-            className="flex-1 touch-target min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+            className="flex-1 touch-target min-h-[48px] rounded-2xl bg-primary text-primary-foreground font-semibold shadow-md shadow-primary/20 hover:opacity-90 transition-opacity"
           >
             Сохранить
           </button>
           <button
             onClick={() => navigate(ROUTES.classic.myProfile)}
-            className="touch-target min-h-[48px] px-6 rounded-xl border border-border bg-background font-medium hover:bg-muted/50 transition-colors"
+            className="touch-target min-h-[48px] px-6 rounded-2xl border border-border bg-background font-medium hover:bg-muted/50 transition-colors"
           >
             Отмена
           </button>

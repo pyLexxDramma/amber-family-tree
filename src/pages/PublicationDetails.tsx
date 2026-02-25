@@ -81,7 +81,7 @@ const PublicationDetails: React.FC = () => {
         <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '55vh' }}>
           <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center">
-            <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-xl border-2 border-white/40 text-white/90 hover:text-white hover:bg-white/15 hover:border-white/60 transition-colors shadow-sm" aria-label="Назад">
+            <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors" aria-label="Назад">
               <ArrowLeft className="h-6 w-6" />
             </button>
           </div>
@@ -127,7 +127,7 @@ const PublicationDetails: React.FC = () => {
         <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '50vh' }}>
           <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute top-0 left-0 right-0 p-4">
-            <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-xl border-2 border-white/40 text-white/90 hover:text-white hover:bg-white/15 hover:border-white/60 transition-colors shadow-sm" aria-label="Назад">
+            <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors" aria-label="Назад">
               <ArrowLeft className="h-6 w-6" />
             </button>
           </div>
@@ -187,7 +187,7 @@ const PublicationDetails: React.FC = () => {
 
         {/* Nav over hero */}
         <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4">
-          <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-xl border-2 border-white/40 text-white/90 hover:text-white hover:bg-white/15 hover:border-white/60 transition-colors shadow-sm" aria-label="Назад">
+          <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors" aria-label="Назад">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <DropdownMenu>
@@ -205,7 +205,7 @@ const PublicationDetails: React.FC = () => {
         {/* Title overlay on hero */}
         <div className="absolute bottom-0 left-0 right-0 p-6 photo-card-text">
           <span className="editorial-caption text-white/50 block mb-2">{pub.topicTag}</span>
-          <h1 className="editorial-title text-white text-3xl mb-2">{pub.title}</h1>
+          <h1 className="editorial-title font-serif text-white text-3xl mb-2">{pub.title}</h1>
           <div className="flex items-center gap-3 text-white/50 text-xs font-light">
             <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{pub.eventDate}</span>
             {pub.place && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{pub.place}</span>}

@@ -42,12 +42,12 @@ const InviteFlow: React.FC = () => {
   if (view === 'list') {
     return (
       <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
+        <button onClick={() => setView('invite')} className="touch-target mb-8 flex items-center gap-2 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors px-3 py-2 font-semibold">
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm tracking-wide">Назад</span>
         </button>
 
-        <h1 className="hero-title text-2xl mb-6 px-3">Приглашения</h1>
+        <h1 className="hero-title font-serif text-2xl mb-6 px-3">Приглашения</h1>
 
         {incomingList.length > 0 && (
           <div className="mb-8 page-enter-stagger">
@@ -114,12 +114,12 @@ const InviteFlow: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors px-3 py-2 font-semibold">
         <ArrowLeft className="h-5 w-5" />
         <span className="text-sm tracking-wide">Назад</span>
       </button>
 
-      <h1 className="hero-title text-2xl mb-2 px-3">Пригласить</h1>
+      <h1 className="hero-title font-serif text-2xl mb-2 px-3">Пригласить</h1>
       <p className="text-sm font-medium text-muted-foreground mb-8 px-3">Отправьте ссылку близкому человеку</p>
 
       <div className="mb-10 page-enter-stagger">

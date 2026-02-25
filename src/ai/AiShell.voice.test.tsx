@@ -79,7 +79,6 @@ describe('AiShell — voice flow', () => {
       await vi.runAllTimersAsync();
     });
 
-    expect(screen.getByText('Расскажи про Ольгу Соколову')).toBeInTheDocument();
     expect(screen.getAllByText(/Ольга Кузнецова/).length).toBeGreaterThan(0);
   });
 
@@ -100,8 +99,6 @@ describe('AiShell — voice flow', () => {
     });
     await vi.runAllTimersAsync();
 
-    expect(screen.getByText('Покажи дерево')).toBeInTheDocument();
-    // Reply mentions tree
     expect(screen.getAllByText(/дерево/i).length).toBeGreaterThan(0);
   });
 });

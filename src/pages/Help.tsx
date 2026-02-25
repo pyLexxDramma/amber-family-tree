@@ -48,66 +48,65 @@ const Help: React.FC = () => {
   }, [isSpeaking]);
 
   return (
-    <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
+    <div className="min-h-screen bg-background px-4 pt-6 pb-8">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
         <ArrowLeft className="h-5 w-5" />
-        <span className="text-base tracking-wide">Назад</span>
       </button>
 
-      <h1 className="editorial-title text-3xl font-bold text-foreground mb-8 px-3">Помощь и поддержка</h1>
+      <h1 className="font-serif text-2xl font-bold text-foreground mb-8">Помощь и поддержка</h1>
 
-      <p className="section-title text-primary mb-4 px-3 text-lg">Краткая инструкция</p>
-      <div className="content-card border-2 border-border rounded-2xl p-5 mb-8 mx-3">
-        <p className="text-base font-medium text-foreground/90 editorial-body whitespace-pre-line mb-4">{QUICK_GUIDE}</p>
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-4">Краткая инструкция</p>
+      <div className="rounded-2xl bg-card border border-border/30 shadow-sm p-5 mb-8">
+        <p className="text-sm text-foreground/90 whitespace-pre-line mb-4 leading-relaxed">{QUICK_GUIDE}</p>
         <button
           type="button"
           onClick={speakGuide}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity shadow-md shadow-primary/20"
         >
-          <Volume2 className="h-5 w-5" />
+          <Volume2 className="h-4 w-4" />
           {isSpeaking ? 'Остановить озвучку' : 'Слушать инструкцию'}
         </button>
       </div>
 
-      <p className="section-title text-primary mb-4 px-3 text-lg">Частые вопросы</p>
-      <Accordion type="single" collapsible className="mb-10 space-y-3">
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-4">Частые вопросы</p>
+      <Accordion type="single" collapsible className="mb-10 space-y-2">
         {faqs.map((faq, i) => (
-          <AccordionItem key={i} value={`faq-${i}`} className="content-card border-2 border-border rounded-2xl overflow-hidden px-0 min-h-0 [&[data-state=open]]:border-primary/40 [&[data-state=open]]:bg-primary/5">
-            <AccordionTrigger className="w-full min-h-[72px] py-5 px-5 text-left cursor-pointer touch-target flex items-center justify-between gap-3 hover:no-underline hover:bg-foreground/5 rounded-2xl [&[data-state=open]]:bg-primary/10 [&[data-state=open]]:text-primary">
-              <span className="text-base font-bold text-foreground tracking-wide flex-1 pr-2">{faq.q}</span>
+          <AccordionItem key={i} value={`faq-${i}`} className="rounded-2xl bg-card border border-border/30 shadow-sm overflow-hidden px-0 min-h-0 [&[data-state=open]]:border-primary/20">
+            <AccordionTrigger className="w-full py-4 px-5 text-left cursor-pointer touch-target flex items-center justify-between gap-3 hover:no-underline hover:bg-card/80 rounded-2xl">
+              <span className="text-sm font-semibold text-foreground flex-1 pr-2">{faq.q}</span>
             </AccordionTrigger>
-            <AccordionContent className="text-base font-medium text-foreground/90 editorial-body px-5 pb-5 pt-0">
+            <AccordionContent className="text-sm text-muted-foreground px-5 pb-4 pt-0 leading-relaxed">
               {faq.a}
             </AccordionContent>
           </AccordionItem>
         ))}
       </Accordion>
 
-      <p className="section-title text-primary mb-4 px-3 text-lg">Написать в поддержку</p>
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-4">Написать в поддержку</p>
 
       {sent ? (
-        <div className="py-12 text-center px-3">
-          <p className="editorial-title text-2xl font-bold text-foreground mb-2">Сообщение отправлено</p>
-          <p className="text-base font-medium text-foreground/90">Мы ответим вам в ближайшее время.</p>
+        <div className="py-12 text-center">
+          <p className="text-xl font-bold text-foreground mb-2">Сообщение отправлено</p>
+          <p className="text-sm text-muted-foreground">Мы ответим вам в ближайшее время.</p>
         </div>
       ) : (
-        <div className="space-y-4 px-3">
+        <div className="space-y-3">
           <Input
             placeholder="Ваш email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="rounded-xl border-2 border-input text-base font-medium min-h-[48px]"
+            className="rounded-xl border border-border bg-card text-foreground text-sm min-h-[48px] focus-visible:border-primary/50 focus-visible:ring-primary/20"
           />
           <Textarea
             placeholder="Опишите проблему..."
             value={message}
             onChange={e => setMessage(e.target.value)}
-            className="rounded-xl border-2 border-input min-h-[100px] resize-none text-base font-medium"
+            className="rounded-xl border border-border bg-card text-foreground min-h-[100px] resize-none text-sm focus-visible:border-primary/50 focus-visible:ring-primary/20"
           />
           <button
             onClick={() => setSent(true)}
             disabled={!message.trim()}
-            className="content-card w-full min-h-[56px] rounded-2xl border-2 border-primary text-base font-bold tracking-wide hover:bg-primary hover:text-primary-foreground transition-all duration-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-foreground py-3"
+            className="w-full min-h-[48px] rounded-2xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-30"
           >
             Отправить сообщение
           </button>

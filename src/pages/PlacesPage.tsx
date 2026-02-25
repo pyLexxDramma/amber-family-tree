@@ -31,12 +31,12 @@ const PlacesPage: React.FC = () => {
   return (
     <AppLayout>
       <div className="pt-4 pb-4 px-0 page-enter">
-        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
+        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors px-3 py-2 font-semibold">
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm tracking-wide">Назад</span>
         </button>
 
-        <h1 className="hero-title text-2xl mb-1 px-3">Места</h1>
+        <h1 className="hero-title font-serif text-2xl mb-1 px-3">Места</h1>
         <p className="section-title text-primary/80 text-sm mb-6 px-3">занято {usedPlaces} из {maxPlaces}</p>
 
         <div className="space-y-3 mb-8 page-enter-stagger">

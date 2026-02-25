@@ -38,7 +38,7 @@ const MyProfile: React.FC = () => {
           <div className="absolute inset-0 editorial-overlay" />
           <div className="absolute bottom-0 left-0 right-0 p-5 photo-card-text">
             <p className="editorial-caption text-white/40 mb-2">{plan?.name === 'Free' ? 'Бесплатный' : plan?.name === 'Premium' ? 'Премиум' : plan?.name} · план</p>
-            <h1 className="editorial-title text-white text-3xl">{user.firstName} {user.lastName}</h1>
+            <h1 className="editorial-title font-serif text-white text-3xl">{user.firstName} {user.lastName}</h1>
             <p className="text-white/50 text-sm font-light mt-1">{user.city}</p>
           </div>
         </div>

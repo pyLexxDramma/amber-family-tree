@@ -47,98 +47,91 @@ const Settings: React.FC = () => {
   const langLabel = locale === 'ru' ? t('langRu') : t('langEn');
 
   return (
-    <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
+    <div className="min-h-screen bg-background px-4 pt-6 pb-8">
+      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
         <ArrowLeft className="h-5 w-5" />
-        <span className="text-base tracking-wide">{t('back')}</span>
       </button>
 
-      <h1 className="editorial-title text-3xl font-bold text-foreground mb-8 px-3">{t('settings')}</h1>
+      <h1 className="font-serif text-2xl font-bold text-foreground mb-8">{t('settings')}</h1>
 
-      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('profile')}</p>
-      <div className="space-y-3 mb-6">
-        <button onClick={() => navigate(ROUTES.classic.myProfile)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <User className="h-6 w-6 text-primary" strokeWidth={1.8} />
-          <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('profileDesc')}</p>
-            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{t('profileDescLong')}</p>
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('profile')}</p>
+      <div className="space-y-2 mb-6">
+        <button onClick={() => navigate(ROUTES.classic.myProfile)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-[hsl(28,55%,42%)]/15 flex items-center justify-center shrink-0"><User className="h-5 w-5 text-[hsl(28,55%,42%)]" /></div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">{t('profileDesc')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('profileDescLong')}</p>
           </div>
         </button>
       </div>
 
-      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('security')}</p>
-      <div className="space-y-3 mb-6">
-        <button onClick={handleLogout} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <LogOut className="h-6 w-6 text-primary" strokeWidth={1.8} />
-          <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('logout')}</p>
-          </div>
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('security')}</p>
+      <div className="space-y-2 mb-6">
+        <button onClick={handleLogout} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0"><LogOut className="h-5 w-5 text-destructive" /></div>
+          <p className="text-sm font-semibold text-foreground">{t('logout')}</p>
         </button>
       </div>
 
-      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('documents')}</p>
-      <div className="space-y-3 mb-8">
-        <button onClick={() => navigate(ROUTES.classic.terms)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <FileText className="h-6 w-6 text-primary" strokeWidth={1.8} />
-          <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('termsOfUse')}</p>
-          </div>
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('documents')}</p>
+      <div className="space-y-2 mb-8">
+        <button onClick={() => navigate(ROUTES.classic.terms)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-primary" /></div>
+          <p className="text-sm font-semibold text-foreground">{t('termsOfUse')}</p>
         </button>
-        <button onClick={() => navigate(ROUTES.classic.privacy)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <FileText className="h-6 w-6 text-primary" strokeWidth={1.8} />
-          <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('privacyPolicy')}</p>
-          </div>
+        <button onClick={() => navigate(ROUTES.classic.privacy)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-primary" /></div>
+          <p className="text-sm font-semibold text-foreground">{t('privacyPolicy')}</p>
         </button>
       </div>
 
-      <p className="section-title text-primary mb-3 px-3 text-base sm:text-lg">{t('other')}</p>
-      <div className="space-y-3">
-        <div className="content-card flex items-center gap-4 min-h-[144px] py-5 px-5">
-          <Palette className="h-6 w-6 text-primary" strokeWidth={1.8} />
+      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('other')}</p>
+      <div className="space-y-2">
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm">
+          <div className="h-10 w-10 rounded-full bg-[hsl(280,50%,55%)]/15 flex items-center justify-center shrink-0"><Palette className="h-5 w-5 text-[hsl(280,50%,55%)]" /></div>
           <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('theme')}</p>
-            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5 flex items-center gap-1.5">
-              {mounted && (isDark ? <><Moon className="h-4 w-4" /> {t('themeDark')}</> : <><Sun className="h-4 w-4" /> {t('themeLight')}</>)}
+            <p className="text-sm font-semibold text-foreground">{t('theme')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+              {mounted && (isDark ? <><Moon className="h-3.5 w-3.5" /> {t('themeDark')}</> : <><Sun className="h-3.5 w-3.5" /> {t('themeLight')}</>)}
             </p>
           </div>
           <Switch checked={isDark} onCheckedChange={toggleTheme} />
         </div>
 
-        <div className="content-card flex items-center gap-4 min-h-[144px] py-5 px-5">
-          <Bell className="h-6 w-6 text-primary" strokeWidth={1.8} />
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm">
+          <div className="h-10 w-10 rounded-full bg-[hsl(38,65%,52%)]/15 flex items-center justify-center shrink-0"><Bell className="h-5 w-5 text-[hsl(38,65%,52%)]" /></div>
           <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('notifications')}</p>
-            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{t('notificationsDesc')}</p>
+            <p className="text-sm font-semibold text-foreground">{t('notifications')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('notificationsDesc')}</p>
           </div>
           <Switch />
         </div>
 
-        <button type="button" onClick={() => setPrivacyOpen(true)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <Lock className="h-6 w-6 text-primary" strokeWidth={1.8} />
+        <button type="button" onClick={() => setPrivacyOpen(true)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-[hsl(160,45%,45%)]/15 flex items-center justify-center shrink-0"><Lock className="h-5 w-5 text-[hsl(160,45%,45%)]" /></div>
           <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('privacy')}</p>
-            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{privacyLabel[visibility]}</p>
+            <p className="text-sm font-semibold text-foreground">{t('privacy')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{privacyLabel[visibility]}</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
 
-        <button type="button" onClick={() => setLanguageOpen(true)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <Globe className="h-6 w-6 text-primary" strokeWidth={1.8} />
+        <button type="button" onClick={() => setLanguageOpen(true)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-[hsl(210,55%,50%)]/15 flex items-center justify-center shrink-0"><Globe className="h-5 w-5 text-[hsl(210,55%,50%)]" /></div>
           <div className="flex-1">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">{t('language')}</p>
-            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5">{langLabel}</p>
+            <p className="text-sm font-semibold text-foreground">{t('language')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{langLabel}</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
 
-        <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="content-card w-full flex items-center gap-4 min-h-[144px] py-5 px-5 hover:border-primary/30 transition-colors text-left">
-          <Layout className="h-6 w-6 text-primary" strokeWidth={1.8} />
+        <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
+          <div className="h-10 w-10 rounded-full bg-[hsl(340,50%,50%)]/15 flex items-center justify-center shrink-0"><Layout className="h-5 w-5 text-[hsl(340,50%,50%)]" /></div>
           <div className="flex-1 min-w-0">
-            <p className="text-base sm:text-lg font-bold tracking-wide text-foreground">Вариант оформления</p>
-            <p className="text-sm sm:text-base font-medium text-foreground/85 mt-0.5 truncate" title={VARIANT_LABELS[variant]}>Выбрано: {VARIANT_LABELS[variant]}</p>
+            <p className="text-sm font-semibold text-foreground">Вариант оформления</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate" title={VARIANT_LABELS[variant]}>Выбрано: {VARIANT_LABELS[variant]}</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-foreground/60 shrink-0" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>
       </div>
 

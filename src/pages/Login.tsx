@@ -15,7 +15,6 @@ const Login: React.FC = () => {
       setError('Некорректный формат');
       return;
     }
-    // Мок по ТЗ: «Пользователь не найден»
     if (value.trim().toLowerCase() === 'notfound@test.com') {
       setError('Пользователь не найден');
       return;
@@ -25,22 +24,17 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden">
-      <div className="absolute inset-0">
-        <img src="/bg-2.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
-        <div className="absolute inset-0 overlay-light" />
-      </div>
-      <div className="relative z-10 flex min-h-screen flex-col px-6 pt-6 page-enter">
-      <button onClick={() => navigate(-1)} className="touch-target mb-12 flex items-center gap-2 min-h-touch min-w-[80px] -ml-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
-        <ArrowLeft className="h-5 w-5 shrink-0" />
-        <span className="text-sm tracking-wide">Назад</span>
+    <div className="flex min-h-screen flex-col bg-background px-6 pt-6">
+      <button onClick={() => navigate(-1)} className="touch-target mb-10 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
+        <ArrowLeft className="h-5 w-5" />
       </button>
 
-      <h1 className="hero-title text-3xl sm:text-4xl mb-2">Вход</h1>
+      <h1 className="font-serif text-3xl font-bold text-foreground mb-2">Вход</h1>
+      <p className="text-sm text-muted-foreground mb-10">Введите ваши данные для входа</p>
 
-      <div className="space-y-8 mt-10">
+      <div className="space-y-6">
         <div>
-          <Label htmlFor="contact" className="text-sm font-medium text-foreground/90">
+          <Label htmlFor="contact" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Телефон или email
           </Label>
           <Input
@@ -48,20 +42,19 @@ const Login: React.FC = () => {
             placeholder="+7 999 123 45 67 или you@email.com"
             value={value}
             onChange={e => { setValue(e.target.value); setError(''); }}
-            className="mt-3 rounded-xl border border-input bg-background text-base font-normal focus-visible:border-foreground"
+            className="mt-2 rounded-2xl border border-border bg-card text-foreground text-base h-12 focus-visible:border-primary/50 focus-visible:ring-primary/20"
           />
           {error && <p className="text-destructive text-sm mt-2 font-medium">{error}</p>}
         </div>
-        <button onClick={handleSubmit} className="touch-target w-full min-h-[52px] rounded-xl bg-foreground text-background text-base font-medium tracking-wide hover:bg-foreground/90 active:opacity-95 transition-all duration-200">
+        <button onClick={handleSubmit} className="touch-target w-full h-12 rounded-2xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all shadow-md shadow-primary/20">
           Получить код
         </button>
-        <p className="text-center text-base font-normal text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
           Нет аккаунта?{' '}
-          <button type="button" onClick={() => navigate('/register')} className="touch-target inline-block py-1 px-2 rounded underline underline-offset-2 hover:text-foreground font-medium">
+          <button type="button" onClick={() => navigate('/register')} className="text-primary font-semibold hover:underline">
             Создать
           </button>
         </p>
-      </div>
       </div>
     </div>
   );

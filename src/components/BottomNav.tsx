@@ -11,7 +11,6 @@ const navItemsDefault = [
   { path: ROUTES.classic.store, label: 'Магазин', icon: Store },
 ];
 
-/** По ТЗ 7.1: в виде «медиа» ленты — Контакты и Профиль вместо Семья и Магазин */
 const navItemsMediaView = [
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreePine },
   { path: ROUTES.classic.feed, label: 'Лента', icon: Newspaper },
@@ -27,8 +26,8 @@ export const BottomNav: React.FC = () => {
   const navItems = isFeedMediaView ? navItemsMediaView : navItemsDefault;
 
   return (
-    <nav className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border/60 safe-area-pb">
-      <div className="mx-auto flex max-w-md items-stretch justify-around min-h-[72px] py-2">
+    <nav className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border/40 safe-area-pb">
+      <div className="mx-auto flex max-w-md items-center justify-around py-1.5 px-2">
         {navItems.map(item => {
           const active = location.pathname.startsWith(item.path);
           if (item.isCenter) {
@@ -36,11 +35,11 @@ export const BottomNav: React.FC = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className="touch-target flex flex-1 items-center justify-center min-w-touch"
+                className="touch-target flex items-center justify-center"
                 aria-label="Создать"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-primary/50 bg-primary/10 text-primary shadow-lg hover:bg-primary hover:text-primary-foreground hover:border-primary hover:scale-110 hover:shadow-xl hover:shadow-primary/30 active:scale-95 transition-all duration-300 animate-warm-glow">
-                  <item.icon className="h-7 w-7" strokeWidth={2} />
+                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+                  <item.icon className="h-5 w-5" strokeWidth={2.5} />
                 </div>
               </button>
             );
@@ -49,11 +48,17 @@ export const BottomNav: React.FC = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`touch-target flex flex-1 flex-col items-center justify-center gap-1 min-w-0 overflow-hidden px-1 sm:px-2 py-2 rounded-xl transition-all duration-200 ${active ? 'text-primary font-semibold bg-primary/15 ring-2 ring-primary/25' : 'text-muted-foreground hover:text-foreground/80 hover:bg-primary/5'}`}
+              className="touch-target flex flex-col items-center justify-center gap-0.5 px-3 py-1 transition-colors"
               aria-current={active ? 'page' : undefined}
             >
-              <item.icon className="h-6 w-6 shrink-0" strokeWidth={active ? 2.25 : 1.5} />
-              <span className="text-xs sm:text-sm font-semibold tracking-wide uppercase tabular-nums truncate w-full max-w-full text-center min-w-0 block max-[400px]:hidden">{item.label}</span>
+              <div className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${
+                active ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:text-foreground'
+              }`}>
+                <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.5} />
+              </div>
+              <span className={`text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+                {item.label}
+              </span>
             </button>
           );
         })}

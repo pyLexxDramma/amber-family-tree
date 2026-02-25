@@ -31,7 +31,6 @@ const PAGE_ROUTES: Record<string, string> = {
 export const AiShell: React.FC = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
     messages,
     interfaceView,
@@ -207,11 +206,6 @@ export const AiShell: React.FC = () => {
     }
   }, [speak, setIsSpeaking]);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   // TTS for last AI message (skip welcome, only reply after user)
   const lastAi = messages.filter((m) => m.role === 'ai').pop();
   const prevLastAiId = useRef<string | null>(null);
@@ -236,25 +230,20 @@ export const AiShell: React.FC = () => {
   };
 
   return (
-    <div className="relative flex flex-col h-screen overflow-hidden paper-texture">
-      <div className="fixed inset-0 -z-10">
-        <img src="/bg-5.png" alt="" className="h-full w-full object-cover photo-bg-blur" />
-        <div className="absolute inset-0 bg-background/90" />
-      </div>
-      {/* Header */}
-      <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-primary/20 gradient-warm">
+    <div className="relative flex flex-col h-screen overflow-hidden bg-background">
+      <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/30 bg-background">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate(ROUTES.classic.tree)}
-            className="touch-target p-2.5 -ml-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors shadow-sm"
+            className="touch-target p-2.5 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm"
             aria-label="Назад"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="editorial-title text-lg text-foreground">Angelo</h1>
-            <p className="text-[11px] text-foreground/60 font-light">Управление голосом или текстом</p>
+            <h1 className="font-serif text-lg font-semibold text-foreground">Angelo</h1>
+            <p className="text-[11px] text-muted-foreground">Управление голосом или текстом</p>
           </div>
         </div>
         <button
@@ -267,88 +256,17 @@ export const AiShell: React.FC = () => {
         </button>
       </header>
 
-      <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-y-auto md:overflow-hidden">
-        <section className="order-2 md:order-1 flex flex-col flex-shrink-0 w-full md:w-[320px] md:border-r border-primary/10 bg-card/50">
-          <div className="flex-1 md:overflow-y-auto p-4 space-y-4">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[90%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                      : 'bg-card text-foreground border border-primary/15 shadow-sm'
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {isThinking && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl px-4 py-3 bg-primary/10 border border-primary/20 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  <span className="text-sm text-foreground/70">Думаю…</span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="flex-shrink-0 p-3 border-t border-border/50 sticky bottom-0 bg-card/95 backdrop-blur-sm z-10">
-            <form onSubmit={onSubmit} className="flex gap-2 items-end">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Напишите или скажите..."
-                className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-[15px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
-                aria-label="Сообщение"
-              />
-              <button
-                type="button"
-                onClick={isSupported ? (isListening ? stopListening : startListening) : undefined}
-                disabled={!isSupported}
-                title={isSupported ? (isListening ? 'Остановить запись' : 'Нажмите и говорите') : 'Голос недоступен в этом браузере'}
-                className={`flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center transition-all shadow-md ${
-                  !isSupported
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : isListening
-                      ? 'bg-destructive/90 text-white animate-pulse shadow-destructive/30'
-                      : 'bg-primary text-primary-foreground hover:opacity-90 shadow-primary/25'
-                }`}
-                aria-label={isListening ? 'Остановить запись' : 'Голос: нажмите и говорите'}
-              >
-                <Mic className="h-5 w-5" />
-              </button>
-              <button
-                type="submit"
-                className="flex-shrink-0 h-12 w-12 rounded-xl border border-border hover:bg-muted flex items-center justify-center text-foreground"
-                aria-label="Отправить"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </form>
-            <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-2">
-              {isSpeaking ? (
-                <><Volume2 className="h-3 w-3" /> Озвучиваю ответ</>
-              ) : (
-                <><Mic className="h-3 w-3" /> Нажмите микрофон и говорите — или напишите выше</>
-              )}
-            </p>
-          </div>
-        </section>
-
-        <section className="order-1 md:order-2 md:flex-1 md:min-h-0 md:overflow-y-auto p-4 md:p-6 bg-background">
+      <main className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        <div className={`rounded-2xl border border-primary/10 bg-card/80 backdrop-blur-sm p-6 min-h-[140px] flex flex-col ${
+          interfaceView.type === 'empty' || interfaceView.type === 'story' ? 'items-center justify-center text-center' : ''
+        }`}>
           {interfaceView.type === 'empty' && (
-            <div className="h-full min-h-[280px] flex flex-col items-center justify-center text-center px-4 animate-in fade-in duration-300 rounded-2xl border border-primary/10 bg-gradient-to-b from-primary/5 to-transparent">
+            <>
               <p className="editorial-title text-xl text-foreground mb-2">Здесь будет контент</p>
               <p className="text-sm text-foreground/70 font-light max-w-xs">
                 Спросите: «Покажи дерево», «Расскажи про дедушку» или «Что нового?» — и я покажу сюда дерево, карточки и истории. По ним можно нажимать.
               </p>
-            </div>
+            </>
           )}
           {interfaceView.type === 'tree' && (
             <MiniTree
@@ -370,7 +288,7 @@ export const AiShell: React.FC = () => {
           {interfaceView.type === 'gallery' && <MiniGallery />}
           {interfaceView.type === 'story' &&
             interfaceView.payload === 'create_publication' && (
-              <div className="animate-in fade-in duration-300 flex flex-col items-center justify-center min-h-[280px] text-center px-4">
+              <>
                 <p className="editorial-title text-xl text-foreground/90 mb-2">Создать публикацию</p>
                 <p className="text-sm text-muted-foreground mb-6 max-w-xs">
                   В классическом режиме можно добавить фото, видео или историю в ленту семьи.
@@ -382,10 +300,64 @@ export const AiShell: React.FC = () => {
                 >
                   Открыть «Создать публикацию»
                 </button>
-              </div>
+              </>
             )}
-        </section>
-      </div>
+        </div>
+
+        <div className="rounded-2xl border border-primary/10 bg-card/80 backdrop-blur-sm p-6 text-left">
+          {isThinking ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-foreground/70">Думаю…</span>
+            </div>
+          ) : lastAi ? (
+            <p className="text-[15px] leading-relaxed text-foreground">{lastAi.text}</p>
+          ) : null}
+        </div>
+      </main>
+
+      <footer className="flex-shrink-0 p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm">
+        <form onSubmit={onSubmit} className="flex gap-2 items-center">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Напишите или скажите..."
+            className="flex-1 min-w-0 px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground text-[15px] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
+            aria-label="Сообщение"
+          />
+          <button
+            type="button"
+            onClick={isSupported ? (isListening ? stopListening : startListening) : undefined}
+            disabled={!isSupported}
+            title={isSupported ? (isListening ? 'Остановить запись' : 'Нажмите и говорите') : 'Голос недоступен в этом браузере'}
+            className={`flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center transition-all shadow-md ${
+              !isSupported
+                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                : isListening
+                  ? 'bg-destructive/90 text-white animate-pulse shadow-destructive/30'
+                  : 'bg-primary text-primary-foreground hover:opacity-90 shadow-primary/25'
+            }`}
+            aria-label={isListening ? 'Остановить запись' : 'Голос: нажмите и говорите'}
+          >
+            <Mic className="h-5 w-5" />
+          </button>
+          <button
+            type="submit"
+            className="flex-shrink-0 h-10 w-10 rounded-xl border border-border hover:bg-muted flex items-center justify-center text-foreground"
+            aria-label="Отправить"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </form>
+        <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-2">
+          {isSpeaking ? (
+            <><Volume2 className="h-3 w-3" /> Озвучиваю ответ</>
+          ) : (
+            <><Mic className="h-3 w-3" /> Нажмите микрофон и говорите — или напишите выше</>
+          )}
+        </p>
+      </footer>
     </div>
   );
 };

@@ -23,31 +23,31 @@ const FamilyTree: React.FC = () => {
   const generations: Record<number, typeof mockMembers> = {};
   mockMembers.forEach(m => { (generations[m.generation] ||= []).push(m); });
 
-  /** Карточка участника: одна на всю ширину (горизонтальный блок — аватар слева, имя справа) */
   const memberCard = (m: typeof mockMembers[0]) => {
     const isCurrent = m.id === currentUserId;
     return (
       <button
         key={m.id}
         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-        className="person-card w-full flex items-center gap-4 text-left group min-h-[144px] p-4 hover:border-primary/40 hover:shadow-md hover:shadow-primary/10"
+        className="w-full flex items-center gap-4 text-left group p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
         aria-label={`Открыть профиль: ${m.firstName} ${m.lastName}`}
       >
-        <div className="relative h-[108px] w-[108px] flex-shrink-0 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+        <div className="relative h-16 w-16 flex-shrink-0 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
           {demoWithPhotos && (
             <img src={getDemoMemberPhotoUrl(m.id)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
           )}
           <div className={`absolute inset-0 flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
-            <User className={`h-9 w-9 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
+            <User className={`h-7 w-7 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
           </div>
           {isCurrent && (
             <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="card-name text-xl sm:text-2xl font-bold text-foreground truncate text-primary/95 group-hover:text-primary dark:text-white" title={m.nickname || m.firstName}>
+          <p className="text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors" title={m.nickname || m.firstName}>
             {m.nickname || m.firstName}
           </p>
+          <p className="text-xs text-muted-foreground">{m.city || ''}</p>
         </div>
       </button>
     );
@@ -56,29 +56,20 @@ const FamilyTree: React.FC = () => {
   return (
     <AppLayout>
       <TopBar
-        title="Дерево"
+        title="Семейное дерево"
+        subtitle="Генеалогия"
         right={
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="touch-target flex items-center gap-1.5 min-h-touch px-2 sm:px-3 py-2 text-xs font-medium tracking-wide border border-current/30 rounded-xl hover:bg-white/15 transition-colors whitespace-nowrap"
-              onClick={() => setAddMenuOpen(true)}
-              aria-label="Создать контакт"
-              title="Создать контакт"
-            >
-              <UserPlus className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline">Создать контакт</span>
-            </button>
+          <div className="flex items-center gap-1">
             <DropdownMenu open={addMenuOpen} onOpenChange={setAddMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="touch-target flex h-10 w-10 items-center justify-center rounded-xl border border-current/30 hover:bg-white/15 transition-colors" aria-label="Добавить">
+                <button className="touch-target h-10 w-10 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors" aria-label="Добавить">
                   <Plus className="h-5 w-5" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-sm font-light"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm font-light" onClick={() => { setAddMenuOpen(false); navigate(ROUTES.classic.invite); }}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
+                <DropdownMenuItem className="text-sm" onClick={() => { setAddMenuOpen(false); navigate(ROUTES.classic.invite); }}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -101,7 +92,7 @@ const FamilyTree: React.FC = () => {
           return (
             <div key={gen} className="mt-8">
               <div className="px-3 mb-4">
-                <p className="section-title text-base sm:text-lg text-primary font-bold dark:text-[hsl(36,80%,58%)]">{config.label}</p>
+                <p className="text-sm font-semibold text-primary uppercase tracking-wider">{config.label}</p>
               </div>
 
               <div className="px-3 flex flex-col gap-3">

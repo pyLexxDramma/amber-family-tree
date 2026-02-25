@@ -49,11 +49,11 @@ const CreatePublication: React.FC = () => {
   if (!type) {
     return (
       <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 rounded-xl border-2 border-primary/50 text-foreground/90 hover:text-primary hover:bg-primary/10 hover:border-primary/70 transition-colors px-3 py-2 font-semibold shadow-sm">
+        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors px-3 py-2 font-semibold">
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm tracking-wide">Назад</span>
         </button>
-        <h1 className="hero-title text-2xl mb-2 px-3">Создать публикацию</h1>
+        <h1 className="hero-title font-serif text-2xl mb-2 px-3">Создать публикацию</h1>
         <p className="text-sm font-medium text-muted-foreground mb-6 px-3">Что хотите добавить?</p>
         <div className="flex flex-col gap-3 page-enter-stagger">
           {types.map(t => (
@@ -73,7 +73,7 @@ const CreatePublication: React.FC = () => {
         <ArrowLeft className="h-5 w-5" />
         <span className="text-sm font-medium tracking-wide">Сменить тип</span>
       </button>
-      <h1 className="hero-title text-xl mb-4 px-3">{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
+      <h1 className="hero-title font-serif text-xl mb-4 px-3">{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
 
       <div className="space-y-4 page-enter-stagger">
         <div className="content-card p-5 rounded-2xl min-h-[96px]">

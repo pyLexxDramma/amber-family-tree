@@ -15,8 +15,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Comfortaa'", "'Nunito'", "sans-serif"],
-        serif: ["'Playfair Display'", "serif"],
+        sans: ["'Inter'", "system-ui", "sans-serif"],
+        serif: ["'Playfair Display'", "Georgia", "serif"],
       },
       fontSize: {
         "xs": ["0.8125rem", { lineHeight: "1.4" }],

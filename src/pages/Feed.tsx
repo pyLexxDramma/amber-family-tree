@@ -11,7 +11,7 @@ import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publicat
 import { getMember, mockMembers, currentUserId } from '@/data/mock-members';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { LayoutList, Grid3X3, SlidersHorizontal, ArrowUpDown, Heart, MessageCircle, Image, Video, Mic, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { LayoutList, Grid3X3, SlidersHorizontal, ArrowUpDown, Heart, MessageCircle, Image, Video, Mic, ChevronLeft, ChevronRight, Plus, Send } from 'lucide-react';
 import type { Publication } from '@/types';
 
 /** Год из eventDate (например "1985-07-15" -> 1985) для группировки по десятилетиям */
@@ -97,8 +97,7 @@ const Feed: React.FC = () => {
 
   const mediaCount = (type: string, items: { type: string }[]) => items.filter(i => i.type === type).length;
 
-  /** Главная карточка ленты: первая использует bg-4.png, остальные — медиа публикации */
-  const heroCard = (pub: typeof sorted[0], isFirst = false) => {
+  const feedCard = (pub: typeof sorted[0], isFirst = false) => {
     const author = getMember(pub.authorId);
     const hasMedia = pub.media.length > 0 && pub.media[0]?.type === 'photo';
     const imgUrl = isFirst
@@ -109,72 +108,53 @@ const Feed: React.FC = () => {
       <button
         key={pub.id}
         onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-        className="w-full text-left relative overflow-hidden"
+        className="w-full text-left relative overflow-hidden rounded-2xl"
         style={{ aspectRatio: '3/4' }}
       >
         <img src={imgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 editorial-overlay" />
-        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col gap-2 photo-card-text">
-          {!pub.isRead && (
-            <div className="flex items-center gap-2">
-              <UnreadMarker />
-              <span className="text-white/60 editorial-caption">новое</span>
+
+        <div className="absolute right-3 top-1/3 flex flex-col items-center gap-4 z-10">
+          <div className="flex flex-col items-center gap-1">
+            <div className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+              <Heart className="h-4 w-4 text-white" />
             </div>
+            <span className="text-white/80 text-xs font-medium">{pub.likes.length}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+              <MessageCircle className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-white/80 text-xs font-medium">{pub.comments.length}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+              <Send className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-white/80 text-xs font-medium">
+              {mediaCount('photo', pub.media) + mediaCount('video', pub.media)}
+            </span>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-14 p-5 flex flex-col gap-1.5 photo-card-text">
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="h-8 w-8 rounded-full bg-muted/50 overflow-hidden ring-1 ring-white/20 shrink-0">
+              {author?.photo ? <img src={author.photo} alt="" className="h-full w-full object-cover" /> : <span className="flex h-full w-full items-center justify-center text-white text-xs font-semibold">{author?.firstName?.charAt(0)}</span>}
+            </div>
+            <span className="text-white font-semibold text-sm">{author?.firstName} {author?.lastName}</span>
+          </div>
+          <p className="text-white/80 text-sm font-normal line-clamp-2">{pub.text || pub.title}</p>
+          {pub.topicTag && (
+            <p className="text-primary/80 text-xs font-medium mt-0.5">#{pub.topicTag.replace(/\s+/g, '')}  #Memories  #Family</p>
           )}
-          <h2 className="editorial-title text-white text-xl sm:text-2xl">{pub.title}</h2>
-          <p className="text-white/70 text-sm sm:text-base font-light line-clamp-2">{pub.text}</p>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-white/50 text-xs sm:text-sm font-light">
-              {author?.firstName} {author?.lastName}
-            </span>
-            <span className="text-white/30">·</span>
-            <span className="text-white/50 text-xs sm:text-sm font-light">
-              {pub.place}
-            </span>
-            <span className="text-white/30">·</span>
-            <span className="text-white/50 text-xs sm:text-sm font-light">
-              {pub.eventDate}
-            </span>
-          </div>
-          <div className="flex items-center gap-3 text-white/40 text-xs sm:text-sm mt-1">
-            {mediaCount('photo', pub.media) > 0 && <span className="flex items-center gap-1"><Image className="h-3 w-3" />{mediaCount('photo', pub.media)}</span>}
-            {mediaCount('video', pub.media) > 0 && <span className="flex items-center gap-1"><Video className="h-3 w-3" />{mediaCount('video', pub.media)}</span>}
-            {mediaCount('audio', pub.media) > 0 && <span className="flex items-center gap-1"><Mic className="h-3 w-3" />{mediaCount('audio', pub.media)}</span>}
-            <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{pub.likes.length}</span>
-            <span className="flex items-center gap-1"><MessageCircle className="h-3 w-3" />{pub.comments.length}</span>
-          </div>
         </div>
       </button>
     );
   };
 
-  const editorialCard = (pub: typeof sorted[0], size: 'full' | 'half') => {
+  const smallCard = (pub: typeof sorted[0]) => {
     const author = getMember(pub.authorId);
-    const hasPhoto = pub.media.some(m => m.type === 'photo');
-    const isTextOnly = pub.type === 'text' || pub.type === 'audio';
-
-    if (isTextOnly) {
-      return (
-        <button
-          key={pub.id}
-          onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-          className={`text-left bg-card rounded-sm overflow-hidden ${size === 'full' ? 'w-full' : 'w-full'}`}
-        >
-          <div className="p-6 flex flex-col gap-3" style={{ minHeight: size === 'full' ? '240px' : '200px' }}>
-            {!pub.isRead && <UnreadMarker />}
-            <span className="editorial-caption text-muted-foreground">{pub.topicTag}</span>
-            <h3 className="editorial-title text-lg sm:text-xl leading-snug">{pub.title}</h3>
-            <p className="text-sm sm:text-base font-light text-foreground/70 line-clamp-3 editorial-body">{pub.text}</p>
-            <div className="mt-auto flex items-center gap-2 text-xs text-muted-foreground font-light">
-              <span>{author?.firstName} {author?.lastName}</span>
-              <span>·</span>
-              <span>{pub.eventDate}</span>
-            </div>
-          </div>
-        </button>
-      );
-    }
-
     const firstPhoto = pub.media.find(m => m.type === 'photo');
     const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10));
 
@@ -182,26 +162,22 @@ const Feed: React.FC = () => {
       <button
         key={pub.id}
         onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-        className={`text-left relative overflow-hidden rounded-sm ${size === 'full' ? 'w-full' : 'w-full'}`}
-        style={{ aspectRatio: size === 'full' ? '16/10' : '1/1' }}
+        className="text-left relative overflow-hidden rounded-2xl w-full"
+        style={{ aspectRatio: '16/10' }}
       >
         <img src={imgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 editorial-overlay" />
-
-        {!pub.isRead && (
-          <div className="absolute top-0 left-0 w-0.5 h-full bg-primary" />
-        )}
-
         <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
-          <span className="editorial-caption text-white/50 block mb-1">{pub.topicTag}</span>
-          <h3 className="editorial-title text-white text-base sm:text-lg leading-tight">{pub.title}</h3>
-          {size === 'full' && (
-            <p className="text-white/60 text-xs sm:text-sm font-light mt-1.5 line-clamp-2">{pub.text}</p>
-          )}
-          <div className="flex items-center gap-3 mt-2 text-white/40 text-xs sm:text-sm">
-            <span>{author?.firstName}</span>
-            <span className="flex items-center gap-0.5"><Heart className="h-2.5 w-2.5" />{pub.likes.length}</span>
-            <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" />{pub.comments.length}</span>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-6 w-6 rounded-full bg-muted/50 overflow-hidden ring-1 ring-white/20 shrink-0">
+              {author?.photo ? <img src={author.photo} alt="" className="h-full w-full object-cover" /> : <span className="flex h-full w-full items-center justify-center text-white text-[10px] font-semibold">{author?.firstName?.charAt(0)}</span>}
+            </div>
+            <span className="text-white font-medium text-xs">{author?.firstName}</span>
+          </div>
+          <h3 className="text-white font-semibold text-sm leading-tight">{pub.title}</h3>
+          <div className="flex items-center gap-3 mt-1.5 text-white/50 text-xs">
+            <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" />{pub.likes.length}</span>
+            <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{pub.comments.length}</span>
           </div>
         </div>
       </button>
@@ -211,18 +187,16 @@ const Feed: React.FC = () => {
   const renderMagazineLayout = () => {
     if (filtered.length === 0) return null;
 
-    const items: React.ReactNode[] = [];
     const [first, ...rest] = filtered;
 
-    items.push(heroCard(first, true));
-
-    let i = 0;
-    while (i < rest.length) {
-      items.push(editorialCard(rest[i], 'full'));
-      i += 1;
-    }
-
-    return <div className="flex flex-col gap-1 pb-4">{items}</div>;
+    return (
+      <div className="flex flex-col gap-4 px-3 pb-4">
+        {feedCard(first, true)}
+        <div className="grid grid-cols-2 gap-3">
+          {rest.map(pub => smallCard(pub))}
+        </div>
+      </div>
+    );
   };
 
   /** Вариант 1: Классический семейный архив — витрина (лента альбомов) */
@@ -346,34 +320,33 @@ const Feed: React.FC = () => {
   const masonry = allMediaItems.filter(m => m.type === 'photo' || m.type === 'video');
   const masonryAspects = ['aspect-square', 'aspect-[3/4]', 'aspect-[4/3]', 'aspect-square', 'aspect-[3/4]'];
 
-  const topBarTitle = uiVariant === 'classic' ? 'СЕМЕЙНЫЙ АЛЬБОМ' : uiVariant === 'calendar' ? 'Лента по годам' : 'Лента';
-
   return (
     <AppLayout>
       <TopBar
-        title={topBarTitle}
+        title="Семейный альбом"
+        subtitle="Моменты и воспоминания"
         right={
           <div className="flex items-center gap-1">
             <button
               onClick={() => setFeedMode('publications')}
-              className={`touch-target p-2 rounded-xl transition-colors ${mode === 'publications' ? 'text-current bg-white/15' : 'text-current/60 hover:text-current'}`}
+              className={`touch-target h-9 w-9 rounded-full flex items-center justify-center transition-colors ${mode === 'publications' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
               aria-label="Публикации"
             >
-              <LayoutList className="h-5 w-5" />
+              <LayoutList className="h-4 w-4" />
             </button>
             <button
               onClick={() => setFeedMode('media')}
-              className={`touch-target p-2 rounded-xl transition-colors ${mode === 'media' ? 'text-current bg-white/15' : 'text-current/60 hover:text-current'}`}
+              className={`touch-target h-9 w-9 rounded-full flex items-center justify-center transition-colors ${mode === 'media' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
               aria-label="Медиа"
             >
-              <Grid3X3 className="h-5 w-5" />
+              <Grid3X3 className="h-4 w-4" />
             </button>
             <button
               onClick={() => setFiltersOpen(true)}
-              className="touch-target p-2 rounded-xl text-current/80 hover:text-current hover:bg-white/10 transition-colors"
+              className="touch-target h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-colors"
               aria-label="Фильтры"
             >
-              <SlidersHorizontal className="h-5 w-5" />
+              <SlidersHorizontal className="h-4 w-4" />
             </button>
           </div>
         }
@@ -458,7 +431,7 @@ const Feed: React.FC = () => {
               <p className="editorial-caption text-muted-foreground mb-2">Автор</p>
               <div className="flex flex-wrap gap-2">
                 {mockMembers.slice(0, 12).map(m => (
-                  <button key={m.id} onClick={() => setFilterAuthorId(filterAuthorId === m.id ? null : m.id)} className={`px-3 py-1.5 text-xs font-light border rounded-sm transition-colors ${filterAuthorId === m.id ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-muted'}`}>
+                  <button key={m.id} onClick={() => setFilterAuthorId(filterAuthorId === m.id ? null : m.id)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterAuthorId === m.id ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
                     {m.nickname || m.firstName}
                   </button>
                 ))}
@@ -468,7 +441,7 @@ const Feed: React.FC = () => {
               <p className="editorial-caption text-muted-foreground mb-2">Участники</p>
               <div className="flex flex-wrap gap-2">
                 {mockMembers.slice(0, 10).map(m => (
-                  <button key={m.id} onClick={() => toggleParticipant(m.id)} className={`px-3 py-1.5 text-xs font-light border rounded-sm transition-colors ${filterParticipantIds.includes(m.id) ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-muted'}`}>
+                  <button key={m.id} onClick={() => toggleParticipant(m.id)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterParticipantIds.includes(m.id) ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
                     {m.nickname || m.firstName}
                   </button>
                 ))}
@@ -498,7 +471,7 @@ const Feed: React.FC = () => {
               <p className="editorial-caption text-muted-foreground mb-2">Тег темы</p>
               <div className="flex flex-wrap gap-2">
                 {topicTags.map(t => (
-                  <button key={t} onClick={() => setFilterTopicTag(filterTopicTag === t ? null : t)} className={`px-3 py-1.5 text-xs font-light border rounded-sm transition-colors ${filterTopicTag === t ? 'bg-foreground text-background border-foreground' : 'border-border hover:bg-muted'}`}>
+                  <button key={t} onClick={() => setFilterTopicTag(filterTopicTag === t ? null : t)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterTopicTag === t ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
                     {t}
                   </button>
                 ))}
@@ -515,8 +488,8 @@ const Feed: React.FC = () => {
               </label>
             </div>
             <div className="flex gap-3 pt-2">
-              <Button variant="outline" className="flex-1 rounded-sm h-11" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить</Button>
-              <Button className="flex-1 rounded-sm h-11" onClick={() => setFiltersOpen(false)}>Показать</Button>
+              <Button variant="outline" className="flex-1 rounded-2xl h-11" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить</Button>
+              <Button className="flex-1 rounded-2xl h-11" onClick={() => setFiltersOpen(false)}>Показать</Button>
             </div>
           </div>
         </SheetContent>

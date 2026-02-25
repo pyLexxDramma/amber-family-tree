@@ -76,7 +76,7 @@ const StorePage: React.FC = () => {
                   {!isCurrent && (
                     <button
                       onClick={handleUpgrade}
-                      className="w-full min-h-[48px] py-3 border-2 border-primary text-base font-semibold tracking-widest uppercase hover:bg-primary hover:text-primary-foreground transition-all duration-300 rounded-xl"
+                      className="w-full min-h-[48px] py-3 border-2 border-primary text-base font-semibold tracking-widest uppercase hover:bg-primary hover:text-primary-foreground transition-all duration-300 rounded-2xl"
                     >
                       Выбрать тариф
                     </button>
