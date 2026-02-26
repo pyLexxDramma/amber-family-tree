@@ -27,9 +27,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import Help from "./pages/Help";
 import AIDemoPage from "./pages/AIDemoPage";
 import { AiShell } from "./ai/AiShell";
-import { VoiceControlGlobal } from "./components/VoiceControlGlobal";
 import NotFound from "./pages/NotFound";
-import DemoVariantsPage from "./pages/DemoVariantsPage";
 import DesignShowcasePage from "./pages/DesignShowcasePage";
 import { CLASSIC_BASE } from "./constants/routes";
 import { UIVariantProvider, UIVariantSync } from "./contexts/UIVariantContext";
@@ -40,7 +38,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" storageKey="angelo-theme" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="light" storageKey="angelo-theme" enableSystem={false}>
       <LanguageProvider>
       <PrivacyVisibilityProvider>
       <PlatformProvider>
@@ -50,7 +48,6 @@ const App = () => (
           <BrowserRouter>
           <UIVariantProvider>
           <UIVariantSync />
-          <VoiceControlGlobal />
           <Routes>
             <Route path="/" element={<Welcome />} />
             <Route path="/app" element={<AiShell />} />
@@ -76,7 +73,6 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/terms`} element={<TermsPage />} />
             <Route path={`${CLASSIC_BASE}/privacy`} element={<PrivacyPage />} />
             <Route path={`${CLASSIC_BASE}/help`} element={<Help />} />
-            <Route path={`${CLASSIC_BASE}/demo-variants`} element={<DemoVariantsPage />} />
             <Route path={`${CLASSIC_BASE}/design-showcase`} element={<DesignShowcasePage />} />
             <Route path="/ai" element={<AIDemoPage />} />
             <Route path="*" element={<NotFound />} />

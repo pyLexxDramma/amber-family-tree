@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
+import { getDemoFeedPhotoUrl, getDemoMemberPhotoUrl } from '@/lib/demo-photos';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { UnreadMarker } from '@/components/UnreadMarker';
-import { useUIVariant } from '@/contexts/UIVariantContext';
 import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
 import { mockPublications, allMediaItems, topicTags } from '@/data/mock-publications';
-import { getMember, mockMembers, currentUserId } from '@/data/mock-members';
+import { getMember, mockMembers, currentUserId, getCurrentUser } from '@/data/mock-members';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { LayoutList, Grid3X3, SlidersHorizontal, ArrowUpDown, Heart, MessageCircle, Image, Video, Mic, ChevronLeft, ChevronRight, Plus, Send } from 'lucide-react';
+import { SlidersHorizontal, Heart, Image, Video, Mic, ChevronLeft, ChevronRight, Plus, User } from 'lucide-react';
+import iconToListen from '@/assets/icons/icon-to-listen.gif';
+import iconWatch from '@/assets/icons/icon-watch.gif';
 import type { Publication } from '@/types';
 
 /** Год из eventDate (например "1985-07-15" -> 1985) для группировки по десятилетиям */
@@ -23,7 +24,7 @@ function getDecadeFromEventDate(eventDate: string): string {
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
-  const { variant: uiVariant } = useUIVariant();
+  const currentUser = getCurrentUser();
   useDemoWithPhotos();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewParam = searchParams.get('view');
@@ -31,6 +32,7 @@ const Feed: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'new' | 'old'>('new');
   const [density, setDensity] = useState(3);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const memberAvatar = currentUser ? getDemoMemberPhotoUrl(currentUser.id) : undefined;
 
   useEffect(() => {
     const v = searchParams.get('view');
@@ -77,6 +79,8 @@ const Feed: React.FC = () => {
     return true;
   });
 
+  const unreadCount = mockPublications.filter(pub => !pub.isRead).length;
+
   const hasActiveFilters = !!(filterAuthorId || filterParticipantIds.length || filterPublishFrom || filterPublishTo || filterEventFrom || filterEventTo || filterTopicTag || filterFavorite || filterUnread);
 
   const resetFilters = () => {
@@ -95,65 +99,7 @@ const Feed: React.FC = () => {
     setFilterParticipantIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const mediaCount = (type: string, items: { type: string }[]) => items.filter(i => i.type === type).length;
-
-  const feedCard = (pub: typeof sorted[0], isFirst = false) => {
-    const author = getMember(pub.authorId);
-    const hasMedia = pub.media.length > 0 && pub.media[0]?.type === 'photo';
-    const imgUrl = isFirst
-      ? '/bg-4.png'
-      : (hasMedia ? (pub.media[0].url || pub.media[0].thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10)));
-
-    return (
-      <button
-        key={pub.id}
-        onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-        className="w-full text-left relative overflow-hidden rounded-2xl"
-        style={{ aspectRatio: '3/4' }}
-      >
-        <img src={imgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 editorial-overlay" />
-
-        <div className="absolute right-3 top-1/3 flex flex-col items-center gap-4 z-10">
-          <div className="flex flex-col items-center gap-1">
-            <div className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              <Heart className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-white/80 text-xs font-medium">{pub.likes.length}</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <div className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              <MessageCircle className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-white/80 text-xs font-medium">{pub.comments.length}</span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <div className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              <Send className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-white/80 text-xs font-medium">
-              {mediaCount('photo', pub.media) + mediaCount('video', pub.media)}
-            </span>
-          </div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-14 p-5 flex flex-col gap-1.5 photo-card-text">
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="h-8 w-8 rounded-full bg-muted/50 overflow-hidden ring-1 ring-white/20 shrink-0">
-              {author?.photo ? <img src={author.photo} alt="" className="h-full w-full object-cover" /> : <span className="flex h-full w-full items-center justify-center text-white text-xs font-semibold">{author?.firstName?.charAt(0)}</span>}
-            </div>
-            <span className="text-white font-semibold text-sm">{author?.firstName} {author?.lastName}</span>
-          </div>
-          <p className="text-white/80 text-sm font-normal line-clamp-2">{pub.text || pub.title}</p>
-          {pub.topicTag && (
-            <p className="text-primary/80 text-xs font-medium mt-0.5">#{pub.topicTag.replace(/\s+/g, '')}  #Memories  #Family</p>
-          )}
-        </div>
-      </button>
-    );
-  };
-
-  const smallCard = (pub: typeof sorted[0]) => {
+  const feedCard = (pub: typeof sorted[0]) => {
     const author = getMember(pub.authorId);
     const firstPhoto = pub.media.find(m => m.type === 'photo');
     const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10));
@@ -162,22 +108,22 @@ const Feed: React.FC = () => {
       <button
         key={pub.id}
         onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-        className="text-left relative overflow-hidden rounded-2xl w-full"
-        style={{ aspectRatio: '16/10' }}
+        className="w-full rounded-3xl shadow-sm border border-border/40 px-3 py-3 flex flex-col gap-2 text-left feed-card-animated"
       >
-        <img src={imgUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 editorial-overlay" />
-        <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="h-6 w-6 rounded-full bg-muted/50 overflow-hidden ring-1 ring-white/20 shrink-0">
-              {author?.photo ? <img src={author.photo} alt="" className="h-full w-full object-cover" /> : <span className="flex h-full w-full items-center justify-center text-white text-[10px] font-semibold">{author?.firstName?.charAt(0)}</span>}
-            </div>
-            <span className="text-white font-medium text-xs">{author?.firstName}</span>
+        <div className="flex items-center gap-3">
+          <div className="h-16 w-16 rounded-2xl overflow-hidden flex-shrink-0 bg-muted">
+            <img src={imgUrl} alt={pub.title || ''} className="h-full w-full object-cover" />
           </div>
-          <h3 className="text-white font-semibold text-sm leading-tight">{pub.title}</h3>
-          <div className="flex items-center gap-3 mt-1.5 text-white/50 text-xs">
-            <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" />{pub.likes.length}</span>
-            <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{pub.comments.length}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-foreground leading-snug line-clamp-2">
+              {pub.title || pub.text}
+            </p>
+            <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+              <User className="h-3 w-3" />
+              <span className="truncate">
+                {author ? `${author.firstName} ${author.lastName}` : 'Член семьи'}
+              </span>
+            </div>
           </div>
         </div>
       </button>
@@ -187,14 +133,12 @@ const Feed: React.FC = () => {
   const renderMagazineLayout = () => {
     if (filtered.length === 0) return null;
 
-    const [first, ...rest] = filtered;
-
     return (
-      <div className="flex flex-col gap-4 px-3 pb-4">
-        {feedCard(first, true)}
-        <div className="grid grid-cols-2 gap-3">
-          {rest.map(pub => smallCard(pub))}
-        </div>
+      <div className="flex flex-col gap-3 px-3 pb-4">
+        {filtered.map(pub => feedCard(pub))}
+        <Button className="create-cta-animated mt-1" onClick={() => navigate(ROUTES.classic.create)}>
+          <Plus className="h-6 w-6" /> СОЗДАТЬ ПУБЛИКАЦИЮ
+        </Button>
       </div>
     );
   };
@@ -265,8 +209,8 @@ const Feed: React.FC = () => {
           </button>
         )}
 
-        <Button className="w-full min-h-[96px] text-lg font-semibold rounded-2xl gap-2" onClick={() => navigate(ROUTES.classic.create)}>
-          <Plus className="h-6 w-6" /> ДОБАВИТЬ ФОТО
+        <Button className="create-cta-animated" onClick={() => navigate(ROUTES.classic.create)}>
+          <Plus className="h-6 w-6" /> СОЗДАТЬ ПУБЛИКАЦИЮ
         </Button>
       </div>
     );
@@ -310,6 +254,9 @@ const Feed: React.FC = () => {
         <Button variant="outline" className="w-full min-h-[96px] rounded-2xl font-semibold">
           ↓ ЗАГРУЗИТЬ СТАРЫЕ ФОТО
         </Button>
+        <Button className="create-cta-animated" onClick={() => navigate(ROUTES.classic.create)}>
+          <Plus className="h-6 w-6" /> СОЗДАТЬ ПУБЛИКАЦИЮ
+        </Button>
       </div>
     );
   };
@@ -322,25 +269,14 @@ const Feed: React.FC = () => {
 
   return (
     <AppLayout>
-      <TopBar
-        title="Семейный альбом"
-        subtitle="Моменты и воспоминания"
-        right={
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setFeedMode('publications')}
-              className={`touch-target h-9 w-9 rounded-full flex items-center justify-center transition-colors ${mode === 'publications' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              aria-label="Публикации"
-            >
-              <LayoutList className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setFeedMode('media')}
-              className={`touch-target h-9 w-9 rounded-full flex items-center justify-center transition-colors ${mode === 'media' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              aria-label="Медиа"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </button>
+      <div className="relative min-h-screen bg-gradient-to-b from-[#f8f3ec] via-[#f4f1ec] to-[#e5e1dc] feed-page-bg">
+        <TopBar
+          title={currentUser ? `Привет, ${currentUser.firstName}!` : 'Семейный альбом'}
+          subtitle={unreadCount ? `У тебя ${unreadCount} новых воспоминаний` : 'Моменты и воспоминания'}
+          avatarUrl={memberAvatar}
+          sticky={false}
+          transparent
+          right={
             <button
               onClick={() => setFiltersOpen(true)}
               className="touch-target h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-colors"
@@ -348,40 +284,61 @@ const Feed: React.FC = () => {
             >
               <SlidersHorizontal className="h-4 w-4" />
             </button>
-          </div>
-        }
-      />
-      <div className="px-0 pt-2 pb-4 page-enter">
-        {uiVariant !== 'current' && mode === 'publications' && (
-          <p className="text-sm font-semibold text-primary/90 mb-2 px-3" role="status">
-            Вариант: {uiVariant === 'classic' ? 'Классический архив' : uiVariant === 'calendar' ? 'Календарь воспоминаний' : uiVariant === 'living' ? 'Живая история' : uiVariant === 'journal' ? 'Журнал + Плеер' : uiVariant === 'minimal' ? 'Минимализм' : uiVariant === 'retro' ? 'Ретро' : 'Текущий'}
-          </p>
-        )}
-        {(['living','journal','minimal','retro'] as const).includes(uiVariant as 'living' | 'journal' | 'minimal' | 'retro') && mode === 'publications' && (
-          <p className="text-xs text-muted-foreground mb-3 px-3">Откройте любую публикацию — просмотр в выбранном стиле</p>
-        )}
-        {uiVariant !== 'classic' && uiVariant !== 'calendar' && (
-          <p className="section-title text-primary mb-3 px-3">{mode === 'publications' ? 'Публикации' : 'Медиа'}</p>
-        )}
-
-        {(uiVariant !== 'classic' && uiVariant !== 'calendar') && (
-        <div className="flex items-center gap-3 mb-4 px-3">
-          <button
-            onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowUpDown className="h-3 w-3" />
-            <span className="editorial-caption">{sortOrder === 'new' ? 'Сначала новые' : 'Сначала старые'}</span>
-          </button>
-          {mode === 'media' && (
-            <div className="ml-auto flex gap-1">
-              {[1, 3, 5].map(d => (
-                <button key={d} onClick={() => setDensity(d)} className={`h-5 w-5 rounded-sm text-[10px] font-light ${density === d ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>{d}</button>
-              ))}
+          }
+        />
+        <div className="px-0 pt-2 pb-4 page-enter">
+          <div className="px-3 pb-4">
+            <div className="space-y-2">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between rounded-2xl bg-primary/8 px-4 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center">
+                    <Image className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-medium text-foreground">Новые фото в альбоме</p>
+                  </div>
+                </div>
+                <div
+                  className="px-4 py-1.5 rounded-full font-serif text-xs sm:text-sm italic text-white border-t border-white/30"
+                  style={{
+                    backgroundImage: 'linear-gradient(to bottom, hsl(28,70%,55%), hsl(28,65%,38%))',
+                    boxShadow:
+                      'inset 0 1px 1px rgba(255,255,255,0.25), 0 3px 0 hsl(28,65%,30%), 0 5px 10px rgba(0,0,0,0.25)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.35)',
+                  }}
+                >
+                  <img src={iconWatch} alt="Открыть" className="h-5 sm:h-6 w-auto" />
+                </div>
+              </button>
+              <button
+                type="button"
+                className="w-full flex items-center justify-between rounded-2xl bg-primary/4 px-4 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Mic className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-medium text-foreground">Новая аудио-история</p>
+                  </div>
+                </div>
+                <div
+                  className="px-4 py-1.5 rounded-full font-serif text-xs sm:text-sm italic text-white border-t border-white/30"
+                  style={{
+                    backgroundImage: 'linear-gradient(to bottom, hsl(168,40%,52%), hsl(168,40%,32%))',
+                    boxShadow:
+                      'inset 0 1px 1px rgba(255,255,255,0.25), 0 3px 0 hsl(168,40%,24%), 0 5px 10px rgba(0,0,0,0.25)',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.35)',
+                  }}
+                >
+                  <img src={iconToListen} alt="Слушать" className="h-5 sm:h-6 w-auto" />
+                </div>
+              </button>
             </div>
-          )}
-        </div>
-        )}
+          </div>
 
         {mode === 'publications' && showNoResults && (
           <div className="px-3 py-12 text-center">
@@ -390,110 +347,109 @@ const Feed: React.FC = () => {
             <Button variant="outline" className="mt-4 rounded-sm" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить фильтры</Button>
           </div>
         )}
-        {mode === 'publications' && !showNoResults && uiVariant === 'classic' && renderClassicShowcase()}
-        {mode === 'publications' && !showNoResults && uiVariant === 'calendar' && renderCalendarByYears()}
-        {mode === 'publications' && !showNoResults && uiVariant !== 'classic' && uiVariant !== 'calendar' && renderMagazineLayout()}
+        {mode === 'publications' && !showNoResults && renderMagazineLayout()}
 
-        {mode === 'publications' && showEmptyFeed && (
-          <div className="px-3 py-12 text-center">
-            <p className="editorial-title text-lg">Создайте первую историю</p>
-            <p className="text-sm font-light text-muted-foreground mt-2">Добавьте публикацию или пригласите близких</p>
-            <div className="flex gap-3 justify-center mt-6">
-              <Button className="rounded-sm" onClick={() => navigate(ROUTES.classic.create)}>Создать</Button>
-              <Button variant="outline" className="rounded-sm" onClick={() => navigate(ROUTES.classic.invite)}>Пригласить</Button>
+          {mode === 'publications' && showEmptyFeed && (
+            <div className="px-3 py-12 text-center">
+              <p className="editorial-title text-lg">Создайте первую историю</p>
+              <p className="text-sm font-light text-muted-foreground mt-2">Добавьте публикацию или пригласите близких</p>
+              <div className="flex gap-3 justify-center mt-6">
+                <Button className="rounded-sm" onClick={() => navigate(ROUTES.classic.create)}>Создать</Button>
+                <Button variant="outline" className="rounded-sm" onClick={() => navigate(ROUTES.classic.invite)}>Пригласить</Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {mode === 'media' && (
-          <div className="px-0.5">
-            <div className={`grid gap-0.5 pb-4`} style={{ gridTemplateColumns: `repeat(${density}, 1fr)` }}>
-              {masonry.slice(0, 60).map((item, idx) => (
-                <div key={item.id} className={`relative overflow-hidden bg-muted ${density === 1 ? 'aspect-[16/10]' : masonryAspects[idx % masonryAspects.length]}`}>
-                  <img src={item.thumbnail || item.url} alt={item.name} className="h-full w-full object-cover" />
-                  {item.type === 'video' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Video className="h-5 w-5 text-white/80" />
-                    </div>
-                  )}
+          {mode === 'media' && (
+            <div className="px-0.5">
+              <div className={`grid gap-0.5 pb-4`} style={{ gridTemplateColumns: `repeat(${density}, 1fr)` }}>
+                {masonry.slice(0, 60).map((item, idx) => (
+                  <div key={item.id} className={`relative overflow-hidden bg-muted ${density === 1 ? 'aspect-[16/10]' : masonryAspects[idx % masonryAspects.length]}`}>
+                    <img src={item.thumbnail || item.url} alt={item.name} className="h-full w-full object-cover" />
+                    {item.type === 'video' && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <Video className="h-5 w-5 text-white/80" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
+            <SheetHeader><SheetTitle className="editorial-title">Фильтры</SheetTitle></SheetHeader>
+            <div className="space-y-5 py-4">
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-2">Автор</p>
+                <div className="flex flex-wrap gap-2">
+                  {mockMembers.slice(0, 12).map(m => (
+                    <button key={m.id} onClick={() => setFilterAuthorId(filterAuthorId === m.id ? null : m.id)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterAuthorId === m.id ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
+                      {m.nickname || m.firstName}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-2">Участники</p>
+                <div className="flex flex-wrap gap-2">
+                  {mockMembers.slice(0, 10).map(m => (
+                    <button key={m.id} onClick={() => toggleParticipant(m.id)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterParticipantIds.includes(m.id) ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
+                      {m.nickname || m.firstName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="editorial-caption text-muted-foreground mb-1">Дата публикации от</p>
+                  <input type="date" value={filterPublishFrom} onChange={e => setFilterPublishFrom(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+                </div>
+                <div>
+                  <p className="editorial-caption text-muted-foreground mb-1">до</p>
+                  <input type="date" value={filterPublishTo} onChange={e => setFilterPublishTo(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="editorial-caption text-muted-foreground mb-1">Дата события от</p>
+                  <input type="date" value={filterEventFrom} onChange={e => setFilterEventFrom(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+                </div>
+                <div>
+                  <p className="editorial-caption text-muted-foreground mb-1">до</p>
+                  <input type="date" value={filterEventTo} onChange={e => setFilterEventTo(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
+                </div>
+              </div>
+              <div>
+                <p className="editorial-caption text-muted-foreground mb-2">Тег темы</p>
+                <div className="flex flex-wrap gap-2">
+                  {topicTags.map(t => (
+                    <button key={t} onClick={() => setFilterTopicTag(filterTopicTag === t ? null : t)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterTopicTag === t ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={filterFavorite} onChange={e => setFilterFavorite(e.target.checked)} className="rounded border-border" />
+                  <span className="text-sm font-light">Избранное</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={filterUnread} onChange={e => setFilterUnread(e.target.checked)} className="rounded border-border" />
+                  <span className="text-sm font-light">Непрочитанное</span>
+                </label>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" className="flex-1 rounded-2xl h-11" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить</Button>
+                <Button className="flex-1 rounded-2xl h-11" onClick={() => setFiltersOpen(false)}>Показать</Button>
+              </div>
             </div>
-          </div>
-        )}
+          </SheetContent>
+        </Sheet>
       </div>
-
-      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto">
-          <SheetHeader><SheetTitle className="editorial-title">Фильтры</SheetTitle></SheetHeader>
-          <div className="space-y-5 py-4">
-            <div>
-              <p className="editorial-caption text-muted-foreground mb-2">Автор</p>
-              <div className="flex flex-wrap gap-2">
-                {mockMembers.slice(0, 12).map(m => (
-                  <button key={m.id} onClick={() => setFilterAuthorId(filterAuthorId === m.id ? null : m.id)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterAuthorId === m.id ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
-                    {m.nickname || m.firstName}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="editorial-caption text-muted-foreground mb-2">Участники</p>
-              <div className="flex flex-wrap gap-2">
-                {mockMembers.slice(0, 10).map(m => (
-                  <button key={m.id} onClick={() => toggleParticipant(m.id)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterParticipantIds.includes(m.id) ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
-                    {m.nickname || m.firstName}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="editorial-caption text-muted-foreground mb-1">Дата публикации от</p>
-                <input type="date" value={filterPublishFrom} onChange={e => setFilterPublishFrom(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
-              </div>
-              <div>
-                <p className="editorial-caption text-muted-foreground mb-1">до</p>
-                <input type="date" value={filterPublishTo} onChange={e => setFilterPublishTo(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="editorial-caption text-muted-foreground mb-1">Дата события от</p>
-                <input type="date" value={filterEventFrom} onChange={e => setFilterEventFrom(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
-              </div>
-              <div>
-                <p className="editorial-caption text-muted-foreground mb-1">до</p>
-                <input type="date" value={filterEventTo} onChange={e => setFilterEventTo(e.target.value)} className="w-full h-9 px-2 text-sm border border-border rounded-sm bg-background" />
-              </div>
-            </div>
-            <div>
-              <p className="editorial-caption text-muted-foreground mb-2">Тег темы</p>
-              <div className="flex flex-wrap gap-2">
-                {topicTags.map(t => (
-                  <button key={t} onClick={() => setFilterTopicTag(filterTopicTag === t ? null : t)} className={`px-3 py-1.5 text-xs font-medium border rounded-full transition-colors ${filterTopicTag === t ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={filterFavorite} onChange={e => setFilterFavorite(e.target.checked)} className="rounded border-border" />
-                <span className="text-sm font-light">Избранное</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={filterUnread} onChange={e => setFilterUnread(e.target.checked)} className="rounded border-border" />
-                <span className="text-sm font-light">Непрочитанное</span>
-              </label>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" className="flex-1 rounded-2xl h-11" onClick={() => { resetFilters(); setFiltersOpen(false); }}>Сбросить</Button>
-              <Button className="flex-1 rounded-2xl h-11" onClick={() => setFiltersOpen(false)}>Показать</Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
     </AppLayout>
   );
 };

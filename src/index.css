@@ -315,6 +315,36 @@
     opacity: 0.95;
   }
 
+  .create-cta-animated {
+    @apply w-full min-h-[96px] rounded-3xl text-base sm:text-lg font-semibold flex items-center justify-center gap-2 text-primary-foreground shadow-md;
+    background-image: linear-gradient(120deg, #f9d976, #f39f86, #8fd3f4, #a1ffce);
+    background-size: 260% 260%;
+    animation: cta-gradient 8s ease-in-out infinite;
+  }
+
+  .feed-card-animated {
+    background-image: linear-gradient(135deg, #f8f3ec, #f3e4d2, #f7ebd9);
+    background-size: 220% 220%;
+    animation: card-gradient 14s ease-in-out infinite;
+  }
+
+  .dark .feed-card-animated,
+  .dark .feed-card-animated .text-foreground {
+    color: hsl(25 25% 18%);
+  }
+  .dark .feed-card-animated .text-muted-foreground {
+    color: hsl(25 15% 40%);
+  }
+
+  .dark .feed-page-bg,
+  .dark .feed-page-bg .text-foreground,
+  .dark .feed-page-bg .text-current {
+    color: hsl(25 25% 18%);
+  }
+  .dark .feed-page-bg .text-muted-foreground {
+    color: hsl(25 15% 45%);
+  }
+
   .touch-target {
     min-height: var(--touch-min);
     min-width: var(--touch-min);
@@ -1114,5 +1144,29 @@
   }
   .tma-family-btn:not(:disabled):active {
     opacity: 0.9;
+  }
+}
+
+@keyframes cta-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes card-gradient {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
   }
 }

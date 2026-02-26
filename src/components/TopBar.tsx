@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, Send } from 'lucide-react';
+import { ChevronLeft, Send, User } from 'lucide-react';
 
 export interface TopBarProps {
   title: string;
@@ -8,14 +8,13 @@ export interface TopBarProps {
   right?: React.ReactNode;
   transparent?: boolean;
   avatarUrl?: string;
+  sticky?: boolean;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ title, subtitle, onBack, right, transparent, avatarUrl }) => {
+export const TopBar: React.FC<TopBarProps> = ({ title, subtitle, onBack, right, transparent, avatarUrl, sticky = true }) => {
   return (
     <header
-      className={`app-topbar sticky top-0 z-40 flex items-center gap-3 px-4 py-3 safe-area-pt ${
-        transparent ? 'bg-transparent' : 'app-header'
-      }`}
+      className={`app-topbar ${sticky ? 'sticky top-0' : ''} z-40 flex items-center gap-3 px-4 py-3 safe-area-pt ${transparent ? 'bg-transparent' : 'app-header'}`}
     >
       {onBack != null ? (
         <button
@@ -32,7 +31,7 @@ export const TopBar: React.FC<TopBarProps> = ({ title, subtitle, onBack, right, 
         </div>
       ) : (
         <div className="h-10 w-10 rounded-full bg-white/10 shrink-0 flex items-center justify-center">
-          <span className="text-current font-serif font-semibold text-sm">{title.charAt(0)}</span>
+          <User className="h-5 w-5 text-current/80" />
         </div>
       )}
 

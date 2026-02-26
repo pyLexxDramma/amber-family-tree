@@ -2,29 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ROUTES } from '@/constants/routes';
-import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, ChevronRight, Layout } from 'lucide-react';
+import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, ChevronRight } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePrivacyVisibility, type PrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
-import { useUIVariant, type UIVariant } from '@/contexts/UIVariantContext';
-
-const VARIANT_LABELS: Record<UIVariant, string> = {
-  current: 'Текущий',
-  classic: 'Классический архив',
-  living: 'Живая история',
-  calendar: 'Календарь воспоминаний',
-  journal: 'Журнал + Плеер',
-  minimal: 'Минимализм',
-  retro: 'Ретро',
-};
-
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { t, locale, setLocale } = useLanguage();
   const { visibility, setVisibility } = usePrivacyVisibility();
-  const { variant } = useUIVariant();
   const [mounted, setMounted] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -121,15 +108,6 @@ const Settings: React.FC = () => {
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground">{t('language')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{langLabel}</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </button>
-
-        <button type="button" onClick={() => navigate(ROUTES.classic.demoVariants)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-[hsl(340,50%,50%)]/15 flex items-center justify-center shrink-0"><Layout className="h-5 w-5 text-[hsl(340,50%,50%)]" /></div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Вариант оформления</p>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate" title={VARIANT_LABELS[variant]}>Выбрано: {VARIANT_LABELS[variant]}</p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
         </button>

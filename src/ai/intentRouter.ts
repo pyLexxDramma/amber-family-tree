@@ -149,11 +149,6 @@ export function routeIntent(userText: string, selectedContext?: string | null): 
     return { type: 'help' };
   }
 
-  // Change UI variant / оформление
-  if (/(смени|переключи|поменяй|выбери)\s*(оформление|интерфейс|стиль|вариант)/.test(text)) {
-    return { type: 'navigate_to', entity: 'demoVariants' };
-  }
-
   // Invite
   if (/(пригласи|пригласить)\s*(присоединиться|родственн|в\s*семью)?/.test(text)) {
     return { type: 'navigate_to', entity: 'invite' };

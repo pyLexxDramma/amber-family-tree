@@ -1,21 +1,26 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TreePine, Newspaper, Plus, Users, Store, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import familyTreeIcon from '@/assets/icons/family-tree.gif';
+import iconLenta from '@/assets/icons/icon-lenta.gif';
+import iconMicrophone from '@/assets/icons/icon-microphone.gif';
+import iconFamily from '@/assets/icons/icon-family.gif';
+import iconSettings from '@/assets/icons/icon-settings.gif';
 
 const navItemsDefault = [
-  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreePine },
-  { path: ROUTES.classic.feed, label: 'Лента', icon: Newspaper },
-  { path: ROUTES.classic.create, label: '', icon: Plus, isCenter: true },
-  { path: ROUTES.classic.family, label: 'Семья', icon: Users },
-  { path: ROUTES.classic.store, label: 'Магазин', icon: Store },
+  { path: ROUTES.classic.tree, label: 'Дерево', iconImg: familyTreeIcon },
+  { path: ROUTES.classic.feed, label: 'Лента', iconImg: iconLenta },
+  { path: ROUTES.app, label: '', iconImg: iconMicrophone, isCenter: true },
+  { path: ROUTES.classic.family, label: 'Семья', iconImg: iconFamily },
+  { path: ROUTES.classic.settings, label: 'Настройки', iconImg: iconSettings },
 ];
 
 const navItemsMediaView = [
-  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreePine },
-  { path: ROUTES.classic.feed, label: 'Лента', icon: Newspaper },
-  { path: ROUTES.classic.create, label: '', icon: Plus, isCenter: true },
-  { path: ROUTES.classic.family, label: 'Контакты', icon: Users },
+  { path: ROUTES.classic.tree, label: 'Дерево', iconImg: familyTreeIcon },
+  { path: ROUTES.classic.feed, label: 'Лента', iconImg: iconLenta },
+  { path: ROUTES.app, label: '', iconImg: iconMicrophone, isCenter: true },
+  { path: ROUTES.classic.family, label: 'Контакты', iconImg: iconFamily },
   { path: ROUTES.classic.myProfile, label: 'Профиль', icon: User },
 ];
 
@@ -36,10 +41,14 @@ export const BottomNav: React.FC = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className="touch-target flex items-center justify-center"
-                aria-label="Создать"
+                aria-label="Голосовой помощник"
               >
-                <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
-                  <item.icon className="h-5 w-5" strokeWidth={2.5} />
+                <div className="h-12 w-12 rounded-full border border-primary/40 bg-background/60 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-md shadow-primary/20 hover:bg-primary/5 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+                  {'iconImg' in item && item.iconImg ? (
+                    <img src={item.iconImg} alt="" className="h-6 w-6 object-contain" />
+                  ) : (
+                    <item.icon className="h-5 w-5 text-primary" strokeWidth={2.2} />
+                  )}
                 </div>
               </button>
             );
@@ -51,10 +60,16 @@ export const BottomNav: React.FC = () => {
               className="touch-target flex flex-col items-center justify-center gap-0.5 px-3 py-1 transition-colors"
               aria-current={active ? 'page' : undefined}
             >
-              <div className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${
-                active ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:text-foreground'
-              }`}>
-                <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.5} />
+              <div
+                className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors overflow-hidden ${
+                  active ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {'iconImg' in item && item.iconImg ? (
+                  <img src={item.iconImg} alt="" className="h-5 w-5 object-contain" />
+                ) : (
+                  'icon' in item && <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.5} />
+                )}
               </div>
               <span className={`text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}>
                 {item.label}

@@ -1,39 +1,17 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
-const STORAGE_KEY = 'angelo-demo-ui-variant';
-
-export type UIVariant = 'current' | 'classic' | 'living' | 'calendar' | 'journal' | 'minimal' | 'retro';
+export type UIVariant = 'journal';
 
 type UIVariantContextValue = {
   variant: UIVariant;
-  setVariant: (v: UIVariant) => void;
 };
 
-const defaultValue: UIVariantContextValue = {
-  variant: 'journal',
-  setVariant: () => {},
-};
-
+const defaultValue: UIVariantContextValue = { variant: 'journal' };
 const UIVariantContext = createContext<UIVariantContextValue>(defaultValue);
 
-export function getStoredVariant(): UIVariant {
-  if (typeof localStorage === 'undefined') return 'journal';
-  const v = localStorage.getItem(STORAGE_KEY);
-  const valid: UIVariant[] = ['classic','living','calendar','journal','minimal','retro','current'];
-  if (valid.includes(v as UIVariant)) return v as UIVariant;
-  return 'journal';
-}
-
 export function UIVariantProvider({ children }: { children: React.ReactNode }) {
-  const [variant, setVariantState] = useState<UIVariant>(getStoredVariant);
-
-  const setVariant = useCallback((v: UIVariant) => {
-    setVariantState(v);
-    if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY, v);
-  }, []);
-
   return (
-    <UIVariantContext.Provider value={{ variant, setVariant }}>
+    <UIVariantContext.Provider value={{ variant: 'journal' }}>
       {children}
     </UIVariantContext.Provider>
   );
@@ -43,12 +21,10 @@ export function useUIVariant() {
   return useContext(UIVariantContext);
 }
 
-/** Syncs current variant to document for CSS selectors [data-ui-variant="..."] */
 export function UIVariantSync() {
-  const { variant } = useUIVariant();
   useEffect(() => {
-    document.documentElement.setAttribute('data-ui-variant', variant);
+    document.documentElement.setAttribute('data-ui-variant', 'journal');
     return () => document.documentElement.removeAttribute('data-ui-variant');
-  }, [variant]);
+  }, []);
   return null;
 }
