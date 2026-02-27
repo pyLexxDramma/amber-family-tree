@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { getDemoFeedPhotoUrl, getDemoMemberPhotoUrl } from '@/lib/demo-photos';
@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { SlidersHorizontal, Heart, Image, Video, Mic, ChevronLeft, ChevronRight, Plus, User } from 'lucide-react';
 import iconToListen from '@/assets/icons/icon-to-listen.gif';
 import iconWatch from '@/assets/icons/icon-watch.gif';
+import iconNewPost from '@/assets/icons/new-post.gif';
 import type { Publication } from '@/types';
 
 /** Год из eventDate (например "1985-07-15" -> 1985) для группировки по десятилетиям */
@@ -32,7 +33,20 @@ const Feed: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'new' | 'old'>('new');
   const [density, setDensity] = useState(3);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [createCtaVisible, setCreateCtaVisible] = useState(false);
+  const createCtaRef = useRef<HTMLDivElement>(null);
   const memberAvatar = currentUser ? getDemoMemberPhotoUrl(currentUser.id) : undefined;
+
+  useEffect(() => {
+    const el = createCtaRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setCreateCtaVisible(true); },
+      { threshold: 0.2, rootMargin: '0px 0px -20% 0px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     const v = searchParams.get('view');
@@ -99,7 +113,7 @@ const Feed: React.FC = () => {
     setFilterParticipantIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const feedCard = (pub: typeof sorted[0]) => {
+  const feedPublicationCard = (pub: typeof sorted[0]) => {
     const author = getMember(pub.authorId);
     const firstPhoto = pub.media.find(m => m.type === 'photo');
     const imgUrl = firstPhoto ? (firstPhoto.url || firstPhoto.thumbnail) : getDemoFeedPhotoUrl(parseInt(pub.id.replace(/\D/g, '') || '1', 10));
@@ -108,37 +122,61 @@ const Feed: React.FC = () => {
       <button
         key={pub.id}
         onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-        className="w-full rounded-3xl shadow-sm border border-border/40 px-3 py-3 flex flex-col gap-2 text-left feed-card-animated"
+        className="content-card feed-card-block overflow-hidden text-left rounded-2xl w-full aspect-[4/5] block"
       >
-        <div className="flex items-center gap-3">
-          <div className="h-16 w-16 rounded-2xl overflow-hidden flex-shrink-0 bg-muted">
-            <img src={imgUrl} alt={pub.title || ''} className="h-full w-full object-cover" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-foreground leading-snug line-clamp-2">
+        <div className="relative w-full h-full">
+          <img src={imgUrl} alt={pub.title || ''} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute bottom-0 left-0 right-0 h-[33.333%] min-h-[4.25rem] p-2.5 feed-card-overlay flex flex-col justify-end">
+            <p className="feed-card-overlay-title text-white leading-tight line-clamp-2">
               {pub.title || pub.text}
             </p>
-            <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-              <User className="h-3 w-3" />
-              <span className="truncate">
-                {author ? `${author.firstName} ${author.lastName}` : 'Член семьи'}
-              </span>
-            </div>
+            <p className="feed-card-overlay-caption text-white/90 mt-0.5 truncate">
+              {author ? `${author.firstName} ${author.lastName}` : ''}
+            </p>
           </div>
         </div>
       </button>
     );
   };
 
+  const createPublicationBlock = () => (
+    <div
+      ref={createCtaRef}
+      className={`feed-create-block transition-all duration-500 ${createCtaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+    >
+      <button
+        type="button"
+        onClick={() => navigate(ROUTES.classic.create)}
+        className="content-card feed-card-block overflow-hidden rounded-2xl w-full aspect-[4/5] block text-foreground relative"
+      >
+        <div className="feed-create-block-border rounded-2xl p-[3px] w-full h-full min-h-0 flex flex-col items-center justify-center absolute inset-0">
+          <span className="feed-create-block-inner rounded-[14px] w-full h-full min-h-0 flex flex-col items-center justify-center bg-white">
+            <img src={iconNewPost} alt="Создать публикацию" className="h-20 w-20 sm:h-24 sm:w-24 object-contain" />
+          </span>
+        </div>
+      </button>
+    </div>
+  );
+
   const renderMagazineLayout = () => {
     if (filtered.length === 0) return null;
 
+    const col0 = filtered.filter((_, i) => i % 2 === 0);
+    const col1 = filtered.filter((_, i) => i % 2 === 1);
+
+    const renderColumn = (items: typeof filtered, columnIndex: number) => (
+      <div key={columnIndex} className={`feed-masonry-col ${columnIndex === 1 ? 'feed-masonry-col--offset' : ''}`}>
+        {items.map(pub => feedPublicationCard(pub))}
+        {columnIndex === 1 && createPublicationBlock()}
+      </div>
+    );
+
     return (
-      <div className="flex flex-col gap-3 px-3 pb-4">
-        {filtered.map(pub => feedCard(pub))}
-        <Button className="create-cta-animated mt-1" onClick={() => navigate(ROUTES.classic.create)}>
-          <Plus className="h-6 w-6" /> СОЗДАТЬ ПУБЛИКАЦИЮ
-        </Button>
+      <div className="px-3 pb-4">
+        <div className="feed-masonry">
+          {renderColumn(col0, 0)}
+          {renderColumn(col1, 1)}
+        </div>
       </div>
     );
   };
@@ -270,76 +308,69 @@ const Feed: React.FC = () => {
   return (
     <AppLayout>
       <div className="relative min-h-screen bg-gradient-to-b from-[#f8f3ec] via-[#f4f1ec] to-[#e5e1dc] feed-page-bg">
-        <TopBar
-          title={currentUser ? `Привет, ${currentUser.firstName}!` : 'Семейный альбом'}
-          subtitle={unreadCount ? `У тебя ${unreadCount} новых воспоминаний` : 'Моменты и воспоминания'}
-          avatarUrl={memberAvatar}
-          sticky={false}
-          transparent
-          right={
-            <button
-              onClick={() => setFiltersOpen(true)}
-              className="touch-target h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-colors"
-              aria-label="Фильтры"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-            </button>
-          }
-        />
-        <div className="px-0 pt-2 pb-4 page-enter">
-          <div className="px-3 pb-4">
-            <div className="space-y-2">
+        <div className="feed-topbar-enter">
+          <TopBar
+            title={currentUser ? `Привет, ${currentUser.firstName}!` : 'Семейный альбом'}
+            subtitle={unreadCount ? `У тебя ${unreadCount} новых воспоминаний` : 'Моменты и воспоминания'}
+            avatarUrl={memberAvatar}
+            sticky={false}
+            transparent
+            right={
               <button
-                type="button"
-                className="w-full flex items-center justify-between rounded-2xl bg-primary/8 px-4 py-3"
+                onClick={() => setFiltersOpen(true)}
+                className="touch-target h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-primary/8 transition-colors"
+                aria-label="Фильтры"
               >
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center">
-                    <Image className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-medium text-foreground">Новые фото в альбоме</p>
-                  </div>
-                </div>
-                <div
-                  className="px-4 py-1.5 rounded-full font-serif text-xs sm:text-sm italic text-white border-t border-white/30"
-                  style={{
-                    backgroundImage: 'linear-gradient(to bottom, hsl(28,70%,55%), hsl(28,65%,38%))',
-                    boxShadow:
-                      'inset 0 1px 1px rgba(255,255,255,0.25), 0 3px 0 hsl(28,65%,30%), 0 5px 10px rgba(0,0,0,0.25)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.35)',
-                  }}
-                >
-                  <img src={iconWatch} alt="Открыть" className="h-5 sm:h-6 w-auto" />
-                </div>
+                <SlidersHorizontal className="h-4 w-4" />
               </button>
-              <button
-                type="button"
-                className="w-full flex items-center justify-between rounded-2xl bg-primary/4 px-4 py-3"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Mic className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-medium text-foreground">Новая аудио-история</p>
-                  </div>
-                </div>
-                <div
-                  className="px-4 py-1.5 rounded-full font-serif text-xs sm:text-sm italic text-white border-t border-white/30"
-                  style={{
-                    backgroundImage: 'linear-gradient(to bottom, hsl(168,40%,52%), hsl(168,40%,32%))',
-                    boxShadow:
-                      'inset 0 1px 1px rgba(255,255,255,0.25), 0 3px 0 hsl(168,40%,24%), 0 5px 10px rgba(0,0,0,0.25)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.35)',
-                  }}
+            }
+          />
+        </div>
+        <div className="px-0 pt-2 pb-4 feed-page-enter">
+          <div className="feed-page-enter-stagger">
+            <div>
+              <div className="px-3 pb-4">
+                <div className="space-y-3">
+              <div className="feed-row-cream-border rounded-2xl p-[3px]">
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between rounded-[14px] bg-primary/8 px-4 py-3"
                 >
-                  <img src={iconToListen} alt="Слушать" className="h-5 sm:h-6 w-auto" />
-                </div>
-              </button>
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center">
+                      <Image className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-medium text-foreground">Новые фото в альбоме</p>
+                    </div>
+                  </div>
+                  <span className="feed-cta-shimmer-border inline-flex rounded-xl p-[2px] flex-shrink-0">
+                    <img src={iconWatch} alt="Открыть" className="h-10 sm:h-12 w-auto touch-target rounded-[10px]" />
+                  </span>
+                </button>
+              </div>
+              <div className="feed-row-cream-border rounded-2xl p-[3px]">
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between rounded-[14px] bg-primary/4 px-4 py-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Mic className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-medium text-foreground">Новая аудио-история</p>
+                    </div>
+                  </div>
+                  <span className="feed-cta-shimmer-border inline-flex rounded-xl p-[2px] flex-shrink-0">
+                    <img src={iconToListen} alt="Слушать" className="h-10 sm:h-12 w-auto touch-target rounded-[10px]" />
+                  </span>
+                </button>
+              </div>
             </div>
-          </div>
-
+              </div>
+            </div>
+            <div>
         {mode === 'publications' && showNoResults && (
           <div className="px-3 py-12 text-center">
             <p className="editorial-caption text-muted-foreground">Нет результатов</p>
@@ -376,6 +407,8 @@ const Feed: React.FC = () => {
               </div>
             </div>
           )}
+            </div>
+          </div>
         </div>
 
         <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>

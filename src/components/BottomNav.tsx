@@ -31,7 +31,7 @@ export const BottomNav: React.FC = () => {
   const navItems = isFeedMediaView ? navItemsMediaView : navItemsDefault;
 
   return (
-    <nav className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-xl border-t border-border/40 safe-area-pb">
+    <nav className="app-bottom-nav nav-footer-shimmer fixed bottom-0 left-0 right-0 z-50 bg-white safe-area-pb">
       <div className="mx-auto flex max-w-md items-center justify-around py-1.5 px-2">
         {navItems.map(item => {
           const active = location.pathname.startsWith(item.path);
@@ -43,11 +43,11 @@ export const BottomNav: React.FC = () => {
                 className="touch-target flex items-center justify-center"
                 aria-label="Голосовой помощник"
               >
-                <div className="h-12 w-12 rounded-full border border-primary/40 bg-background/60 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-md shadow-primary/20 hover:bg-primary/5 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+                <div className="h-14 w-14 rounded-full flex items-center justify-center overflow-hidden hover:scale-105 active:scale-95 transition-transform">
                   {'iconImg' in item && item.iconImg ? (
-                    <img src={item.iconImg} alt="" className="h-6 w-6 object-contain" />
+                    <img src={item.iconImg} alt="" className="h-12 w-12 object-contain" />
                   ) : (
-                    <item.icon className="h-5 w-5 text-primary" strokeWidth={2.2} />
+                    <item.icon className="h-10 w-10 text-primary" strokeWidth={2.2} />
                   )}
                 </div>
               </button>
@@ -61,14 +61,14 @@ export const BottomNav: React.FC = () => {
               aria-current={active ? 'page' : undefined}
             >
               <div
-                className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors overflow-hidden ${
-                  active ? 'bg-primary/12 text-primary' : 'text-muted-foreground hover:text-foreground'
+                className={`h-10 w-10 rounded-full flex items-center justify-center overflow-hidden ${
+                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {'iconImg' in item && item.iconImg ? (
-                  <img src={item.iconImg} alt="" className="h-5 w-5 object-contain" />
+                  <img src={item.iconImg} alt="" className="h-10 w-10 object-contain" />
                 ) : (
-                  'icon' in item && <item.icon className="h-5 w-5" strokeWidth={active ? 2 : 1.5} />
+                  'icon' in item && <item.icon className="h-10 w-10" strokeWidth={active ? 2 : 1.5} />
                 )}
               </div>
               <span className={`text-[10px] font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}>
