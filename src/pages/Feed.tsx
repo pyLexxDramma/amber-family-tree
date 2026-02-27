@@ -341,7 +341,7 @@ const Feed: React.FC = () => {
                       <Image className="h-4 w-4 text-primary" />
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-medium text-foreground">Новые фото в альбоме</p>
+                      <p className="text-base font-medium text-foreground">Новые фото в альбоме</p>
                     </div>
                   </div>
                   <span className="feed-cta-shimmer-border inline-flex rounded-xl p-[2px] flex-shrink-0">
@@ -359,7 +359,7 @@ const Feed: React.FC = () => {
                       <Mic className="h-4 w-4 text-primary" />
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-medium text-foreground">Новая аудио-история</p>
+                      <p className="text-base font-medium text-foreground">Новая аудио-история</p>
                     </div>
                   </div>
                   <span className="feed-cta-shimmer-border inline-flex rounded-xl p-[2px] flex-shrink-0">

@@ -1,5 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 
+@font-face {
+  font-family: 'Gatchina';
+  src: url('/fonts/Gatchina.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -239,7 +247,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.55;
@@ -255,7 +263,7 @@
     line-height: 1.25;
   }
   h4, h5, h6 {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-weight: 600;
     line-height: 1.35;
   }
@@ -396,13 +404,13 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 6px rgba(0, 0, 0, 0.3);
   }
   .feed-card-overlay-title {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-size: 0.8125rem;
     font-weight: 700;
     line-height: 1.2;
   }
   .feed-card-overlay-caption {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-size: 0.6875rem;
     font-weight: 500;
   }
@@ -436,7 +444,7 @@
   }
 
   .editorial-caption {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-size: clamp(0.6875rem, 2vw, 0.8125rem);
     font-weight: 500;
     letter-spacing: 0.12em;
@@ -452,7 +460,7 @@
   }
 
   .editorial-body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-weight: 400;
     line-height: 1.7;
     letter-spacing: 0.01em;
@@ -596,7 +604,7 @@
   }
 
   .section-title {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Gatchina', 'Inter', system-ui, sans-serif;
     font-size: clamp(1.0625rem, 4vw, 1.375rem);
     font-weight: 600;
     letter-spacing: 0.06em;
