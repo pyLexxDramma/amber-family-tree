@@ -44,84 +44,86 @@ const EditMyProfile: React.FC = () => {
 
   return (
     <AppLayout>
-      <TopBar title="Редактировать профиль" onBack={() => navigate(ROUTES.classic.myProfile)} />
-      <div className="px-4 pt-4 pb-8 page-enter max-w-xl mx-auto">
-        <p className="text-sm text-muted-foreground mb-4">В демо изменения сохраняются в браузере и отображаются на странице «О себе».</p>
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Имя</span>
-            <input
-              type="text"
-              value={form.firstName}
-              onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Имя"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Фамилия</span>
-            <input
-              type="text"
-              value={form.lastName}
-              onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Фамилия"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Отчество</span>
-            <input
-              type="text"
-              value={form.middleName}
-              onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Отчество"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ник / как к вам обращаться</span>
-            <input
-              type="text"
-              value={form.nickname}
-              onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Никнейм"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Город</span>
-            <input
-              type="text"
-              value={form.city}
-              onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Город"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">О себе</span>
-            <textarea
-              value={form.about}
-              onChange={e => setForm(f => ({ ...f, about: e.target.value }))}
-              rows={4}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-              placeholder="Кратко о себе"
-            />
-          </label>
-        </div>
-        <div className="mt-8 flex gap-3">
-          <button
-            onClick={handleSave}
-            className="flex-1 touch-target min-h-[48px] rounded-2xl bg-primary text-primary-foreground font-semibold shadow-md shadow-primary/20 hover:opacity-90 transition-opacity"
-          >
-            Сохранить
-          </button>
-          <button
-            onClick={() => navigate(ROUTES.classic.myProfile)}
-            className="touch-target min-h-[48px] px-6 rounded-2xl border border-border bg-background font-medium hover:bg-muted/50 transition-colors"
-          >
-            Отмена
-          </button>
+      <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+        <TopBar title="Редактировать профиль" onBack={() => navigate(ROUTES.classic.myProfile)} light />
+        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+          <p className="text-sm text-[var(--proto-text-muted)] mb-4">В демо изменения сохраняются в браузере и отображаются на странице «О себе».</p>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Имя</span>
+              <input
+                type="text"
+                value={form.firstName}
+                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="Имя"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Фамилия</span>
+              <input
+                type="text"
+                value={form.lastName}
+                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="Фамилия"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Отчество</span>
+              <input
+                type="text"
+                value={form.middleName}
+                onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="Отчество"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Ник / как к вам обращаться</span>
+              <input
+                type="text"
+                value={form.nickname}
+                onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="Никнейм"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Город</span>
+              <input
+                type="text"
+                value={form.city}
+                onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="Город"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">О себе</span>
+              <textarea
+                value={form.about}
+                onChange={e => setForm(f => ({ ...f, about: e.target.value }))}
+                rows={4}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)] resize-y"
+                placeholder="Кратко о себе"
+              />
+            </label>
+          </div>
+          <div className="mt-8 flex gap-3">
+            <button
+              onClick={handleSave}
+              className="flex-1 min-h-[48px] rounded-2xl bg-[var(--proto-active)] text-white font-semibold hover:opacity-90 transition-opacity"
+            >
+              Сохранить
+            </button>
+            <button
+              onClick={() => navigate(ROUTES.classic.myProfile)}
+              className="min-h-[48px] px-6 rounded-2xl border border-[var(--proto-border)] bg-[var(--proto-card)] font-medium text-[var(--proto-text)] hover:opacity-90 transition-opacity"
+            >
+              Отмена
+            </button>
+          </div>
         </div>
       </div>
     </AppLayout>

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { ROUTES } from '@/constants/routes';
-import { ArrowLeft, Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, ChevronRight } from 'lucide-react';
+import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
+import { Bell, Lock, Palette, Globe, User, FileText, LogOut, Sun, Moon, ChevronRight } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -34,83 +36,82 @@ const Settings: React.FC = () => {
   const langLabel = locale === 'ru' ? t('langRu') : t('langEn');
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-6 pb-8">
-      <button onClick={() => navigate(-1)} className="touch-target mb-8 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
-        <ArrowLeft className="h-5 w-5" />
-      </button>
-
-      <h1 className="font-serif text-2xl font-bold text-foreground mb-8">{t('settings')}</h1>
-
-      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('profile')}</p>
-      <div className="space-y-2 mb-6">
-        <button onClick={() => navigate(ROUTES.classic.myProfile)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-[hsl(28,55%,42%)]/15 flex items-center justify-center shrink-0"><User className="h-5 w-5 text-[hsl(28,55%,42%)]" /></div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">{t('profileDesc')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t('profileDescLong')}</p>
+    <AppLayout>
+      <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+        <TopBar title={t('settings')} onBack={() => navigate(-1)} light />
+        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+          <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">{t('profile')}</p>
+          <div className="space-y-2 mb-6">
+            <button onClick={() => navigate(ROUTES.classic.myProfile)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><User className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">{t('profileDesc')}</p>
+                <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">{t('profileDescLong')}</p>
+              </div>
+            </button>
           </div>
-        </button>
-      </div>
 
-      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('security')}</p>
-      <div className="space-y-2 mb-6">
-        <button onClick={handleLogout} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0"><LogOut className="h-5 w-5 text-destructive" /></div>
-          <p className="text-sm font-semibold text-foreground">{t('logout')}</p>
-        </button>
-      </div>
-
-      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('documents')}</p>
-      <div className="space-y-2 mb-8">
-        <button onClick={() => navigate(ROUTES.classic.terms)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-primary" /></div>
-          <p className="text-sm font-semibold text-foreground">{t('termsOfUse')}</p>
-        </button>
-        <button onClick={() => navigate(ROUTES.classic.privacy)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-primary" /></div>
-          <p className="text-sm font-semibold text-foreground">{t('privacyPolicy')}</p>
-        </button>
-      </div>
-
-      <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">{t('other')}</p>
-      <div className="space-y-2">
-        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm">
-          <div className="h-10 w-10 rounded-full bg-[hsl(280,50%,55%)]/15 flex items-center justify-center shrink-0"><Palette className="h-5 w-5 text-[hsl(280,50%,55%)]" /></div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{t('theme')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-              {mounted && (isDark ? <><Moon className="h-3.5 w-3.5" /> {t('themeDark')}</> : <><Sun className="h-3.5 w-3.5" /> {t('themeLight')}</>)}
-            </p>
+          <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">{t('security')}</p>
+          <div className="space-y-2 mb-6">
+            <button onClick={handleLogout} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-red-500/30 transition-all text-left">
+              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0"><LogOut className="h-5 w-5 text-red-600" /></div>
+              <p className="text-sm font-semibold text-[var(--proto-text)]">{t('logout')}</p>
+            </button>
           </div>
-          <Switch checked={isDark} onCheckedChange={toggleTheme} />
+
+          <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">{t('documents')}</p>
+          <div className="space-y-2 mb-8">
+            <button onClick={() => navigate(ROUTES.classic.terms)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <p className="text-sm font-semibold text-[var(--proto-text)]">{t('termsOfUse')}</p>
+            </button>
+            <button onClick={() => navigate(ROUTES.classic.privacy)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <p className="text-sm font-semibold text-[var(--proto-text)]">{t('privacyPolicy')}</p>
+            </button>
+          </div>
+
+          <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">{t('other')}</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)]">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><Palette className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">{t('theme')}</p>
+                <p className="text-xs text-[var(--proto-text-muted)] mt-0.5 flex items-center gap-1.5">
+                  {mounted && (isDark ? <><Moon className="h-3.5 w-3.5" /> {t('themeDark')}</> : <><Sun className="h-3.5 w-3.5" /> {t('themeLight')}</>)}
+                </p>
+              </div>
+              <Switch checked={isDark} onCheckedChange={toggleTheme} />
+            </div>
+
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)]">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><Bell className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">{t('notifications')}</p>
+                <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">{t('notificationsDesc')}</p>
+              </div>
+              <Switch />
+            </div>
+
+            <button type="button" onClick={() => setPrivacyOpen(true)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><Lock className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">{t('privacy')}</p>
+                <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">{privacyLabel[visibility]}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)] shrink-0" />
+            </button>
+
+            <button type="button" onClick={() => setLanguageOpen(true)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left">
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><Globe className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">{t('language')}</p>
+                <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">{langLabel}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)] shrink-0" />
+            </button>
+          </div>
         </div>
-
-        <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm">
-          <div className="h-10 w-10 rounded-full bg-[hsl(38,65%,52%)]/15 flex items-center justify-center shrink-0"><Bell className="h-5 w-5 text-[hsl(38,65%,52%)]" /></div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{t('notifications')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t('notificationsDesc')}</p>
-          </div>
-          <Switch />
-        </div>
-
-        <button type="button" onClick={() => setPrivacyOpen(true)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-[hsl(160,45%,45%)]/15 flex items-center justify-center shrink-0"><Lock className="h-5 w-5 text-[hsl(160,45%,45%)]" /></div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{t('privacy')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{privacyLabel[visibility]}</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </button>
-
-        <button type="button" onClick={() => setLanguageOpen(true)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-md hover:border-primary/20 transition-all text-left">
-          <div className="h-10 w-10 rounded-full bg-[hsl(210,55%,50%)]/15 flex items-center justify-center shrink-0"><Globe className="h-5 w-5 text-[hsl(210,55%,50%)]" /></div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-foreground">{t('language')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{langLabel}</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-        </button>
       </div>
 
       <Dialog open={languageOpen} onOpenChange={setLanguageOpen}>
@@ -124,7 +125,7 @@ const Settings: React.FC = () => {
                 key={loc}
                 type="button"
                 onClick={() => { setLocale(loc); setLanguageOpen(false); }}
-                className={`touch-target min-h-[48px] rounded-xl border-2 px-4 text-left font-medium transition-colors ${locale === loc ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50 text-foreground'}`}
+                className={`touch-target min-h-[48px] rounded-xl border-2 px-4 text-left font-medium transition-colors ${locale === loc ? 'border-[var(--proto-active)] bg-[var(--proto-active)]/10 text-[var(--proto-active)]' : 'border-[var(--proto-border)] hover:border-[var(--proto-active)]/50 text-[var(--proto-text)]'}`}
               >
                 {loc === 'ru' ? t('langRu') : t('langEn')}
               </button>
@@ -144,7 +145,7 @@ const Settings: React.FC = () => {
                 key={v}
                 type="button"
                 onClick={() => { setVisibility(v); setPrivacyOpen(false); }}
-                className={`touch-target min-h-[48px] rounded-xl border-2 px-4 text-left font-medium transition-colors ${visibility === v ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/50 text-foreground'}`}
+                className={`touch-target min-h-[48px] rounded-xl border-2 px-4 text-left font-medium transition-colors ${visibility === v ? 'border-[var(--proto-active)] bg-[var(--proto-active)]/10 text-[var(--proto-active)]' : 'border-[var(--proto-border)] hover:border-[var(--proto-active)]/50 text-[var(--proto-text)]'}`}
               >
                 {privacyLabel[v]}
               </button>
@@ -152,7 +153,7 @@ const Settings: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppLayout>
   );
 };
 

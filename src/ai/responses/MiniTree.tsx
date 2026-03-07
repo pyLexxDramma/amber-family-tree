@@ -1,8 +1,6 @@
 import React from 'react';
 import { mockMembers, currentUserId } from '@/data/mock-members';
-import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
-import { useDemoWithPhotos } from '@/hooks/useDemoWithPhotos';
-import { User } from 'lucide-react';
+import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 
 const generationLabels: Record<number, string> = {
@@ -16,7 +14,6 @@ interface MiniTreeProps {
 }
 
 export const MiniTree: React.FC<MiniTreeProps> = ({ onSelectPerson }) => {
-  const demoWithPhotos = useDemoWithPhotos();
   const generations: Record<number, FamilyMember[]> = {};
   mockMembers.forEach((m) => {
     (generations[m.generation] ||= []).push(m);
@@ -41,18 +38,12 @@ export const MiniTree: React.FC<MiniTreeProps> = ({ onSelectPerson }) => {
                     onClick={() => onSelectPerson(m.id)}
                     className="relative overflow-hidden rounded-xl aspect-square border-2 border-border/40 hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 bg-muted shadow-sm"
                   >
-                    {demoWithPhotos ? (
-                      <img
-                        src={getDemoMemberPhotoUrl(m.id)}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        style={{ filter: m.isActive ? 'sepia(0.06)' : 'grayscale(0.5)' }}
-                        onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-                      />
-                    ) : null}
-                    <div className={`absolute inset-0 flex items-center justify-center ${demoWithPhotos ? 'hidden' : ''}`}>
-                      <User className={`h-12 w-12 ${m.isActive ? 'text-primary/70' : 'text-muted-foreground'}`} />
-                    </div>
+                    <img
+                      src={getPrototypeAvatarUrl(m.id, currentUserId)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      style={{ filter: m.isActive ? 'sepia(0.06)' : 'grayscale(0.5)' }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                     <span className="absolute bottom-2 left-2 right-2 text-sm text-white font-medium truncate">
                       {m.nickname || m.firstName}

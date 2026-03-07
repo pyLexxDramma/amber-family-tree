@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { mockMembers } from '@/data/mock-members';
 import { ArrowLeft, Image, Video, Mic, FileText, Type, Upload, X, AlertTriangle } from 'lucide-react';
 
 const MAX_SIZES: Record<string, number> = { photo: 20_000_000, video: 500_000_000, audio: 100_000_000 };
@@ -48,97 +49,96 @@ const CreatePublication: React.FC = () => {
 
   if (!type) {
     return (
-      <div className="min-h-screen bg-background px-0 pt-6 pb-8 page-enter">
-        <button onClick={() => navigate(-1)} className="touch-target mb-6 flex items-center gap-2 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors px-3 py-2 font-semibold">
-          <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm tracking-wide">Назад</span>
-        </button>
-        <h1 className="hero-title font-serif text-2xl mb-2 px-3">Создать публикацию</h1>
-        <p className="text-sm font-medium text-muted-foreground mb-6 px-3">Что хотите добавить?</p>
-        <div className="flex flex-col gap-3 page-enter-stagger">
-          {types.map(t => (
-            <button key={t.id} onClick={() => setType(t.id)} className="content-card w-full flex flex-row items-center justify-center gap-4 min-h-[96px] p-5 transition-all duration-300 hover:border-primary/40">
-              <t.icon className="h-8 w-8 text-primary" />
-              <span className="text-sm font-semibold text-foreground">{t.label}</span>
-            </button>
-          ))}
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+          <TopBar title="Создать публикацию" onBack={() => navigate(-1)} light />
+          <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+            <p className="text-sm font-medium text-[var(--proto-text-muted)] mb-6">Что хотите добавить?</p>
+            <div className="flex flex-col gap-3">
+              {types.map(t => (
+                <button key={t.id} onClick={() => setType(t.id)} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] w-full flex flex-row items-center justify-center gap-4 min-h-[96px] p-5 transition-all duration-300 hover:border-[var(--proto-active)]/40">
+                  <t.icon className="h-8 w-8 text-[var(--proto-active)]" />
+                  <span className="text-sm font-semibold text-[var(--proto-text)]">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background px-0 pt-4 pb-8 page-enter">
-      <button onClick={() => setType(null)} className="touch-target mb-4 flex items-center gap-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-primary/5 px-3 py-1">
-        <ArrowLeft className="h-5 w-5" />
-        <span className="text-sm font-medium tracking-wide">Сменить тип</span>
-      </button>
-      <h1 className="hero-title font-serif text-xl mb-4 px-3">{type.charAt(0).toUpperCase() + type.slice(1)}</h1>
+    <AppLayout>
+      <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+        <TopBar title={type.charAt(0).toUpperCase() + type.slice(1)} onBack={() => setType(null)} light />
+        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+          <div className="space-y-4">
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+              <Label className="text-sm font-semibold text-[var(--proto-text)]">Заголовок (необязательно)</Label>
+              <Input value={title} onChange={e => setTitle(e.target.value)} className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)]" placeholder="Название..." />
+            </div>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+              <Label className="text-sm font-semibold text-[var(--proto-text)]">Описание</Label>
+              <Textarea value={text} onChange={e => setText(e.target.value)} className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] min-h-[80px]" placeholder="Расскажите историю..." />
+            </div>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px] flex gap-3 items-end">
+              <div className="flex-1">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Дата события</Label>
+                <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]" />
+              </div>
+              <div className="flex items-center gap-2 pb-0.5">
+                <Switch checked={approximate} onCheckedChange={setApproximate} />
+                <span className="text-xs font-medium text-[var(--proto-text-muted)]">приблизительно</span>
+              </div>
+            </div>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+              <Label className="text-sm font-semibold text-[var(--proto-text)]">Место</Label>
+              <Input value={place} onChange={e => setPlace(e.target.value)} className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]" placeholder="Где это было?" />
+            </div>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+              <Label className="text-sm font-semibold text-[var(--proto-text)]">Тема *</Label>
+              <Select value={topicTag} onValueChange={v => { setTopicTag(v); setTagError(''); }}>
+                <SelectTrigger className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] h-12 text-[var(--proto-text)]"><SelectValue placeholder="Выберите тему" /></SelectTrigger>
+                <SelectContent>{topicTags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+              {tagError && <p className="text-red-600 text-sm font-medium mt-1">{tagError}</p>}
+            </div>
 
-      <div className="space-y-4 page-enter-stagger">
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <Label className="text-sm font-semibold text-foreground">Заголовок (необязательно)</Label>
-          <Input value={title} onChange={e => setTitle(e.target.value)} className="mt-2 rounded-xl border-2" placeholder="Название..." />
-        </div>
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <Label className="text-sm font-semibold text-foreground">Описание</Label>
-          <Textarea value={text} onChange={e => setText(e.target.value)} className="mt-2 rounded-xl border-2 min-h-[80px]" placeholder="Расскажите историю..." />
-        </div>
-        <div className="content-card p-5 rounded-2xl min-h-[96px] flex gap-3 items-end">
-          <div className="flex-1">
-            <Label className="text-sm font-semibold text-foreground">Дата события</Label>
-            <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-2 rounded-xl border-2" />
-          </div>
-          <div className="flex items-center gap-2 pb-0.5">
-            <Switch checked={approximate} onCheckedChange={setApproximate} />
-            <span className="text-xs font-medium text-muted-foreground">приблизительно</span>
-          </div>
-        </div>
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <Label className="text-sm font-semibold text-foreground">Место</Label>
-          <Input value={place} onChange={e => setPlace(e.target.value)} className="mt-2 rounded-xl border-2" placeholder="Где это было?" />
-        </div>
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <Label className="text-sm font-semibold text-foreground">Тема *</Label>
-          <Select value={topicTag} onValueChange={v => { setTopicTag(v); setTagError(''); }}>
-            <SelectTrigger className="mt-2 rounded-xl border-2 h-12"><SelectValue placeholder="Выберите тему" /></SelectTrigger>
-            <SelectContent>{topicTags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-          </Select>
-          {tagError && <p className="text-destructive text-sm font-medium mt-1">{tagError}</p>}
-        </div>
-
-        {type !== 'text' && (
-          <div className="content-card p-5 rounded-2xl min-h-[96px]">
-            <Label className="text-sm font-semibold text-foreground">Файлы</Label>
-            <div className="mt-2 space-y-2">
-              {files.map((f, i) => (
-                <div key={i} className={`flex items-center gap-2 rounded-xl p-3 text-sm border-2 ${f.error ? 'border-destructive/50 bg-destructive/5' : 'border-border/50'}`}>
-                  <div className="flex-1">
-                    <p className="font-semibold">{f.name}</p>
-                    <p className="text-xs text-muted-foreground">{(f.size / 1_000_000).toFixed(1)} MB</p>
-                    {f.error && <p className="text-xs text-destructive flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{f.error}</p>}
-                  </div>
-                  <button onClick={() => setFiles(fs => fs.filter((_,j) => j !== i))} className="rounded-lg p-1 hover:bg-muted"><X className="h-4 w-4 text-muted-foreground" /></button>
+            {type !== 'text' && (
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Файлы</Label>
+                <div className="mt-2 space-y-2">
+                  {files.map((f, i) => (
+                    <div key={i} className={`flex items-center gap-2 rounded-xl p-3 text-sm border-2 ${f.error ? 'border-red-500/50 bg-red-500/5' : 'border-[var(--proto-border)]'}`}>
+                      <div className="flex-1">
+                        <p className="font-semibold text-[var(--proto-text)]">{f.name}</p>
+                        <p className="text-xs text-[var(--proto-text-muted)]">{(f.size / 1_000_000).toFixed(1)} MB</p>
+                        {f.error && <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{f.error}</p>}
+                      </div>
+                      <button onClick={() => setFiles(fs => fs.filter((_,j) => j !== i))} className="rounded-lg p-1 hover:bg-[var(--proto-border)]"><X className="h-4 w-4 text-[var(--proto-text-muted)]" /></button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="rounded-xl border-2 border-[var(--proto-active)] text-[var(--proto-active)] mt-2" onClick={addMockFile}>
+                    <Upload className="h-3.5 w-3.5 mr-1" /> Добавить файл (мок)
+                  </Button>
                 </div>
-              ))}
-              <Button variant="outline" size="sm" className="rounded-xl border-2 mt-2" onClick={addMockFile}>
-                <Upload className="h-3.5 w-3.5 mr-1" /> Добавить файл (мок)
-              </Button>
+              </div>
+            )}
+
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-1">Видимость</p>
+              <p className="text-xs font-medium text-[var(--proto-text-muted)]">Всем участникам семьи. Нажмите, чтобы настроить.</p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => navigate(-1)}>Отмена</Button>
+              <Button className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold" onClick={handlePublish} disabled={files.some(f => !!f.error)}>Опубликовать</Button>
             </div>
           </div>
-        )}
-
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <p className="text-sm font-semibold text-foreground mb-1">Видимость</p>
-          <p className="text-xs font-medium text-muted-foreground">Всем участникам семьи. Нажмите, чтобы настроить.</p>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 font-semibold" onClick={() => navigate(-1)}>Отмена</Button>
-          <Button className="flex-1 rounded-2xl h-12 font-semibold" onClick={handlePublish} disabled={files.some(f => !!f.error)}>Опубликовать</Button>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { getMember } from '@/data/mock-members';
-import { getDemoMemberPhotoUrl } from '@/lib/demo-photos';
+import { getMember, currentUserId } from '@/data/mock-members';
+import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 
 interface PersonCardProps {
   memberId: string;
@@ -27,7 +27,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({ memberId, isSelected, on
         style={{ aspectRatio: '4/3' }}
       >
         <img
-          src={getDemoMemberPhotoUrl(member.id)}
+          src={getPrototypeAvatarUrl(member.id, currentUserId)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
           style={{ filter: member.isActive ? 'sepia(0.1)' : 'grayscale(0.5) sepia(0.1)' }}

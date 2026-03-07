@@ -20,6 +20,31 @@
   --header-bg: 30 25% 18%;
   --header-fg: 35 30% 95%;
 }
+
+.prototype-screen {
+  --proto-bg: #F8F5F1;
+  --proto-card: #F0EDE8;
+  --proto-active: #A39B8A;
+  --proto-text: #333333;
+  --proto-text-muted: #6B6560;
+  --proto-border: #E5E1DC;
+}
+
+.prototype-screen .app-topbar {
+  background: var(--proto-card);
+  border-bottom-color: var(--proto-border);
+  color: var(--proto-text);
+}
+
+.prototype-screen .app-topbar button[aria-label="Назад"],
+.prototype-screen .app-topbar .rounded-full.bg-muted {
+  background: var(--proto-border);
+  color: var(--proto-text);
+}
+
+.prototype-screen .app-topbar .text-muted-foreground {
+  color: var(--proto-text-muted);
+}
 .dark {
   --header-bg: 25 20% 10%;
   --header-fg: 35 30% 95%;

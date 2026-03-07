@@ -1,99 +1,175 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { format, formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 import { mockPublications } from '@/data/mock-publications';
-import { getMember } from '@/data/mock-members';
-import { useVoice } from '@/ai/useVoice';
+import { getMember, currentUserId } from '@/data/mock-members';
 import { ROUTES } from '@/constants/routes';
-import { getDemoFeedPhotoUrl } from '@/lib/demo-photos';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import {
+  getPrototypeAvatar,
+  getPrototypePublicationPhotoByTopic,
+} from '@/lib/prototype-assets';
+import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
+import { MoreVertical } from 'lucide-react';
 
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { speak, stopSpeaking } = useVoice(() => {});
   const pub = mockPublications.find(p => p.id === id);
-  const [audioPlaying, setAudioPlaying] = useState(false);
 
-  const handlePlayPause = () => {
-    if (audioPlaying) {
-      stopSpeaking();
-      setAudioPlaying(false);
-    } else if (pub?.text?.trim()) {
-      speak(pub.text);
-      setAudioPlaying(true);
-    }
-  };
-
-  useEffect(() => {
-    setAudioPlaying(false);
-    return () => { stopSpeaking(); };
-  }, [id, stopSpeaking]);
-
-  useEffect(() => {
-    const handler = () => {
-      stopSpeaking();
-      setAudioPlaying(false);
-    };
-    window.addEventListener('voice-control-start', handler);
-    return () => window.removeEventListener('voice-control-start', handler);
-  }, [stopSpeaking]);
-
-  if (!pub) return <div className="p-6 text-center text-muted-foreground">Публикация не найдена</div>;
+  if (!pub) {
+    return (
+      <AppLayout>
+        <div className="prototype-screen p-6 text-center text-[var(--proto-text-muted)]">Публикация не найдена</div>
+      </AppLayout>
+    );
+  }
 
   const author = getMember(pub.authorId);
   const photos = pub.media.filter(m => m.type === 'photo');
-  const heroImg = photos[0];
-  const fallbackSeed = (pub.id.replace(/\D/g, '') || '1').slice(0, 2);
-  const heroUrl = heroImg
-    ? (heroImg.url || heroImg.thumbnail || getDemoFeedPhotoUrl(parseInt(fallbackSeed, 10) || 1))
-    : getDemoFeedPhotoUrl(parseInt(fallbackSeed, 10) || 1);
+  const authorAvatar = getPrototypeAvatar(pub.authorId, currentUserId);
+  const comment = pub.comments[0];
+  const commentAuthor = comment ? getMember(comment.authorId) : null;
+  const commentTimeAgo = comment ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: ru }) : null;
+  const commentAvatar = comment ? getPrototypeAvatar(comment.authorId, currentUserId) : { src: '', objectPosition: undefined as string | undefined };
+  const mainPhoto = getPrototypePublicationPhotoByTopic(pub.topicTag);
+  const participants = pub.participantIds.slice(0, 6).map(pid => getMember(pid)).filter(Boolean);
+  const tags = [pub.topicTag, 'Тэг 1', 'Тэг 2'].filter(Boolean);
+  const PUBLICATION_SCREENSHOT_TEXT = 'Моя бабушка Тамара и дедушка Максим. Фотография сделана в 1932 году. г. Валдай, Новгородская область.';
 
-  const voiceLabel = author ? author.firstName : 'Мама';
+  const publicationDescription = (pub.title || '').toLowerCase().includes('бабушка') && (pub.title || '').toLowerCase().includes('дедушка')
+    ? PUBLICATION_SCREENSHOT_TEXT
+    : (pub.text || PUBLICATION_SCREENSHOT_TEXT);
+  const publishDateFormatted = format(new Date(pub.publishDate), 'dd MMM, yyyy', { locale: ru });
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="relative w-full flex-shrink-0" style={{ aspectRatio: '4/5', maxHeight: '50vh' }}>
-        <img src={heroUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute top-0 left-0 right-0 p-4">
-          <button onClick={() => navigate(-1)} className="touch-target p-2.5 rounded-full bg-card shadow-sm hover:bg-secondary transition-colors" aria-label="Назад">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-      <div className="px-3 py-6 flex-1 space-y-6">
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <button onClick={handlePlayPause} className="w-full flex items-center gap-4 text-left">
-            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              {audioPlaying ? <span className="w-4 h-4 rounded-full bg-primary" /> : <Play className="h-7 w-7 text-primary ml-0.5" />}
+    <AppLayout>
+      <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
+        <TopBar
+          title="Публикация"
+          onBack={() => navigate(ROUTES.classic.feed)}
+          light
+          right={
+            <button type="button" className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Ещё">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          }
+        />
+
+        <div className="mx-auto max-w-full px-4 pt-2 pb-6 space-y-4 overflow-auto flex-1 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.classic.profile(pub.authorId))}
+            className="flex items-center gap-3 w-full text-left"
+          >
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-[var(--proto-card)] shrink-0">
+              <img
+                src={authorAvatar.src}
+                alt=""
+                className="h-full w-full object-cover"
+                style={authorAvatar.objectPosition ? { objectPosition: authorAvatar.objectPosition } : undefined}
+              />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground text-lg">СЛУШАТЬ ИСТОРИЮ</p>
-              <p className="text-sm text-muted-foreground">голос: {voiceLabel}</p>
-              <p className="text-foreground/80 text-sm mt-1 italic line-clamp-2">«{pub.text.slice(0, 80)}…»</p>
+              <p className="font-semibold text-[var(--proto-text)] text-sm">{author ? `${author.firstName} ${author.lastName}` : 'Андрей Филатов'}</p>
+              <p className="text-xs text-[var(--proto-text-muted)] flex items-center gap-1">
+                <span>{publishDateFormatted}</span>
+                {pub.place && <><span>·</span><span>{pub.place}</span></>}
+              </p>
             </div>
           </button>
-        </div>
-        <div className="content-card p-5 rounded-2xl min-h-[96px]">
-          <p className="editorial-caption text-muted-foreground mb-2">Подпись</p>
-          <p className="text-lg font-medium text-foreground leading-snug">{pub.text}</p>
-        </div>
-        <div className="flex items-center justify-center gap-6 py-4">
-          <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Назад"><ChevronLeft className="h-6 w-6" /></button>
-          <button onClick={handlePlayPause} className="touch-target w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
-            {audioPlaying ? <span className="w-5 h-5 rounded-full bg-current" /> : <Play className="h-8 w-8 ml-0.5" />}
-          </button>
-          <button className="touch-target p-3 rounded-full border-2 border-border hover:bg-muted transition-colors" aria-label="Вперёд"><ChevronRight className="h-6 w-6" /></button>
-        </div>
-        <div className="flex flex-col gap-3">
-          <Button variant="outline" className="w-full rounded-xl min-h-[96px] font-semibold gap-2" onClick={() => navigate(ROUTES.classic.feed)}>
-            <ChevronLeft className="h-4 w-4" /> Поменять фото
-          </Button>
-          <Button variant="outline" className="w-full rounded-xl min-h-[96px] font-semibold gap-2">
-            <Download className="h-4 w-4" /> Сохранить в телефон
-          </Button>
+
+          <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+            <img
+              src={mainPhoto.src}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{ objectPosition: mainPhoto.objectPosition }}
+            />
+          </div>
+
+          <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Бабушка Тамара и дедушка'}</h1>
+          <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
+
+          <div>
+            <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Теги:</p>
+            <div className="flex flex-wrap gap-2">
+              {tags.map(tag => (
+                <span key={tag} className="px-3 py-1.5 rounded-full bg-[var(--proto-card)] text-[var(--proto-text-muted)] text-xs font-medium border border-[var(--proto-border)]">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {participants.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Участники:</p>
+              <div className="flex flex-wrap gap-2">
+                {participants.map((p) => {
+                  const av = getPrototypeAvatar(p!.id, currentUserId);
+                  return (
+                  <button
+                    key={p!.id}
+                    type="button"
+                    onClick={() => navigate(ROUTES.classic.profile(p!.id))}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--proto-card)] text-[var(--proto-text-muted)] text-xs font-medium border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
+                  >
+                    <span className="h-6 w-6 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
+                      <img
+                        src={av.src}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        style={av.objectPosition ? { objectPosition: av.objectPosition } : undefined}
+                      />
+                    </span>
+                    {p!.nickname || p!.firstName}
+                  </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Комментарии:</p>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 min-h-[72px]">
+              {comment ? (
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate(ROUTES.classic.profile(comment.authorId))}
+                    className="h-9 w-9 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                  >
+                    <img
+                      src={commentAvatar.src}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      style={commentAvatar.objectPosition ? { objectPosition: commentAvatar.objectPosition } : undefined}
+                    />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--proto-text)]">
+                      {commentAuthor?.nickname || commentAuthor?.firstName || 'Папа'}
+                      {commentTimeAgo && <span className="text-[var(--proto-text-muted)] font-normal ml-1">· {commentTimeAgo}</span>}
+                    </p>
+                    <p className="text-sm text-[var(--proto-text)] mt-0.5 leading-relaxed">{comment.text}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--proto-text-muted)]">Пока нет комментариев</p>
+              )}
+              <div className="mt-3 pt-3 border-t border-[var(--proto-border)]">
+                <div className="rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] h-10 px-3 flex items-center text-sm text-[var(--proto-text-muted)]">
+                  Написать комментарий...
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
