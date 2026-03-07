@@ -1,127 +1,355 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
-import { mockMembers, currentUserId } from '@/data/mock-members';
+import { mockMembers, currentUserId, getMember } from '@/data/mock-members';
+import { mockPublications } from '@/data/mock-publications';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { getPrototypeAvatarUrl, getPrototypeTreeHeroUrl } from '@/lib/prototype-assets';
-import { Plus, UserPlus, Contact, Send } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
+import { getFamilyRole } from '@/lib/family-role';
+import { ChevronLeft, ChevronRight, MessageCircle, Clock, Image, Users, Send } from 'lucide-react';
+import type { FamilyMember } from '@/types';
 
-const generationConfig: Record<number, { label: string }> = {
-  1: { label: 'Дедушки и бабушки' },
-  2: { label: 'Родители' },
-  3: { label: 'Наше поколение' },
-};
+type TreeTab = 'stories' | 'timeline' | 'media' | 'connections';
+type BranchFilter = 'all' | 'paternal' | 'partners';
 
 const FamilyTree: React.FC = () => {
   const navigate = useNavigate();
-  const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [focusId, setFocusId] = useState(currentUserId);
+  const [tab, setTab] = useState<TreeTab>('stories');
+  const [branchFilter, setBranchFilter] = useState<BranchFilter>('all');
+  const [maternal, setMaternal] = useState(true);
+  const [paternal, setPaternal] = useState(true);
+  const [byMarriage, setByMarriage] = useState(true);
+  const [depth, setDepth] = useState(4);
 
-  const generations: Record<number, typeof mockMembers> = {};
-  mockMembers.forEach(m => { (generations[m.generation] ||= []).push(m); });
+  const focus = getMember(focusId) || getMember(currentUserId)!;
+  const parentIds = focus.relations.filter(r => r.type === 'parent').map(r => r.memberId);
+  const spouseId = focus.relations.find(r => r.type === 'spouse')?.memberId;
+  const childIds = focus.relations.filter(r => r.type === 'child').map(r => r.memberId);
+  const parents = parentIds.map(id => getMember(id)).filter(Boolean) as FamilyMember[];
+  const spouse = spouseId ? getMember(spouseId) : null;
+  const children = childIds.map(id => getMember(id)).filter(Boolean) as FamilyMember[];
+  const siblingIds = mockMembers.filter(m => m.id !== focusId && m.relations.some(r => r.type === 'parent' && parentIds.includes(r.memberId))).map(m => m.id);
+  const siblings = siblingIds.map(id => getMember(id)).filter(Boolean) as FamilyMember[];
 
-  const memberCard = (m: typeof mockMembers[0]) => {
-    const isCurrent = m.id === currentUserId;
-    return (
-      <button
-        key={m.id}
-        onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-        className="w-full flex items-center gap-4 text-left group p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] shadow-sm hover:border-[var(--proto-active)]/30 transition-all"
-        aria-label={`Открыть профиль: ${m.firstName} ${m.lastName}`}
-      >
-        <div className="relative h-16 w-16 flex-shrink-0 rounded-full overflow-hidden bg-[var(--proto-bg)] ring-2 ring-[var(--proto-active)]/20 group-hover:ring-[var(--proto-active)]/40 transition-all">
-          <img src={getPrototypeAvatarUrl(m.id, currentUserId)} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          {isCurrent && (
-            <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[var(--proto-active)] border-2 border-[var(--proto-card)]" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-semibold text-[var(--proto-text)] truncate group-hover:text-[var(--proto-active)] transition-colors" title={m.nickname || m.firstName}>
-            {m.nickname || m.firstName}
-          </p>
-          <p className="text-xs text-[var(--proto-text-muted)]">{m.city || ''}</p>
-        </div>
-      </button>
-    );
+  const showParents = parents.filter(p => {
+    if (branchFilter === 'paternal') return parentIds[0] === p.id;
+    if (branchFilter === 'partners') return false;
+    return true;
+  });
+  const showChildren = branchFilter === 'partners' ? [] : children;
+  const showSiblings = branchFilter === 'partners' ? [] : siblings;
+  const showSpouse = (branchFilter === 'all' || branchFilter === 'partners') && byMarriage ? spouse : null;
+
+  const connectionsList = useMemo(() => {
+    const list = mockMembers
+      .filter(m => m.id !== focusId)
+      .filter(m => Math.abs(m.generation - focus.generation) <= depth)
+      .map(m => ({ member: m, role: getFamilyRole(m, focusId) }))
+      .filter(({ role }) => {
+        if (!maternal && (role === 'Мама' || role === 'Бабушка')) return false;
+        if (!paternal && (role === 'Папа' || role === 'Дедушка')) return false;
+        if (!byMarriage && (role === 'Супруг' || role === 'Супруга')) return false;
+        return true;
+      });
+    return list.sort((a, b) => a.role.localeCompare(b.role) || a.member.generation - b.member.generation);
+  }, [focusId, focus.generation, depth, maternal, paternal, byMarriage]);
+
+  const focusIndex = mockMembers.findIndex(m => m.id === focusId);
+  const prevRelative = focusIndex > 0 ? mockMembers[focusIndex - 1] : null;
+  const nextRelative = focusIndex >= 0 && focusIndex < mockMembers.length - 1 ? mockMembers[focusIndex + 1] : null;
+
+  const storiesForFocus = useMemo(() =>
+    mockPublications.filter(p => p.authorId === focusId || p.participantIds.includes(focusId)).slice(0, 10),
+    [focusId]
+  );
+
+  const tabs = [
+    { id: 'stories' as TreeTab, label: 'Истории', icon: MessageCircle },
+    { id: 'timeline' as TreeTab, label: 'Таймлайн', icon: Clock },
+    { id: 'media' as TreeTab, label: 'Медиа', icon: Image },
+    { id: 'connections' as TreeTab, label: 'Связи', icon: Users },
+  ];
+
+  const openProfile = (id: string) => {
+    navigate(id === currentUserId ? ROUTES.classic.myProfile : ROUTES.classic.profile(id));
   };
+
+  const branchPills = [
+    { id: 'all' as BranchFilter, label: 'Ветки' },
+    { id: 'paternal' as BranchFilter, label: 'Отцовская' },
+    { id: 'partners' as BranchFilter, label: 'Партнёры' },
+  ];
 
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
-      <TopBar
-        title="Семейное дерево"
-        subtitle="Генеалогия"
-        light
-        right={
-          <div className="flex items-center gap-1">
-            <DropdownMenu open={addMenuOpen} onOpenChange={setAddMenuOpen}>
-              <DropdownMenuTrigger asChild>
-                <button className="touch-target h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-active)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Добавить">
-                  <Plus className="h-5 w-5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="text-sm"><Contact className="h-4 w-4 mr-2" /> Добавить из контактов</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm"><UserPlus className="h-4 w-4 mr-2" /> Создать новый контакт</DropdownMenuItem>
-                <DropdownMenuItem className="text-sm" onClick={() => { setAddMenuOpen(false); navigate(ROUTES.classic.invite); }}><Send className="h-4 w-4 mr-2" /> Отправить приглашение</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        }
-      />
-      <div className="pb-4 px-4 mx-auto max-w-full sm:max-w-md md:max-w-2xl lg:max-w-4xl">
-        <div className="relative w-full bg-[var(--proto-card)] overflow-hidden rounded-lg" style={{ aspectRatio: '16/9' }}>
-          <img src={getPrototypeTreeHeroUrl()} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: 'center 35%' }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
-        </div>
-
-      <div className="page-enter pb-6">
-        {[1, 2, 3].map(gen => {
-          const members = generations[gen] || [];
-          const config = generationConfig[gen];
-          const isLastGen = gen === 3;
-
-          return (
-            <div key={gen} className="mt-8">
-              <div className="px-3 mb-4">
-                <p className="text-sm font-semibold text-[var(--proto-active)] uppercase tracking-wider">{config.label}</p>
-              </div>
-
-              <div className="px-3 flex flex-col gap-3">
-                {members.map(m => memberCard(m))}
-                {isLastGen && (
-                  <button
-                    onClick={() => navigate(ROUTES.classic.invite)}
-                    className="w-full min-h-[144px] rounded-2xl border border-dashed border-[var(--proto-border)] flex flex-col items-center justify-center gap-2 group hover:border-[var(--proto-active)]/50 transition-colors bg-[var(--proto-card)]"
-                  >
-                    <Plus className="h-8 w-8 text-[var(--proto-text-muted)] group-hover:text-[var(--proto-text)] transition-colors" />
-                    <span className="text-xs sm:text-sm tracking-widest uppercase text-[var(--proto-text-muted)] group-hover:text-[var(--proto-text)] transition-colors">Пригласить</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        <div className="mt-10 mb-4 px-3 text-center">
-          <div className="h-px bg-[var(--proto-border)] mb-4" />
-          <p className="text-xs text-[var(--proto-text-muted)]">
-            Нажмите на портрет: дерево, лента, семья
-          </p>
-        </div>
-
-        <div className="px-4 mt-4">
+        <TopBar
+          title="Пользователь → Экран «Дерево»"
+          onBack={() => navigate(ROUTES.classic.feed)}
+          light
+          right={
+            <button type="button" onClick={() => navigate(ROUTES.classic.invite)} className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поделиться">
+              <Send className="h-5 w-5" />
+            </button>
+          }
+        />
+        <div className="flex gap-2 px-4 pb-2 border-b border-[var(--proto-border)]">
           <button
-            onClick={() => navigate(ROUTES.classic.invite)}
-            className="w-full flex items-center justify-center gap-3 px-6 py-5 rounded-2xl border-2 border-dashed border-[var(--proto-active)]/50 text-[var(--proto-active)] text-base sm:text-lg md:text-xl font-bold hover:bg-[var(--proto-active)]/10 transition-colors"
+            type="button"
+            onClick={() => navigate(ROUTES.classic.tree)}
+            className="px-4 py-2 rounded-full text-sm font-medium bg-[var(--proto-active)] text-white"
           >
-            <Plus className="h-7 w-7" />
-            Пригласить в семью
+            Дерево
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.classic.timeline)}
+            className="px-4 py-2 rounded-full text-sm font-medium bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]"
+          >
+            Таймлайн
           </button>
         </div>
-      </div>
-      </div>
+        <div className="flex gap-2 px-4 py-3 border-b border-[var(--proto-border)]">
+          {branchPills.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setBranchFilter(p.id)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                branchFilter === p.id ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-col lg:flex-row gap-4 p-4 max-w-6xl mx-auto">
+          <aside className="w-full lg:w-56 shrink-0 space-y-4">
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">Карточка поколения</p>
+              <p className="text-sm text-[var(--proto-text)]">{focus.nickname || focus.firstName} — поколение {focus.generation}</p>
+              <p className="text-xs text-[var(--proto-text-muted)] mt-1">{focus.birthDate}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => parentIds[0] && setFocusId(parentIds[0])}
+              className="w-full rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3 flex items-center justify-between hover:border-[var(--proto-active)]/40 transition-colors"
+            >
+              <span className="text-sm font-medium text-[var(--proto-text)]">Родитель</span>
+              <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
+            </button>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
+              <p className="text-xs font-semibold text-[var(--proto-text-muted)] mb-2">Фильтры веток</p>
+              <div className="flex flex-wrap gap-2">
+                {branchPills.map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setBranchFilter(p.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${branchFilter === p.id ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-border)] text-[var(--proto-text)]'}`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          <main className="flex-1 min-w-0">
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-6">
+              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-4">Фокус на человеке</p>
+              {showParents.length > 0 && (
+                <div className="flex justify-center gap-4 mb-4">
+                  <p className="text-xs text-[var(--proto-text-muted)] self-center">Родители</p>
+                  {showParents.map(p => (
+                    <button key={p.id} onClick={() => openProfile(p.id)} className="h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
+                      <img src={getPrototypeAvatarUrl(p.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+                <div className="text-center">
+                  <button onClick={() => openProfile(focus.id)} className="h-20 w-20 rounded-full overflow-hidden border-2 border-[var(--proto-active)] ring-2 ring-[var(--proto-active)]/20 hover:ring-[var(--proto-active)]/40 transition-all">
+                    <img src={getPrototypeAvatarUrl(focus.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                  </button>
+                  <p className="text-sm font-semibold text-[var(--proto-text)] mt-2">{focus.nickname || focus.firstName} {focus.lastName}</p>
+                </div>
+                {showSpouse && (
+                  <>
+                    <div className="h-px w-6 bg-[var(--proto-border)]" />
+                    <div className="text-center">
+                      <button onClick={() => openProfile(showSpouse.id)} className="h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
+                        <img src={getPrototypeAvatarUrl(showSpouse.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                      </button>
+                      <p className="text-xs text-[var(--proto-text-muted)] mt-1">Партнёр</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              {(showChildren.length > 0 || showSiblings.length > 0) && (
+                <div className="flex flex-wrap justify-center gap-6">
+                  {showChildren.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-[var(--proto-text-muted)]">Дети</p>
+                      {showChildren.map(c => (
+                        <button key={c!.id} onClick={() => openProfile(c!.id)} className="h-12 w-12 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
+                          <img src={getPrototypeAvatarUrl(c!.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {showSiblings.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-[var(--proto-text-muted)]">Братья/сёстры</p>
+                      {showSiblings.map(s => (
+                        <button key={s!.id} onClick={() => openProfile(s!.id)} className="h-12 w-12 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
+                          <img src={getPrototypeAvatarUrl(s!.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex border-b border-[var(--proto-border)] mt-6 gap-4">
+                {tabs.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    className={`pb-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+                      tab === t.id ? 'text-[var(--proto-text)] border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-transparent'
+                    }`}
+                  >
+                    <t.icon className="h-4 w-4" />
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 min-h-[120px]">
+                {tab === 'stories' && (
+                  <div className="space-y-2">
+                    {storiesForFocus.length === 0 ? (
+                      <p className="text-sm text-[var(--proto-text-muted)]">Нет историй</p>
+                    ) : (
+                      storiesForFocus.map(pub => (
+                        <button
+                          key={pub.id}
+                          type="button"
+                          onClick={() => navigate(ROUTES.classic.publication(pub.id))}
+                          className="w-full text-left px-3 py-2 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
+                        >
+                          <p className="text-sm font-medium text-[var(--proto-text)]">{pub.title || 'Публикация'}</p>
+                          <p className="text-xs text-[var(--proto-text-muted)]">{pub.topicTag} · {pub.eventDate}</p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+                {tab === 'timeline' && (
+                  <div>
+                    <p className="text-sm text-[var(--proto-text-muted)] mb-2">События в хронологии</p>
+                    <button type="button" onClick={() => navigate(ROUTES.classic.timeline)} className="text-sm font-medium text-[var(--proto-active)] hover:underline">
+                      Открыть таймлайн →
+                    </button>
+                  </div>
+                )}
+                {tab === 'media' && (
+                  <div>
+                    <p className="text-sm text-[var(--proto-text-muted)] mb-2">Фото и видео</p>
+                    <button type="button" onClick={() => navigate(ROUTES.classic.myMedia)} className="text-sm font-medium text-[var(--proto-active)] hover:underline">
+                      Открыть моё медиа →
+                    </button>
+                  </div>
+                )}
+                {tab === 'connections' && (
+                  <div className="space-y-2 max-h-[280px] overflow-y-auto">
+                    {connectionsList.length === 0 ? (
+                      <p className="text-sm text-[var(--proto-text-muted)]">Нет связей в выбранных фильтрах</p>
+                    ) : (
+                      connectionsList.map(({ member, role }) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-3 p-2 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
+                        >
+                          <button type="button" onClick={() => setFocusId(member.id)} className="flex items-center gap-3 min-w-0 flex-1 text-left">
+                            <div className="h-10 w-10 rounded-full overflow-hidden shrink-0">
+                              <img src={getPrototypeAvatarUrl(member.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-[var(--proto-text)] truncate">{member.nickname || member.firstName} {member.lastName}</p>
+                              <p className="text-xs text-[var(--proto-text-muted)]">{role}</p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)] shrink-0" />
+                          </button>
+                          <button type="button" onClick={() => openProfile(member.id)} className="text-xs font-medium text-[var(--proto-active)] hover:underline shrink-0">Профиль</button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between mt-6 pt-4 border-t border-[var(--proto-border)]">
+                <button
+                  type="button"
+                  onClick={() => prevRelative && setFocusId(prevRelative.id)}
+                  disabled={!prevRelative}
+                  className="text-sm font-medium text-[var(--proto-text-muted)] hover:text-[var(--proto-text)] disabled:opacity-40 flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Предыдущий родственник
+                </button>
+                <button
+                  type="button"
+                  onClick={() => nextRelative && setFocusId(nextRelative.id)}
+                  disabled={!nextRelative}
+                  className="text-sm font-medium text-[var(--proto-text-muted)] hover:text-[var(--proto-text)] disabled:opacity-40 flex items-center gap-1"
+                >
+                  Следующий родственник <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </main>
+
+          <aside className="w-full lg:w-52 shrink-0 space-y-4">
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">Фильтры веток и глубины</p>
+              <label className="flex items-center gap-2 text-sm text-[var(--proto-text)] mb-2 cursor-pointer">
+                <input type="checkbox" checked={maternal} onChange={e => setMaternal(e.target.checked)} className="rounded border-[var(--proto-border)] accent-[var(--proto-active)]" />
+                Материнская ветка
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[var(--proto-text)] mb-2 cursor-pointer">
+                <input type="checkbox" checked={paternal} onChange={e => setPaternal(e.target.checked)} className="rounded border-[var(--proto-border)] accent-[var(--proto-active)]" />
+                Отцовская ветка
+              </label>
+              <label className="flex items-center gap-2 text-sm text-[var(--proto-text)] mb-4 cursor-pointer">
+                <input type="checkbox" checked={byMarriage} onChange={e => setByMarriage(e.target.checked)} className="rounded border-[var(--proto-border)] accent-[var(--proto-active)]" />
+                По браку
+              </label>
+              <p className="text-xs text-[var(--proto-text-muted)] mb-1">Глубина поколений</p>
+              <input type="range" min={1} max={6} value={depth} onChange={e => setDepth(Number(e.target.value))} className="w-full accent-[var(--proto-active)]" />
+              <p className="text-xs text-[var(--proto-text-muted)] mt-1">напр. {depth}</p>
+            </div>
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">AI поверх дерева</p>
+              <div className="space-y-2">
+                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
+                  Спросить Angelo о дереве
+                </button>
+                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
+                  Найти пропуски
+                </button>
+                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
+                  Подсветить важные даты
+                </button>
+                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
+                  Показать ветку 1900-х
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </AppLayout>
   );

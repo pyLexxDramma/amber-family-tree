@@ -18,6 +18,7 @@ const Feed: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const viewParam = searchParams.get('view');
+  const filterParam = searchParams.get('filter');
   const [mode, setMode] = useState<'all' | 'media'>(viewParam === 'media' ? 'media' : 'all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -27,9 +28,11 @@ const Feed: React.FC = () => {
   };
 
   const sorted = [...mockPublications].sort((a, b) => b.publishDate.localeCompare(a.publishDate));
-  const filtered = mode === 'media'
+  let filtered = mode === 'media'
     ? sorted.filter(p => p.media.some(m => m.type === 'photo' || m.type === 'video'))
     : sorted;
+  if (filterParam === 'my') filtered = filtered.filter(p => p.authorId === currentUserId);
+  if (filterParam === 'with-me') filtered = filtered.filter(p => p.participantIds.includes(currentUserId));
   const list = searchQuery.trim()
     ? filtered.filter(p => (p.title || p.text).toLowerCase().includes(searchQuery.toLowerCase()))
     : filtered;

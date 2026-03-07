@@ -6,7 +6,7 @@ import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 import { currentUserId } from '@/data/mock-members';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
-import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, Pencil } from 'lucide-react';
+import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, Pencil, Send } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 
 const MyProfile: React.FC = () => {
@@ -15,9 +15,9 @@ const MyProfile: React.FC = () => {
   const plan = plans.find(p => p.id === currentSubscription.planId);
 
   const sections = [
-    { label: 'Мои публикации', icon: Newspaper, path: ROUTES.classic.feed },
-    { label: 'Публикации со мной', icon: Image, path: ROUTES.classic.feed },
-    { label: 'Моё медиа', icon: Image, path: ROUTES.classic.feed },
+    { label: 'Мои публикации', icon: Newspaper, path: `${ROUTES.classic.feed}?filter=my` },
+    { label: 'Публикации со мной', icon: Image, path: `${ROUTES.classic.feed}?filter=with-me` },
+    { label: 'Моё медиа', icon: Image, path: ROUTES.classic.myMedia },
     { label: 'Подписка', icon: CreditCard, path: ROUTES.classic.store },
     { label: 'Настройки', icon: Settings, path: ROUTES.classic.settings },
     { label: 'Помощь и поддержка', icon: HelpCircle, path: ROUTES.classic.help },
@@ -26,7 +26,11 @@ const MyProfile: React.FC = () => {
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
-        <TopBar title="Мой профиль" onBack={() => navigate(ROUTES.classic.family)} light />
+        <TopBar title="Мой профиль" onBack={() => navigate(ROUTES.classic.family)} light right={
+          <button type="button" onClick={() => navigate(ROUTES.classic.invite)} className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поделиться">
+            <Send className="h-5 w-5" />
+          </button>
+        } />
         <div className="mx-auto max-w-full px-4 pt-4 pb-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
           <div className="relative mb-8 overflow-hidden rounded-xl bg-[var(--proto-card)] flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
             <img src={getPrototypeAvatarUrl(currentUserId, currentUserId)} alt="" className="absolute inset-0 h-full w-full object-cover" />

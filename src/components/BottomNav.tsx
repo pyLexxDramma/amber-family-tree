@@ -11,7 +11,7 @@ const navItems = [
   { path: ROUTES.classic.store, label: 'Магазин', icon: Home },
 ];
 
-const prototypePaths = [ROUTES.classic.feed, ROUTES.classic.family, ROUTES.classic.store, ROUTES.classic.tree, ROUTES.classic.create, '/classic/publication'];
+const prototypePaths = [ROUTES.classic.feed, ROUTES.classic.family, ROUTES.classic.store, ROUTES.classic.tree, ROUTES.classic.timeline, ROUTES.classic.create, ROUTES.classic.myMedia, '/classic/publication'];
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();

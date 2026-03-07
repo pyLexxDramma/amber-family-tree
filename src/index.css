@@ -30,6 +30,15 @@
   --proto-border: #E5E1DC;
 }
 
+.dark .prototype-screen {
+  --proto-bg: #1C1917;
+  --proto-card: #292524;
+  --proto-active: #A39B8A;
+  --proto-text: #FAFAF9;
+  --proto-text-muted: #A8A29E;
+  --proto-border: #44403C;
+}
+
 .prototype-screen .app-topbar {
   background: var(--proto-card);
   border-bottom-color: var(--proto-border);

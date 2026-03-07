@@ -11,11 +11,13 @@ import Register from "./pages/Register";
 import ConfirmCode from "./pages/ConfirmCode";
 import Onboarding from "./pages/Onboarding";
 import FamilyTree from "./pages/FamilyTree";
+import TimelinePage from "./pages/TimelinePage";
 import Feed from "./pages/Feed";
 import PublicationDetails from "./pages/PublicationDetails";
 import CreatePublication from "./pages/CreatePublication";
 import FamilyList from "./pages/FamilyList";
 import MyProfile from "./pages/MyProfile";
+import MyMedia from "./pages/MyMedia";
 import EditMyProfile from "./pages/EditMyProfile";
 import ContactProfile from "./pages/ContactProfile";
 import InviteFlow from "./pages/InviteFlow";
@@ -59,12 +61,14 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path={CLASSIC_BASE} element={<Navigate to={`${CLASSIC_BASE}/feed`} replace />} />
             <Route path={`${CLASSIC_BASE}/tree`} element={<FamilyTree />} />
+            <Route path={`${CLASSIC_BASE}/timeline`} element={<TimelinePage />} />
             <Route path={`${CLASSIC_BASE}/feed`} element={<Feed />} />
             <Route path={`${CLASSIC_BASE}/publication/:id`} element={<PublicationDetails />} />
             <Route path={`${CLASSIC_BASE}/create`} element={<CreatePublication />} />
             <Route path={`${CLASSIC_BASE}/family`} element={<FamilyList />} />
             <Route path={`${CLASSIC_BASE}/my-profile`} element={<MyProfile />} />
             <Route path={`${CLASSIC_BASE}/my-profile/edit`} element={<EditMyProfile />} />
+            <Route path={`${CLASSIC_BASE}/my-media`} element={<MyMedia />} />
             <Route path={`${CLASSIC_BASE}/profile/:id`} element={<ContactProfile />} />
             <Route path={`${CLASSIC_BASE}/invite`} element={<InviteFlow />} />
             <Route path={`${CLASSIC_BASE}/store`} element={<StorePage />} />
