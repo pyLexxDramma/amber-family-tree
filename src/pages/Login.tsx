@@ -24,7 +24,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F5F1] flex flex-col px-4 pt-4 pb-8">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col px-4 pt-4 pb-8 overflow-x-hidden">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center justify-center h-10 w-10 rounded-full text-[#333333] hover:bg-[#E5E1DC] transition-colors mb-8"

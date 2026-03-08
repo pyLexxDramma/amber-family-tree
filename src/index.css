@@ -54,6 +54,33 @@
 .prototype-screen .app-topbar .text-muted-foreground {
   color: var(--proto-text-muted);
 }
+
+#lovable-badge {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .prototype-screen .app-topbar h1 {
+    font-size: 1.125rem;
+  }
+}
+
+.prototype-screen {
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
 .dark {
   --header-bg: 25 20% 10%;
   --header-fg: 35 30% 95%;

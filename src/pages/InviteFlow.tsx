@@ -46,7 +46,7 @@ const InviteFlow: React.FC = () => {
       <AppLayout>
         <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
           <TopBar title="Приглашения" onBack={() => setView('invite')} light />
-          <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+          <div className="mx-auto max-w-full px-3 pt-4 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
             {incomingList.length > 0 && (
               <div className="mb-8">
                 <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">Входящие</p>
@@ -116,7 +116,7 @@ const InviteFlow: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title="Пригласить" onBack={() => navigate(-1)} light />
-        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <p className="text-sm font-medium text-[var(--proto-text-muted)] mb-8">Отправьте ссылку близкому человеку</p>
 
           <div className="mb-10">

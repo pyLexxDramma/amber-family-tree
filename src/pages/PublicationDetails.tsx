@@ -57,7 +57,7 @@ const PublicationDetails: React.FC = () => {
           }
         />
 
-        <div className="mx-auto max-w-full px-4 pt-2 pb-6 space-y-4 overflow-auto flex-1 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-2 pb-6 space-y-4 overflow-auto flex-1 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
           <button
             type="button"
             onClick={() => navigate(ROUTES.classic.profile(pub.authorId))}

@@ -53,7 +53,7 @@ const Help: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title="Помощь и поддержка" onBack={() => navigate(-1)} light />
-        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-4">Краткая инструкция</p>
           <div className="rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 mb-8">
             <p className="text-sm text-[var(--proto-text)] whitespace-pre-line mb-4 leading-relaxed">{QUICK_GUIDE}</p>

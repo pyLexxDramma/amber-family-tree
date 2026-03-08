@@ -59,7 +59,7 @@ const MyMedia: React.FC = () => {
             </div>
           }
         />
-        <div className="mx-auto max-w-full px-4 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
           <div className="flex flex-wrap gap-2 mb-4">
             {categoryFilters.map(f => (
               <button

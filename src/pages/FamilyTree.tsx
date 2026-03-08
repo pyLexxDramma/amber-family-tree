@@ -95,7 +95,7 @@ const FamilyTree: React.FC = () => {
             </button>
           }
         />
-        <div className="flex gap-2 px-4 pb-2 border-b border-[var(--proto-border)]">
+        <div className="flex gap-2 px-3 sm:px-4 pb-2 border-b border-[var(--proto-border)]">
           <button
             type="button"
             onClick={() => navigate(ROUTES.classic.tree)}
@@ -111,7 +111,7 @@ const FamilyTree: React.FC = () => {
             Таймлайн
           </button>
         </div>
-        <div className="flex gap-2 px-4 py-3 border-b border-[var(--proto-border)]">
+        <div className="flex gap-2 px-3 sm:px-4 py-3 border-b border-[var(--proto-border)] flex-wrap">
           {branchPills.map(p => (
             <button
               key={p.id}
@@ -125,7 +125,7 @@ const FamilyTree: React.FC = () => {
             </button>
           ))}
         </div>
-        <div className="flex flex-col lg:flex-row gap-4 p-4 max-w-6xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-4 p-3 sm:p-4 max-w-6xl mx-auto overflow-x-hidden">
           <aside className="w-full lg:w-56 shrink-0 space-y-4">
             <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
               <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">Карточка поколения</p>
@@ -158,7 +158,7 @@ const FamilyTree: React.FC = () => {
           </aside>
 
           <main className="flex-1 min-w-0">
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-6">
+            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 sm:p-6">
               <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-4">Фокус на человеке</p>
               {showParents.length > 0 && (
                 <div className="flex justify-center gap-4 mb-4">
@@ -213,13 +213,13 @@ const FamilyTree: React.FC = () => {
                   )}
                 </div>
               )}
-              <div className="flex border-b border-[var(--proto-border)] mt-6 gap-4">
+              <div className="flex border-b border-[var(--proto-border)] mt-6 gap-4 overflow-x-auto scrollbar-hide">
                 {tabs.map(t => (
                   <button
                     key={t.id}
                     type="button"
                     onClick={() => setTab(t.id)}
-                    className={`pb-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+                    className={`pb-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                       tab === t.id ? 'text-[var(--proto-text)] border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-transparent'
                     }`}
                   >

@@ -41,7 +41,7 @@ export const TopBar: React.FC<TopBarProps> = ({ title, subtitle, onBack, right, 
       )}
 
       <div className="flex-1 min-w-0">
-        <h1 className="font-serif font-semibold text-2xl text-current truncate">{title}</h1>
+        <h1 className="font-serif font-semibold text-base sm:text-xl md:text-2xl text-current truncate">{title}</h1>
         {subtitle && <p className={`text-sm truncate ${light ? 'text-muted-foreground' : 'text-current/60'}`}>{subtitle}</p>}
       </div>
 

@@ -46,7 +46,7 @@ const Feed: React.FC = () => {
           light
           right={null}
         />
-        <div className="mx-auto max-w-full px-4 pt-3 pb-4 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-3 pb-4 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
           <div className="space-y-4">
             <div className="flex gap-2 items-center">
               <div className="flex-1 relative">

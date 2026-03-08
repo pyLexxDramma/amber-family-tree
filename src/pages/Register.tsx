@@ -22,7 +22,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-6 pt-6">
+    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-background px-4 sm:px-6 pt-6 overflow-x-hidden">
       <button onClick={() => navigate(-1)} className="touch-target mb-10 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
         <ArrowLeft className="h-5 w-5" />
       </button>

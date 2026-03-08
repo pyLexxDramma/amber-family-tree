@@ -6,7 +6,7 @@ const Welcome: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#F8F5F1] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-center p-4 overflow-x-hidden">
       <div className="w-full max-w-[320px] flex flex-col items-center gap-8">
         <div className="rounded-2xl bg-[#F0EDE8] border border-[#E5E1DC] px-8 py-6 text-center shadow-sm">
           <p className="font-serif text-4xl sm:text-5xl font-bold text-[#333333]">Angelo</p>

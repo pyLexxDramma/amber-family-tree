@@ -46,7 +46,7 @@ const ContactProfile: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
         <TopBar title={displayName} onBack={() => navigate(-1)} light />
-        <div className="mx-auto max-w-full w-full flex-1 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full w-full flex-1 px-3 sm:px-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <div className="relative w-full" style={{ minHeight: '50vh' }}>
             <img src={getPrototypeAvatarUrl(member.id, currentUserId)} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

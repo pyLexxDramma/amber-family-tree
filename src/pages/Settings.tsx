@@ -39,7 +39,7 @@ const Settings: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title={t('settings')} onBack={() => navigate(-1)} light />
-        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">{t('profile')}</p>
           <div className="space-y-2 mb-6">
             <button onClick={() => navigate(ROUTES.classic.myProfile)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left">

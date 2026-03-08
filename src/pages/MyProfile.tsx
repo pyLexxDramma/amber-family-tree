@@ -31,7 +31,7 @@ const MyProfile: React.FC = () => {
             <Send className="h-5 w-5" />
           </button>
         } />
-        <div className="mx-auto max-w-full px-4 pt-4 pb-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-4 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl">
           <div className="relative mb-8 overflow-hidden rounded-xl bg-[var(--proto-card)] flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
             <img src={getPrototypeAvatarUrl(currentUserId, currentUserId)} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />

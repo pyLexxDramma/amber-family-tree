@@ -20,7 +20,7 @@ const StorePage: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
       <TopBar title="Подписка" onBack={() => navigate(-1)} light />
-      <div className="mx-auto max-w-full px-4 pt-4 pb-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-4 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
         <p className="text-sm font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-6">Управление подпиской</p>
 
         <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] mb-6 p-6 min-h-[96px]">

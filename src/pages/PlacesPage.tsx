@@ -31,7 +31,7 @@ const PlacesPage: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title="Места" onBack={() => navigate(-1)} light />
-        <div className="mx-auto max-w-full px-4 pt-4 pb-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-4 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
         <p className="text-sm text-[var(--proto-text-muted)] mb-6">занято {usedPlaces} из {maxPlaces}</p>
 
         <div className="space-y-3 mb-8">

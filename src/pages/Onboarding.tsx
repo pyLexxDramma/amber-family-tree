@@ -49,7 +49,7 @@ const Onboarding: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-6 pt-8 pb-8">
+    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-background px-4 sm:px-6 pt-8 pb-8 overflow-x-hidden">
       <div className="flex items-center gap-3 mb-6">
         <div className="flex rounded-full bg-foreground/15 p-1">
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">1 шаг</span>

@@ -13,7 +13,7 @@ const TermsPage: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title={t('termsOfUse')} onBack={() => navigate(ROUTES.classic.settings, { replace: true })} light />
-        <div className="mx-auto max-w-full px-4 pt-4 pb-8 sm:max-w-md md:max-w-2xl lg:max-w-4xl">
+        <div className="mx-auto max-w-full px-3 pt-4 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <div className="text-base font-medium text-[var(--proto-text)] space-y-4">
             <p>Добро пожаловать в Angelo — семейную сеть для хранения воспоминаний и общения с близкими.</p>
             <p>
