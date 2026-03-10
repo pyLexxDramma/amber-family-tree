@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { mockPublications } from '@/data/mock-publications';
 import { getMember, currentUserId } from '@/data/mock-members';
+import { api } from '@/integrations/api';
 import { ROUTES } from '@/constants/routes';
 import {
   getPrototypeAvatar,
@@ -12,13 +12,30 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { MoreVertical } from 'lucide-react';
+import type { Publication } from '@/types';
 
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const pub = mockPublications.find(p => p.id === id);
+  const [pub, setPub] = useState<Publication | null | undefined>(undefined);
 
-  if (!pub) {
+  useEffect(() => {
+    if (!id) {
+      setPub(null);
+      return;
+    }
+    api.feed.getById(id).then(setPub);
+  }, [id]);
+
+  if (pub === undefined) {
+    return (
+      <AppLayout>
+        <div className="prototype-screen p-6 text-center text-[var(--proto-text-muted)]">Загрузка...</div>
+      </AppLayout>
+    );
+  }
+
+  if (pub === null) {
     return (
       <AppLayout>
         <div className="prototype-screen p-6 text-center text-[var(--proto-text-muted)]">Публикация не найдена</div>

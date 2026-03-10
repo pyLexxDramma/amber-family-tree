@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
@@ -8,6 +8,7 @@ import { getPrototypeAvatarForMember, getPrototypeAvatar } from '@/lib/prototype
 import { getFamilyRole } from '@/lib/family-role';
 import { Search, SlidersHorizontal, User } from 'lucide-react';
 import type { FamilyMember } from '@/types';
+import { api } from '@/integrations/api';
 
 function getRelationshipLabel(member: FamilyMember, currentId: string): string {
   return getFamilyRole(member, currentId);
@@ -22,9 +23,14 @@ const FamilyList: React.FC = () => {
   const [subTab, setSubTab] = useState<'profiles' | 'groups'>('profiles');
   const [filterTab, setFilterTab] = useState<'all' | 'active' | 'inactive'>('active');
   const [search, setSearch] = useState('');
+  const [members, setMembers] = useState<FamilyMember[]>(mockMembers);
   const myProfileAvatar = getPrototypeAvatar(currentUserId, currentUserId);
 
-  const filtered = mockMembers
+  useEffect(() => {
+    api.family.listMembers().then(setMembers);
+  }, []);
+
+  const filtered = members
     .filter(m => filterTab === 'all' || (filterTab === 'active' ? m.isActive : !m.isActive))
     .filter(m => {
       if (!search.trim()) return true;

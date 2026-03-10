@@ -34,3 +34,5 @@ docs/sync-evening-response.json
 .cursor/agents/verifier.md
 .cursor/mcp.json
 .cursor/rules/general.mdc
+local/
+reports/

@@ -31,6 +31,10 @@ export interface MediaItem {
   duration?: number; // seconds for audio/video
   width?: number;
   height?: number;
+  eventDate?: string;
+  year?: string;
+  category?: string;
+  publicationId?: string;
 }
 
 export interface Comment {

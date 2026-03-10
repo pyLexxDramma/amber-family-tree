@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
+import { api } from '@/integrations/api';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -13,11 +14,16 @@ const Register: React.FC = () => {
   const [dataProcessing, setDataProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!value.trim()) { setError('Введите телефон или email'); return; }
     if (!value.includes('@') && !/^\+?\d{7,}$/.test(value.replace(/\s/g, ''))) { setError('Некорректный формат телефона или email'); return; }
     if (!terms || !privacy || !dataProcessing) { setError('Необходимо принять все условия'); return; }
     setError('');
+    try {
+      await api.auth.register(value.trim());
+    } catch {
+      // в демо игнорируем ошибки
+    }
     navigate('/confirm-code', { state: { contact: value, mode: 'register' } });
   };
 

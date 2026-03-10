@@ -1,18 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
-import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 import { currentUserId } from '@/data/mock-members';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, Pencil, Send } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import type { FamilyMember } from '@/types';
+import { api } from '@/integrations/api';
 
 const MyProfile: React.FC = () => {
   const navigate = useNavigate();
-  const user = getCurrentUserForDisplay();
+  const [user, setUser] = useState<FamilyMember | null>(null);
   const plan = plans.find(p => p.id === currentSubscription.planId);
+
+  useEffect(() => {
+    api.profile.getMyProfile().then(setUser);
+  }, []);
+
+  if (!user) {
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex items-center justify-center text-[var(--proto-text-muted)]">
+          Загрузка профиля...
+        </div>
+      </AppLayout>
+    );
+  }
 
   const sections = [
     { label: 'Мои публикации', icon: Newspaper, path: `${ROUTES.classic.feed}?filter=my` },

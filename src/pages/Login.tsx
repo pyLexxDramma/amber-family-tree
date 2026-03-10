@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
+import { api } from '@/integrations/api';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!value.trim()) { setError('Введите телефон или email'); return; }
     if (!value.includes('@') && !/^\+?\d{7,}$/.test(value.replace(/\s/g, ''))) {
       setError('Некорректный формат');
@@ -20,6 +21,11 @@ const Login: React.FC = () => {
       return;
     }
     setError('');
+    try {
+      await api.auth.login(value.trim());
+    } catch {
+      // в демо игнорируем ошибки
+    }
     navigate('/confirm-code', { state: { contact: value, mode: 'login' } });
   };
 

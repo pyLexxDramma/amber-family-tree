@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
-import { mockPublications } from '@/data/mock-publications';
 import { getMember, currentUserId } from '@/data/mock-members';
+import { api } from '@/integrations/api';
 import {
   getPrototypeAvatar,
   getPrototypeFeedPostPhotoByTopic,
@@ -21,13 +21,18 @@ const Feed: React.FC = () => {
   const filterParam = searchParams.get('filter');
   const [mode, setMode] = useState<'all' | 'media'>(viewParam === 'media' ? 'media' : 'all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [items, setItems] = useState<Publication[]>([]);
+
+  useEffect(() => {
+    api.feed.list().then(setItems);
+  }, []);
 
   const setFeedMode = (m: 'all' | 'media') => {
     setMode(m);
     setSearchParams(m === 'media' ? { view: 'media' } : {}, { replace: true });
   };
 
-  const sorted = [...mockPublications].sort((a, b) => b.publishDate.localeCompare(a.publishDate));
+  const sorted = [...items].sort((a, b) => b.publishDate.localeCompare(a.publishDate));
   let filtered = mode === 'media'
     ? sorted.filter(p => p.media.some(m => m.type === 'photo' || m.type === 'video'))
     : sorted;

@@ -4,10 +4,11 @@ import { TopBar } from '@/components/TopBar';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
-import { mockPublications, topicTags } from '@/data/mock-publications';
+import { topicTags } from '@/data/mock-publications';
 import { currentUserId, getMember } from '@/data/mock-members';
 import { Users, MapPin, Tag, Send, FileImage, FileVideo, FileAudio, FileText } from 'lucide-react';
 import type { Publication } from '@/types';
+import { api } from '@/integrations/api';
 
 type Scale = 'decades' | 'years' | 'months';
 type PubType = Publication['type'];
@@ -46,8 +47,6 @@ function formatDateByScale(dateStr: string, scale: Scale): string {
   return `${d.toString().padStart(2, '0')}.${m.toString().padStart(2, '0')}`;
 }
 
-const allPlaces = [...new Set(mockPublications.map(p => p.place).filter(Boolean))] as string[];
-
 const TimelinePage: React.FC = () => {
   const navigate = useNavigate();
   const [scale, setScale] = useState<Scale>('months');
@@ -58,8 +57,15 @@ const TimelinePage: React.FC = () => {
   const [filterType, setFilterType] = useState<PubType | null>(null);
   const [filterMenu, setFilterMenu] = useState<'people' | 'places' | 'tags' | 'types' | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [baseEvents, setBaseEvents] = useState<ReturnType<typeof buildEvents>>([]);
+  const [allPlaces, setAllPlaces] = useState<string[]>([]);
 
-  const baseEvents = useMemo(() => buildEvents(mockPublications), []);
+  useEffect(() => {
+    api.feed.list().then(pubs => {
+      setBaseEvents(buildEvents(pubs));
+      setAllPlaces([...new Set(pubs.map(p => p.place).filter(Boolean))] as string[]);
+    });
+  }, []);
 
   const filteredEvents = useMemo(() => {
     return baseEvents.filter(ev => {
