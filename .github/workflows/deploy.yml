@@ -21,3 +21,5 @@ jobs:
           local-dir: ./dist/
           server-dir: ${{ format('{0}/', secrets.FTP_REMOTE_PATH) }}
           dangerous-clean-slate: true
+      - name: Health check production
+        run: curl -f -L -s -o /dev/null -w "%{http_code}" --max-time 15 https://angelo-test.ru | grep -q 200 || exit 1
