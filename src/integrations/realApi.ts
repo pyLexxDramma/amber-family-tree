@@ -12,7 +12,7 @@ function authHeader(): Record<string, string> | undefined {
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const url = `${BASE}${path}`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...authHeader() };
-  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) });
+  const res = await fetch(url, { method, headers, body: body != null ? JSON.stringify(body) : undefined });
   if (!res.ok) throw new Error(`API ${method} ${path}: ${res.status}`);
   const text = await res.text();
   return (text ? JSON.parse(text) : null) as T;
