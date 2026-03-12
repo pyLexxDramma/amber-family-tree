@@ -33,6 +33,12 @@ export default defineConfig(({ mode }) => {
         secure: false,
         ws: false,
       },
+      "/angelo-media": {
+        target: "http://localhost:9000",
+        changeOrigin: false,
+        secure: false,
+        ws: false,
+      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

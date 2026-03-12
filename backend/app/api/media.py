@@ -17,13 +17,13 @@ async def presign(
     db: AsyncSession = Depends(get_db),
 ) -> PresignResponse:
     settings = get_settings()
-    # Minimal: generate a key and presigned URL via boto3
     import uuid
     key = f"uploads/{current_user.id}/{uuid.uuid4()}_{body.filename}"
     try:
         import boto3
         from botocore.config import Config
-        client = boto3.client(
+
+        internal_client = boto3.client(
             "s3",
             endpoint_url=settings.s3_endpoint_url,
             aws_access_key_id=settings.s3_access_key,
@@ -31,7 +31,23 @@ async def presign(
             region_name=settings.s3_region,
             config=Config(signature_version="s3v4"),
         )
-        upload_url = client.generate_presigned_url(
+
+        try:
+            internal_client.head_bucket(Bucket=settings.s3_bucket)
+        except Exception:
+            internal_client.create_bucket(Bucket=settings.s3_bucket)
+
+        public_endpoint_url = (settings.s3_public_endpoint_url or settings.s3_endpoint_url).rstrip("/")
+        public_client = boto3.client(
+            "s3",
+            endpoint_url=public_endpoint_url,
+            aws_access_key_id=settings.s3_access_key,
+            aws_secret_access_key=settings.s3_secret_key,
+            region_name=settings.s3_region,
+            config=Config(signature_version="s3v4"),
+        )
+
+        upload_url = public_client.generate_presigned_url(
             "put_object",
             Params={
                 "Bucket": settings.s3_bucket,
@@ -40,9 +56,8 @@ async def presign(
             },
             ExpiresIn=3600,
         )
-        url = f"{settings.s3_endpoint_url}/{settings.s3_bucket}/{key}"
+        url = f"{public_endpoint_url}/{settings.s3_bucket}/{key}"
     except Exception:
-        # Fallback when S3 not configured: return placeholder URLs
         upload_url = f"https://example.com/upload?key={key}"
         url = f"https://example.com/media/{key}"
     return PresignResponse(upload_url=upload_url, key=key, url=url)

@@ -1,21 +1,62 @@
-import React, { useState, useMemo } from 'react';
-import { AppLayout } from '@/components/AppLayout';
-import { TopBar } from '@/components/TopBar';
-import { mockMembers, currentUserId, getMember } from '@/data/mock-members';
-import { mockPublications } from '@/data/mock-publications';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/constants/routes';
-import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
-import { getFamilyRole } from '@/lib/family-role';
 import { ChevronLeft, ChevronRight, MessageCircle, Clock, Image, Users, Send } from 'lucide-react';
 import type { FamilyMember } from '@/types';
+import { AppLayout } from '@/components/AppLayout';
+import { TopBar } from '@/components/TopBar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ROUTES } from '@/constants/routes';
+import { api } from '@/integrations/api';
+import { isDemoMode } from '@/lib/demoMode';
+import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 
 type TreeTab = 'stories' | 'timeline' | 'media' | 'connections';
 type BranchFilter = 'all' | 'paternal' | 'partners';
 
+type Rel = { type: string; memberId: string };
+
+function normalizeRelations(relations: unknown): Rel[] {
+  if (!Array.isArray(relations)) return [];
+  return relations
+    .map((r) => {
+      if (!r || typeof r !== 'object') return null;
+      const type = (r as any).type;
+      const memberId = (r as any).memberId ?? (r as any).member_id;
+      if (typeof type !== 'string' || typeof memberId !== 'string') return null;
+      return { type, memberId };
+    })
+    .filter(Boolean) as Rel[];
+}
+
+function initialsFor(m: FamilyMember): string {
+  const a = (m.firstName || '').trim()[0] ?? '';
+  const b = (m.lastName || '').trim()[0] ?? '';
+  const s = (a + b).toUpperCase();
+  return s || 'U';
+}
+
+function avatarSrcFor(member: FamilyMember, currentUserId: string): string | undefined {
+  if (member.avatar) return member.avatar;
+  if (!isDemoMode()) return undefined;
+  return getPrototypeAvatarUrl(member.id, currentUserId);
+}
+
+function roleFor(member: FamilyMember, focusId: string): string {
+  const rel = normalizeRelations(member.relations).find(r => r.memberId === focusId);
+  if (!rel) return 'Родственник';
+  if (rel.type === 'parent') return 'Ребёнок';
+  if (rel.type === 'child') return 'Родитель';
+  if (rel.type === 'spouse') return 'Партнёр';
+  if (rel.type === 'sibling') return 'Брат/сестра';
+  return 'Родственник';
+}
+
 const FamilyTree: React.FC = () => {
   const navigate = useNavigate();
-  const [focusId, setFocusId] = useState(currentUserId);
+  const [me, setMe] = useState<FamilyMember | null>(null);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [tab, setTab] = useState<TreeTab>('stories');
   const [branchFilter, setBranchFilter] = useState<BranchFilter>('all');
   const [maternal, setMaternal] = useState(true);
@@ -23,15 +64,49 @@ const FamilyTree: React.FC = () => {
   const [byMarriage, setByMarriage] = useState(true);
   const [depth, setDepth] = useState(4);
 
-  const focus = getMember(focusId) || getMember(currentUserId)!;
-  const parentIds = focus.relations.filter(r => r.type === 'parent').map(r => r.memberId);
-  const spouseId = focus.relations.find(r => r.type === 'spouse')?.memberId;
-  const childIds = focus.relations.filter(r => r.type === 'child').map(r => r.memberId);
-  const parents = parentIds.map(id => getMember(id)).filter(Boolean) as FamilyMember[];
-  const spouse = spouseId ? getMember(spouseId) : null;
-  const children = childIds.map(id => getMember(id)).filter(Boolean) as FamilyMember[];
-  const siblingIds = mockMembers.filter(m => m.id !== focusId && m.relations.some(r => r.type === 'parent' && parentIds.includes(r.memberId))).map(m => m.id);
-  const siblings = siblingIds.map(id => getMember(id)).filter(Boolean) as FamilyMember[];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const my = await api.profile.getMyProfile();
+        const list = await api.family.listMembers();
+        if (cancelled) return;
+        setMe(my);
+        const uniq = new Map<string, FamilyMember>();
+        for (const m of [my, ...list]) uniq.set(m.id, m);
+        setMembers(Array.from(uniq.values()));
+        setFocusId((prev) => prev ?? my.id);
+        setLoadError(null);
+      } catch (e) {
+        if (cancelled) return;
+        const msg = e instanceof Error ? e.message : 'load error';
+        setLoadError(msg);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const currentUserId = me?.id ?? '';
+
+  const focus = useMemo(() => {
+    if (!members.length) return me;
+    const id = focusId ?? me?.id ?? members[0].id;
+    return members.find(m => m.id === id) ?? me ?? members[0];
+  }, [focusId, me, members]);
+
+  const focusRelations = normalizeRelations(focus?.relations);
+  const parentIds = focusRelations.filter(r => r.type === 'parent').map(r => r.memberId);
+  const spouseId = focusRelations.find(r => r.type === 'spouse')?.memberId;
+  const childIds = focusRelations.filter(r => r.type === 'child').map(r => r.memberId);
+
+  const parents = parentIds.map(id => members.find(m => m.id === id)).filter(Boolean) as FamilyMember[];
+  const spouse = spouseId ? members.find(m => m.id === spouseId) ?? null : null;
+  const children = childIds.map(id => members.find(m => m.id === id)).filter(Boolean) as FamilyMember[];
+  const siblingIds = members
+    .filter(m => m.id !== focus?.id)
+    .filter(m => normalizeRelations(m.relations).some(r => r.type === 'parent' && parentIds.includes(r.memberId)))
+    .map(m => m.id);
+  const siblings = siblingIds.map(id => members.find(m => m.id === id)).filter(Boolean) as FamilyMember[];
 
   const showParents = parents.filter(p => {
     if (branchFilter === 'paternal') return parentIds[0] === p.id;
@@ -43,27 +118,154 @@ const FamilyTree: React.FC = () => {
   const showSpouse = (branchFilter === 'all' || branchFilter === 'partners') && byMarriage ? spouse : null;
 
   const connectionsList = useMemo(() => {
-    const list = mockMembers
-      .filter(m => m.id !== focusId)
+    if (!focus) return [];
+    const list = members
+      .filter(m => m.id !== focus.id)
       .filter(m => Math.abs(m.generation - focus.generation) <= depth)
-      .map(m => ({ member: m, role: getFamilyRole(m, focusId) }))
+      .map(m => ({ member: m, role: roleFor(m, focus.id) }))
       .filter(({ role }) => {
-        if (!maternal && (role === 'Мама' || role === 'Бабушка')) return false;
-        if (!paternal && (role === 'Папа' || role === 'Дедушка')) return false;
-        if (!byMarriage && (role === 'Супруг' || role === 'Супруга')) return false;
+        if (!maternal && role === 'Родитель') return false;
+        if (!paternal && role === 'Родитель') return false;
+        if (!byMarriage && role === 'Партнёр') return false;
         return true;
       });
     return list.sort((a, b) => a.role.localeCompare(b.role) || a.member.generation - b.member.generation);
-  }, [focusId, focus.generation, depth, maternal, paternal, byMarriage]);
+  }, [byMarriage, depth, focus, maternal, members, paternal]);
 
-  const focusIndex = mockMembers.findIndex(m => m.id === focusId);
-  const prevRelative = focusIndex > 0 ? mockMembers[focusIndex - 1] : null;
-  const nextRelative = focusIndex >= 0 && focusIndex < mockMembers.length - 1 ? mockMembers[focusIndex + 1] : null;
+  const ordered = useMemo(() => {
+    return [...members].sort((a, b) => (a.generation - b.generation) || a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName));
+  }, [members]);
+
+  const focusIndex = ordered.findIndex(m => m.id === focus?.id);
+  const prevRelative = focusIndex > 0 ? ordered[focusIndex - 1] : null;
+  const nextRelative = focusIndex >= 0 && focusIndex < ordered.length - 1 ? ordered[focusIndex + 1] : null;
 
   const storiesForFocus = useMemo(() =>
-    mockPublications.filter(p => p.authorId === focusId || p.participantIds.includes(focusId)).slice(0, 10),
-    [focusId]
+    [],
+    [focus?.id]
   );
+
+  const linksWrapRef = useRef<HTMLDivElement | null>(null);
+  const nodeRefs = useRef(new Map<string, HTMLElement>());
+  const setNodeRef = (key: string) => (el: HTMLElement | null) => {
+    if (el) nodeRefs.current.set(key, el);
+    else nodeRefs.current.delete(key);
+  };
+  const [linkPaths, setLinkPaths] = useState<string[]>([]);
+
+  const linksKey = useMemo(() => {
+    const p = showParents.map(m => m.id).join(',');
+    const s = showSiblings.map(m => m.id).join(',');
+    const c = showChildren.map(m => m.id).join(',');
+    const f = focus?.id ?? '';
+    const sp = showSpouse?.id ?? '';
+    return `${branchFilter}|${byMarriage ? '1' : '0'}|${f}|${sp}|${p}|${s}|${c}`;
+  }, [branchFilter, byMarriage, focus?.id, showChildren, showParents, showSiblings, showSpouse?.id]);
+
+  useLayoutEffect(() => {
+    const wrap = linksWrapRef.current;
+    if (!wrap) return;
+
+    const calc = () => {
+      const wrapRect = wrap.getBoundingClientRect();
+      const centerOf = (key: string) => {
+        const el = nodeRefs.current.get(key);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.left - wrapRect.left + r.width / 2, y: r.top - wrapRect.top + r.height / 2 };
+      };
+
+      const parents = showParents.map((p) => centerOf(`parent:${p.id}`)).filter(Boolean) as { x: number; y: number }[];
+      const focusC = focus ? centerOf(`focus:${focus.id}`) : null;
+      const spouseC = showSpouse ? centerOf(`spouse:${showSpouse.id}`) : null;
+      const siblingsC = showSiblings.map((s) => centerOf(`sibling:${s.id}`)).filter(Boolean) as { x: number; y: number }[];
+      const childrenC = showChildren.map((c) => centerOf(`child:${c.id}`)).filter(Boolean) as { x: number; y: number }[];
+
+      const paths: string[] = [];
+
+      const line = (a: { x: number; y: number }, b: { x: number; y: number }) => `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+      const poly = (...pts: { x: number; y: number }[]) => {
+        if (pts.length < 2) return '';
+        return `M ${pts[0].x} ${pts[0].y} ` + pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ');
+      };
+
+      const R_PARENT = 28;
+      const R_FOCUS = 40;
+      const R_SMALL = 24;
+      const R_SPOUSE = 28;
+
+      if (focusC && parents.length > 0) {
+        const parentBottomY = Math.max(...parents.map(p => p.y + R_PARENT));
+        const yBus = parentBottomY + 14;
+        for (const p of parents) {
+          paths.push(poly(
+            { x: p.x, y: p.y + R_PARENT },
+            { x: p.x, y: yBus },
+            { x: focusC.x, y: yBus },
+          ));
+        }
+        paths.push(line({ x: focusC.x, y: yBus }, { x: focusC.x, y: focusC.y - R_FOCUS }));
+      }
+
+      if (focusC && spouseC) {
+        const a = { x: focusC.x + R_FOCUS, y: focusC.y };
+        const b = { x: spouseC.x - R_SPOUSE, y: spouseC.y };
+        if (spouseC.x < focusC.x) {
+          paths.push(line({ x: focusC.x - R_FOCUS, y: focusC.y }, { x: spouseC.x + R_SPOUSE, y: spouseC.y }));
+        } else {
+          paths.push(line(a, b));
+        }
+      }
+
+      if (focusC && (siblingsC.length > 0 || childrenC.length > 0)) {
+        const focusBottom = { x: focusC.x, y: focusC.y + R_FOCUS };
+        const yJ = focusBottom.y + 14;
+        paths.push(line(focusBottom, { x: focusC.x, y: yJ }));
+
+        if (siblingsC.length > 0) {
+          const yBus = yJ + 24;
+          paths.push(line({ x: focusC.x, y: yJ }, { x: focusC.x, y: yBus }));
+          for (const s of siblingsC) {
+            paths.push(poly(
+              { x: focusC.x, y: yBus },
+              { x: s.x, y: yBus },
+              { x: s.x, y: s.y - R_SMALL },
+            ));
+          }
+        }
+
+        if (childrenC.length > 0) {
+          const yBus = yJ + (siblingsC.length > 0 ? 54 : 28);
+          paths.push(line({ x: focusC.x, y: yJ }, { x: focusC.x, y: yBus }));
+          for (const c of childrenC) {
+            paths.push(poly(
+              { x: focusC.x, y: yBus },
+              { x: c.x, y: yBus },
+              { x: c.x, y: c.y - R_SMALL },
+            ));
+          }
+        }
+      }
+
+      setLinkPaths((prev) => {
+        if (prev.length !== paths.length) return paths;
+        for (let i = 0; i < prev.length; i += 1) {
+          if (prev[i] !== paths[i]) return paths;
+        }
+        return prev;
+      });
+    };
+
+    calc();
+
+    const ro = new ResizeObserver(() => calc());
+    ro.observe(wrap);
+    window.addEventListener('resize', calc);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', calc);
+    };
+  }, [linksKey]);
 
   const tabs = [
     { id: 'stories' as TreeTab, label: 'Истории', icon: MessageCircle },
@@ -86,13 +288,25 @@ const FamilyTree: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
-          title="Пользователь → Экран «Дерево»"
+          title="Дерево"
+          subtitle={me ? `Вы вошли как: ${me.nickname || me.firstName} ${me.lastName}` : undefined}
           onBack={() => navigate(ROUTES.classic.feed)}
           light
           right={
-            <button type="button" onClick={() => navigate(ROUTES.classic.invite)} className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поделиться">
-              <Send className="h-5 w-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              {me && (
+                <button type="button" onClick={() => navigate(ROUTES.classic.myProfile)} className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-[var(--proto-border)] transition-colors">
+                  <Avatar className="h-8 w-8">
+                    {avatarSrcFor(me, currentUserId) ? <AvatarImage src={avatarSrcFor(me, currentUserId)} /> : null}
+                    <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(me)}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs font-semibold text-[var(--proto-text)]">Я</span>
+                </button>
+              )}
+              <button type="button" onClick={() => navigate(ROUTES.classic.invite)} className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поделиться">
+                <Send className="h-5 w-5" />
+              </button>
+            </div>
           }
         />
         <div className="flex gap-2 px-3 sm:px-4 pb-2 border-b border-[var(--proto-border)]">
@@ -129,8 +343,14 @@ const FamilyTree: React.FC = () => {
           <aside className="w-full lg:w-56 shrink-0 space-y-4">
             <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
               <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">Карточка поколения</p>
-              <p className="text-sm text-[var(--proto-text)]">{focus.nickname || focus.firstName} — поколение {focus.generation}</p>
-              <p className="text-xs text-[var(--proto-text-muted)] mt-1">{focus.birthDate}</p>
+              {loadError && <p className="text-sm text-red-600">Ошибка: {loadError}</p>}
+              {!focus && !loadError && <p className="text-sm text-[var(--proto-text-muted)]">Загрузка…</p>}
+              {focus && (
+                <>
+                  <p className="text-sm text-[var(--proto-text)]">{focus.nickname || focus.firstName} — поколение {focus.generation}</p>
+                  <p className="text-xs text-[var(--proto-text-muted)] mt-1">{focus.birthDate}</p>
+                </>
+              )}
             </div>
             <button
               type="button"
@@ -160,65 +380,135 @@ const FamilyTree: React.FC = () => {
           <main className="flex-1 min-w-0">
             <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 sm:p-6">
               <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-4">Фокус на человеке</p>
-              {showParents.length > 0 && (
-                <div className="flex justify-center gap-4 mb-4">
-                  <p className="text-xs text-[var(--proto-text-muted)] self-center">Родители</p>
-                  {showParents.map(p => (
-                    <button key={p.id} onClick={() => openProfile(p.id)} className="h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
-                      <img src={getPrototypeAvatarUrl(p.id, currentUserId)} alt="" className="h-full w-full object-cover" />
-                    </button>
+              <div ref={linksWrapRef} className="relative">
+                <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+                  {linkPaths.map((d, idx) => (
+                    <path
+                      key={idx}
+                      d={d}
+                      fill="none"
+                      stroke="rgba(90, 160, 120, 0.45)"
+                      strokeWidth={1.25}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   ))}
-                </div>
-              )}
-              <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
-                <div className="text-center">
-                  <button onClick={() => openProfile(focus.id)} className="h-20 w-20 rounded-full overflow-hidden border-2 border-[var(--proto-active)] ring-2 ring-[var(--proto-active)]/20 hover:ring-[var(--proto-active)]/40 transition-all">
-                    <img src={getPrototypeAvatarUrl(focus.id, currentUserId)} alt="" className="h-full w-full object-cover" />
-                  </button>
-                  <p className="text-sm font-semibold text-[var(--proto-text)] mt-2">{focus.nickname || focus.firstName} {focus.lastName}</p>
-                </div>
-                {showSpouse && (
-                  <>
-                    <div className="h-px w-6 bg-[var(--proto-border)]" />
-                    <div className="text-center">
-                      <button onClick={() => openProfile(showSpouse.id)} className="h-14 w-14 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
-                        <img src={getPrototypeAvatarUrl(showSpouse.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                </svg>
+
+                {showParents.length > 0 && (
+                  <div className="flex justify-center gap-4 mb-4">
+                    <p className="text-xs text-[var(--proto-text-muted)] self-center">Родители</p>
+                    {showParents.map(p => (
+                      <button
+                        key={p.id}
+                        ref={(el) => setNodeRef(`parent:${p.id}`)(el)}
+                        onClick={() => openProfile(p.id)}
+                        className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                      >
+                        <Avatar className="h-14 w-14">
+                          {avatarSrcFor(p, currentUserId) ? <AvatarImage src={avatarSrcFor(p, currentUserId)} /> : null}
+                          <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold">{initialsFor(p)}</AvatarFallback>
+                        </Avatar>
                       </button>
-                      <p className="text-xs text-[var(--proto-text-muted)] mt-1">Партнёр</p>
-                    </div>
-                  </>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+                  <div className="text-center">
+                    {focus && (
+                      <>
+                        <button
+                          ref={(el) => setNodeRef(`focus:${focus.id}`)(el)}
+                          onClick={() => openProfile(focus.id)}
+                          className="rounded-full border-2 border-[var(--proto-active)] ring-2 ring-[var(--proto-active)]/20 hover:ring-[var(--proto-active)]/40 transition-all"
+                        >
+                          <Avatar className="h-20 w-20">
+                            {avatarSrcFor(focus, currentUserId) ? <AvatarImage src={avatarSrcFor(focus, currentUserId)} /> : null}
+                            <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-lg font-semibold">{initialsFor(focus)}</AvatarFallback>
+                          </Avatar>
+                        </button>
+                        <p className="text-sm font-semibold text-[var(--proto-text)] mt-2">{focus.nickname || focus.firstName} {focus.lastName}</p>
+                      </>
+                    )}
+                  </div>
+                  {showSpouse && (
+                    <>
+                      <div className="h-px w-6 bg-[var(--proto-border)]" />
+                      <div className="text-center">
+                        <button
+                          ref={(el) => setNodeRef(`spouse:${showSpouse.id}`)(el)}
+                          onClick={() => openProfile(showSpouse.id)}
+                          className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                        >
+                          <Avatar className="h-14 w-14">
+                            {avatarSrcFor(showSpouse, currentUserId) ? <AvatarImage src={avatarSrcFor(showSpouse, currentUserId)} /> : null}
+                            <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold">{initialsFor(showSpouse)}</AvatarFallback>
+                          </Avatar>
+                        </button>
+                        <p className="text-xs text-[var(--proto-text-muted)] mt-1">Партнёр</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {(showChildren.length > 0 || showSiblings.length > 0) && (
+                  <div className="flex flex-wrap justify-center gap-6">
+                    {showChildren.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-[var(--proto-text-muted)]">Дети</p>
+                        {showChildren.map(c => (
+                          <button
+                            key={c!.id}
+                            ref={(el) => setNodeRef(`child:${c!.id}`)(el)}
+                            onClick={() => openProfile(c!.id)}
+                            className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                          >
+                            <Avatar className="h-12 w-12">
+                              {avatarSrcFor(c!, currentUserId) ? <AvatarImage src={avatarSrcFor(c!, currentUserId)} /> : null}
+                              <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(c!)}</AvatarFallback>
+                            </Avatar>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showSiblings.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-[var(--proto-text-muted)]">Братья/сёстры</p>
+                        {showSiblings.map(s => (
+                          <button
+                            key={s!.id}
+                            ref={(el) => setNodeRef(`sibling:${s!.id}`)(el)}
+                            onClick={() => openProfile(s!.id)}
+                            className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                          >
+                            <Avatar className="h-12 w-12">
+                              {avatarSrcFor(s!, currentUserId) ? <AvatarImage src={avatarSrcFor(s!, currentUserId)} /> : null}
+                              <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(s!)}</AvatarFallback>
+                            </Avatar>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-              {(showChildren.length > 0 || showSiblings.length > 0) && (
-                <div className="flex flex-wrap justify-center gap-6">
-                  {showChildren.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-[var(--proto-text-muted)]">Дети</p>
-                      {showChildren.map(c => (
-                        <button key={c!.id} onClick={() => openProfile(c!.id)} className="h-12 w-12 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
-                          <img src={getPrototypeAvatarUrl(c!.id, currentUserId)} alt="" className="h-full w-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {showSiblings.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-[var(--proto-text-muted)]">Братья/сёстры</p>
-                      {showSiblings.map(s => (
-                        <button key={s!.id} onClick={() => openProfile(s!.id)} className="h-12 w-12 rounded-full overflow-hidden border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors">
-                          <img src={getPrototypeAvatarUrl(s!.id, currentUserId)} alt="" className="h-full w-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
               <div className="flex border-b border-[var(--proto-border)] mt-6 gap-4 overflow-x-auto scrollbar-hide">
                 {tabs.map(t => (
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => setTab(t.id)}
+                    onClick={() => {
+                      if (t.id === 'timeline') {
+                        navigate(ROUTES.classic.timeline);
+                        return;
+                      }
+                      if (t.id === 'media') {
+                        navigate(ROUTES.classic.myMedia);
+                        return;
+                      }
+                      setTab(t.id);
+                    }}
                     className={`pb-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
                       tab === t.id ? 'text-[var(--proto-text)] border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-transparent'
                     }`}
@@ -231,37 +521,7 @@ const FamilyTree: React.FC = () => {
               <div className="mt-4 min-h-[120px]">
                 {tab === 'stories' && (
                   <div className="space-y-2">
-                    {storiesForFocus.length === 0 ? (
-                      <p className="text-sm text-[var(--proto-text-muted)]">Нет историй</p>
-                    ) : (
-                      storiesForFocus.map(pub => (
-                        <button
-                          key={pub.id}
-                          type="button"
-                          onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-                          className="w-full text-left px-3 py-2 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
-                        >
-                          <p className="text-sm font-medium text-[var(--proto-text)]">{pub.title || 'Публикация'}</p>
-                          <p className="text-xs text-[var(--proto-text-muted)]">{pub.topicTag} · {pub.eventDate}</p>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-                {tab === 'timeline' && (
-                  <div>
-                    <p className="text-sm text-[var(--proto-text-muted)] mb-2">События в хронологии</p>
-                    <button type="button" onClick={() => navigate(ROUTES.classic.timeline)} className="text-sm font-medium text-[var(--proto-active)] hover:underline">
-                      Открыть таймлайн →
-                    </button>
-                  </div>
-                )}
-                {tab === 'media' && (
-                  <div>
-                    <p className="text-sm text-[var(--proto-text-muted)] mb-2">Фото и видео</p>
-                    <button type="button" onClick={() => navigate(ROUTES.classic.myMedia)} className="text-sm font-medium text-[var(--proto-active)] hover:underline">
-                      Открыть моё медиа →
-                    </button>
+                    <p className="text-sm text-[var(--proto-text-muted)]">Истории отображаются в ленте. Нажмите «Создать», чтобы добавить новую.</p>
                   </div>
                 )}
                 {tab === 'connections' && (
@@ -275,9 +535,10 @@ const FamilyTree: React.FC = () => {
                           className="flex items-center gap-3 p-2 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
                         >
                           <button type="button" onClick={() => setFocusId(member.id)} className="flex items-center gap-3 min-w-0 flex-1 text-left">
-                            <div className="h-10 w-10 rounded-full overflow-hidden shrink-0">
-                              <img src={getPrototypeAvatarUrl(member.id, currentUserId)} alt="" className="h-full w-full object-cover" />
-                            </div>
+                            <Avatar className="h-10 w-10 shrink-0">
+                              {avatarSrcFor(member, currentUserId) ? <AvatarImage src={avatarSrcFor(member, currentUserId)} /> : null}
+                              <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(member)}</AvatarFallback>
+                            </Avatar>
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium text-[var(--proto-text)] truncate">{member.nickname || member.firstName} {member.lastName}</p>
                               <p className="text-xs text-[var(--proto-text-muted)]">{role}</p>

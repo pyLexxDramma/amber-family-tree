@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
@@ -6,6 +6,7 @@ import { ROUTES } from '@/constants/routes';
 import { Video } from 'lucide-react';
 import type { MediaItem, MediaType } from '@/types';
 import { api } from '@/integrations/api';
+import { requestJson } from '@/integrations/request';
 
 type FilterType = 'all' | 'photo' | 'video';
 type CategoryFilter = 'popular' | 'collection' | 'family';
@@ -18,11 +19,25 @@ const categoryFilters: { id: CategoryFilter; label: string }[] = [
 
 const aspectClasses = ['aspect-[4/5]', 'aspect-[3/4]', 'aspect-square', 'aspect-[5/4]'];
 
+type UploadStat = {
+  name: string;
+  type: string;
+  sizeBytes: number;
+  uploadMs: number;
+  mbps: number;
+  createdAt: string;
+  status: 'ok' | 'error';
+  error?: string;
+};
+
 const MyMedia: React.FC = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterType>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('popular');
   const [items, setItems] = useState<MediaItem[]>([]);
+  const [uploadStats, setUploadStats] = useState<UploadStat[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     api.profile.listMyMedia().then(setItems);
@@ -40,6 +55,53 @@ const MyMedia: React.FC = () => {
   const handleItemClick = (item: MediaItem) => {
     if (item.publicationId) navigate(ROUTES.classic.publication(item.publicationId));
   };
+
+  async function refreshMedia() {
+    const list = await api.profile.listMyMedia();
+    setItems(list);
+  }
+
+  async function uploadFiles(files: FileList) {
+    setIsUploading(true);
+    try {
+      const createdAt = new Date().toISOString();
+      for (const file of Array.from(files)) {
+        const startedAt = performance.now();
+        try {
+          const presign = await api.media.presign({ filename: file.name, content_type: file.type || 'application/octet-stream' });
+          const putRes = await fetch(presign.upload_url, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
+          if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
+
+          const today = new Date().toISOString().slice(0, 10);
+          await requestJson('POST', '/feed', {
+            type: file.type.startsWith('video/') ? 'video' : file.type.startsWith('audio/') ? 'audio' : file.type.startsWith('image/') ? 'photo' : 'document',
+            title: file.name,
+            text: '',
+            event_date: today,
+            event_date_approximate: false,
+            place: null,
+            topic_tag: 'upload',
+            co_author_ids: [],
+            participant_ids: [],
+            visible_for: null,
+            exclude_for: null,
+            media_keys: [presign.key],
+          });
+
+          const uploadMs = Math.round(performance.now() - startedAt);
+          const mbps = (file.size / 1_000_000) / (uploadMs / 1000);
+          setUploadStats(s => [{ name: file.name, type: file.type, sizeBytes: file.size, uploadMs, mbps, createdAt, status: 'ok' }, ...s]);
+        } catch (e) {
+          const uploadMs = Math.round(performance.now() - startedAt);
+          const err = e instanceof Error ? e.message : 'upload error';
+          setUploadStats(s => [{ name: file.name, type: file.type, sizeBytes: file.size, uploadMs, mbps: 0, createdAt, status: 'error', error: err }, ...s]);
+        }
+      }
+      await refreshMedia();
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   const categoryTagClass = (category: string | undefined) => {
     if (category === 'Путешествие') return 'bg-[#4a7c59]/90 text-white';
@@ -59,13 +121,50 @@ const MyMedia: React.FC = () => {
               <button type="button" className="h-9 w-9 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поиск">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </button>
-              <button type="button" className="h-9 w-9 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Добавить">
+              <button
+                type="button"
+                disabled={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="h-9 w-9 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors disabled:opacity-60"
+                aria-label="Добавить"
+              >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               </button>
             </div>
           }
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*,video/*"
+          className="hidden"
+          onChange={e => {
+            const files = e.currentTarget.files;
+            e.currentTarget.value = '';
+            if (files && files.length) void uploadFiles(files);
+          }}
+        />
         <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+          {uploadStats.length > 0 && (
+            <div className="mb-4 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Загрузки (замеры)</p>
+              <div className="space-y-2">
+                {uploadStats.slice(0, 5).map((s, i) => (
+                  <div key={i} className="flex items-start justify-between gap-3 text-xs">
+                    <div className="min-w-0">
+                      <p className="font-medium text-[var(--proto-text)] truncate">{s.name}</p>
+                      <p className="text-[var(--proto-text-muted)]">{(s.sizeBytes / 1_000_000).toFixed(1)} MB · {Math.round(s.mbps * 10) / 10} MB/s · {s.uploadMs} ms</p>
+                      {s.status === 'error' && <p className="text-red-600 mt-0.5">{s.error}</p>}
+                    </div>
+                    <span className={`shrink-0 px-2 py-1 rounded-md ${s.status === 'ok' ? 'bg-green-600/10 text-green-700' : 'bg-red-600/10 text-red-700'}`}>
+                      {s.status === 'ok' ? 'OK' : 'ERR'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2 mb-4">
             {categoryFilters.map(f => (
               <button
@@ -108,7 +207,7 @@ const MyMedia: React.FC = () => {
               >
                 <div className="relative w-full h-full min-h-[140px]">
                   <img
-                    src={item.src}
+                    src={item.url}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
                   />

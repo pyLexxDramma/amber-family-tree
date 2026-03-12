@@ -165,7 +165,9 @@ npm run dev
   - `APP_DEBUG=false`
   - Надёжный `JWT_SECRET`
   - `DATABASE_URL` (если БД в том же docker-compose — оставить вид `postgresql+asyncpg://...@db:5432/angelo`)
-  - Параметры S3/MinIO (если MinIO в том же compose — оставить `http://minio:9000` и т.д.)
+  - Параметры S3/MinIO:
+    - `S3_ENDPOINT_URL=http://minio:9000` (внутренний адрес для бэка)
+    - `S3_PUBLIC_ENDPOINT_URL=https://yourdomain.com` (публичный origin, чтобы presigned URL были на том же домене)
 
 ### 5.3. Подготовка фронта
 
@@ -200,6 +202,16 @@ server {
 
     location /api {
         proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    client_max_body_size 1024m;
+    location /angelo-media/ {
+        proxy_pass http://127.0.0.1:9000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

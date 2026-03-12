@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { setDemoMode } from '@/lib/demoMode';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
@@ -15,13 +16,13 @@ const Welcome: React.FC = () => {
 
         <div className="flex flex-col gap-3 w-full">
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => { setDemoMode(false); navigate('/login'); }}
             className="w-full py-3.5 rounded-2xl bg-[#A39B8A] text-white font-semibold text-base hover:opacity-90 transition-opacity border border-[#A39B8A]"
           >
             Войти
           </button>
           <button
-            onClick={() => navigate('/register')}
+            onClick={() => { setDemoMode(false); navigate('/register'); }}
             className="w-full py-3 rounded-2xl bg-[#F0EDE8] border-2 border-[#E5E1DC] text-[#333333] font-semibold text-base hover:border-[#A39B8A]/50 transition-colors"
           >
             Создать аккаунт
@@ -30,8 +31,8 @@ const Welcome: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => navigate(`${ROUTES.classic.feed}?demo=full`)}
-          className="w-full max-w-[260px] py-3 rounded-2xl border-2 border-[#A39B8A]/50 text-[#A39B8A] font-semibold text-base hover:bg-[#A39B8A]/10 transition-colors"
+          onClick={() => { setDemoMode(true); navigate(ROUTES.classic.feed); }}
+          className="w-full max-w-[180px] py-2 rounded-xl border border-[#A39B8A]/50 text-[#A39B8A] font-semibold text-sm hover:bg-[#A39B8A]/10 transition-colors"
         >
           Демо
         </button>

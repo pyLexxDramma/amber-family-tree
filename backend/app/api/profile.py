@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.security import get_current_user
 from app.database import get_db
 from app.models.media_item import MediaItem
@@ -12,6 +13,13 @@ from app.schemas.feed import MediaItemResponse
 from app.schemas.profile import ProfileUpdate
 
 router = APIRouter(prefix="/profile", tags=["profile"])
+
+def _to_public_media_url(raw: str) -> str:
+    if raw.startswith("http://") or raw.startswith("https://"):
+        return raw
+    settings = get_settings()
+    base = (settings.s3_public_endpoint_url or settings.s3_endpoint_url).rstrip("/")
+    return f"{base}/{settings.s3_bucket}/{raw}"
 
 
 @router.get("/me")
@@ -96,7 +104,7 @@ async def list_my_media(
         MediaItemResponse(
             id=str(m.id),
             type=m.type,
-            url=m.url,
+            url=_to_public_media_url(m.url),
             thumbnail=m.thumbnail,
             name=m.name,
             size=m.size,

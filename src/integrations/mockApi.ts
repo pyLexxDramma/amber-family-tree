@@ -76,5 +76,11 @@ export const mockApi: AngeloApi = {
       });
     },
   },
+  media: {
+    async presign(body) {
+      const key = `mock/${Date.now()}_${body.filename}`;
+      return { upload_url: `https://example.com/upload?key=${encodeURIComponent(key)}`, key, url: `https://example.com/media/${key}` };
+    },
+  },
 };
 

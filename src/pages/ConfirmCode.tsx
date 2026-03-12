@@ -4,6 +4,7 @@ import { ROUTES } from '@/constants/routes';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
+import { setDemoMode } from '@/lib/demoMode';
 
 const ConfirmCode: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const ConfirmCode: React.FC = () => {
     try {
       const res = await api.auth.verify(contact, code);
       localStorage.setItem('token', res.access_token);
+      setDemoMode(false);
       if (mode === 'register') navigate('/onboarding');
       else navigate(ROUTES.classic.tree);
     } catch {

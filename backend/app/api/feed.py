@@ -15,6 +15,7 @@ from app.models.like import Like
 from app.models.media_item import MediaItem
 from app.models.publication import Publication
 from app.models.user import User
+from app.config import get_settings
 from app.schemas.feed import (
     CommentCreate,
     CommentResponse,
@@ -25,12 +26,19 @@ from app.schemas.feed import (
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
+def _to_public_media_url(raw: str) -> str:
+    if raw.startswith("http://") or raw.startswith("https://"):
+        return raw
+    settings = get_settings()
+    base = (settings.s3_public_endpoint_url or settings.s3_endpoint_url).rstrip("/")
+    return f"{base}/{settings.s3_bucket}/{raw}"
+
 
 def _media_to_response(m: MediaItem) -> dict:
     return MediaItemResponse(
         id=str(m.id),
         type=m.type,
-        url=m.url,
+        url=_to_public_media_url(m.url),
         thumbnail=m.thumbnail,
         name=m.name,
         size=m.size,
@@ -184,9 +192,18 @@ async def create_publication(
         )
         db.add(media_item)
     await db.commit()
-    await db.refresh(pub)
-    like_ids = [str(l.member_id) for l in pub.likes]
-    return _publication_to_response(pub, like_ids)
+    result = await db.execute(
+        select(Publication)
+        .options(
+            selectinload(Publication.media),
+            selectinload(Publication.comments),
+            selectinload(Publication.likes),
+        )
+        .where(Publication.id == pub.id)
+    )
+    pub_loaded = result.scalar_one()
+    like_ids = [str(l.member_id) for l in pub_loaded.likes]
+    return _publication_to_response(pub_loaded, like_ids)
 
 
 @router.post("/{publication_id}/comments")

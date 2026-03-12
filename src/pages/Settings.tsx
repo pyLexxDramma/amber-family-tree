@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePrivacyVisibility, type PrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
+import { isDemoMode, setDemoMode } from '@/lib/demoMode';
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -56,6 +57,38 @@ const Settings: React.FC = () => {
             <button onClick={handleLogout} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-red-500/30 transition-all text-left">
               <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0"><LogOut className="h-5 w-5 text-red-600" /></div>
               <p className="text-sm font-semibold text-[var(--proto-text)]">{t('logout')}</p>
+            </button>
+          </div>
+
+          <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">Демо</p>
+          <div className="space-y-2 mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setDemoMode(true);
+                localStorage.removeItem('token');
+                navigate(ROUTES.classic.feed, { replace: true });
+                window.location.reload();
+              }}
+              disabled={isDemoMode()}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/20 transition-all text-left disabled:opacity-60"
+            >
+              <div className="h-10 w-10 rounded-full bg-[var(--proto-active)]/15 flex items-center justify-center shrink-0"><Palette className="h-5 w-5 text-[var(--proto-active)]" /></div>
+              <p className="text-sm font-semibold text-[var(--proto-text)]">Включить демо</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDemoMode(false);
+                localStorage.removeItem('token');
+                navigate(ROUTES.home, { replace: true });
+                window.location.reload();
+              }}
+              disabled={!isDemoMode()}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-red-500/30 transition-all text-left disabled:opacity-60"
+            >
+              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0"><LogOut className="h-5 w-5 text-red-600" /></div>
+              <p className="text-sm font-semibold text-[var(--proto-text)]">Выйти из демо</p>
             </button>
           </div>
 

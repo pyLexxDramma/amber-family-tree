@@ -1,4 +1,4 @@
-import type { AngeloApi, FeedListParams } from './api.types';
+import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse } from './api.types';
 import type { AppUser, FamilyMember, MediaItem, Publication } from '@/types';
 import { getJson, requestJson } from './request';
 
@@ -51,6 +51,11 @@ export const realApi: AngeloApi = {
     },
     async listMyMedia() {
       return getJson<MediaItem[]>('/profile/me/media');
+    },
+  },
+  media: {
+    async presign(body: PresignUploadRequest) {
+      return requestJson<PresignUploadResponse>('POST', '/media/presign', body);
     },
   },
 };

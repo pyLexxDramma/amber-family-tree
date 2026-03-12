@@ -35,10 +35,27 @@ export interface ProfileApi {
   listMyMedia(): Promise<MediaItem[]>;
 }
 
+export interface PresignUploadRequest {
+  filename: string;
+  content_type: string;
+  publication_id?: string;
+}
+
+export interface PresignUploadResponse {
+  upload_url: string;
+  key: string;
+  url: string;
+}
+
+export interface MediaApi {
+  presign(body: PresignUploadRequest): Promise<PresignUploadResponse>;
+}
+
 export interface AngeloApi {
   feed: FeedApi;
   family: FamilyApi;
   auth: AuthApi;
   profile: ProfileApi;
+  media: MediaApi;
 }
 

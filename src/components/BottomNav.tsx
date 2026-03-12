@@ -25,11 +25,12 @@ export const BottomNav: React.FC = () => {
       <div className="mx-auto flex max-w-md items-center justify-around py-2 px-2">
         {navItems.map(item => {
           const active = location.pathname === item.path || (item.path !== ROUTES.classic.create && location.pathname.startsWith(item.path));
+          const isCreate = item.path === ROUTES.classic.create;
           const Icon = item.icon;
           return (
             <button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => navigate(isCreate ? `${ROUTES.classic.create}?type=photo` : item.path)}
               className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-w-[56px] transition-colors rounded-lg ${isPrototype ? 'hover:bg-[var(--proto-border)]' : 'hover:bg-muted/50'}`}
               aria-current={active ? 'page' : undefined}
             >

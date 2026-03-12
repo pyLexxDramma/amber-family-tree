@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = Field(60 * 24 * 7, alias="JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
 
     s3_endpoint_url: str = Field(..., alias="S3_ENDPOINT_URL")
+    s3_public_endpoint_url: str | None = Field(None, alias="S3_PUBLIC_ENDPOINT_URL")
     s3_access_key: str = Field(..., alias="S3_ACCESS_KEY")
     s3_secret_key: str = Field(..., alias="S3_SECRET_KEY")
     s3_region: str = Field("us-east-1", alias="S3_REGION")
