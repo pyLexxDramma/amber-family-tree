@@ -20,9 +20,10 @@ const Register: React.FC = () => {
     if (!terms || !privacy || !dataProcessing) { setError('Необходимо принять все условия'); return; }
     setError('');
     try {
-      await api.auth.register(value.trim());
+      await api.auth.sendCode(value.trim());
     } catch {
-      // в демо игнорируем ошибки
+      setError('Не удалось отправить код');
+      return;
     }
     navigate('/confirm-code', { state: { contact: value, mode: 'register' } });
   };

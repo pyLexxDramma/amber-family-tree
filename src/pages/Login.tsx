@@ -16,15 +16,12 @@ const Login: React.FC = () => {
       setError('Некорректный формат');
       return;
     }
-    if (value.trim().toLowerCase() === 'notfound@test.com') {
-      setError('Пользователь не найден');
-      return;
-    }
     setError('');
     try {
-      await api.auth.login(value.trim());
+      await api.auth.sendCode(value.trim());
     } catch {
-      // в демо игнорируем ошибки
+      setError('Не удалось отправить код');
+      return;
     }
     navigate('/confirm-code', { state: { contact: value, mode: 'login' } });
   };

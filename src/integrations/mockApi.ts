@@ -40,11 +40,12 @@ export const mockApi: AngeloApi = {
     },
   },
   auth: {
-    async login() {
-      return { id: currentUserId, member: getCurrentUser(), subscription: { planId: 'free', usedPlaces: 3, expiresAt: '2026-12-31' } };
+    async sendCode() {
+      return { sent: true };
     },
-    async register() {
-      return { id: currentUserId, member: getCurrentUser(), subscription: { planId: 'free', usedPlaces: 3, expiresAt: '2026-12-31' } };
+    async verify() {
+      const user = { id: currentUserId, member: getCurrentUser(), subscription: { planId: 'free', usedPlaces: 3, expiresAt: '2026-12-31' } };
+      return { access_token: 'mock-token', token_type: 'bearer', user };
     },
     async me() {
       return { id: currentUserId, member: getCurrentUser(), subscription: { planId: 'free', usedPlaces: 3, expiresAt: '2026-12-31' } };

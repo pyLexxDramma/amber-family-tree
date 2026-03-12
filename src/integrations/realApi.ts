@@ -1,26 +1,6 @@
 import type { AngeloApi, FeedListParams } from './api.types';
 import type { AppUser, FamilyMember, MediaItem, Publication } from '@/types';
-
-const BASE = (import.meta.env.VITE_API_BASE as string)?.replace(/\/$/, '') || '';
-
-function authHeader(): Record<string, string> | undefined {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('angelo_token') : null;
-  if (!token) return undefined;
-  return { Authorization: `Bearer ${token}` };
-}
-
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const url = `${BASE}${path}`;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...authHeader() };
-  const res = await fetch(url, { method, headers, body: body != null ? JSON.stringify(body) : undefined });
-  if (!res.ok) throw new Error(`API ${method} ${path}: ${res.status}`);
-  const text = await res.text();
-  return (text ? JSON.parse(text) : null) as T;
-}
-
-async function get<T>(path: string): Promise<T> {
-  return request<T>('GET', path);
-}
+import { getJson, requestJson } from './request';
 
 export const realApi: AngeloApi = {
   feed: {
@@ -28,43 +8,49 @@ export const realApi: AngeloApi = {
       const q = new URLSearchParams();
       if (params?.limit != null) q.set('limit', String(params.limit));
       if (params?.offset != null) q.set('offset', String(params.offset));
-      if (params?.authorId) q.set('authorId', params.authorId);
-      if (params?.topicTag) q.set('topicTag', params.topicTag);
+      if (params?.authorId) q.set('author_id', params.authorId);
+      if (params?.topicTag) q.set('topic_tag', params.topicTag);
       const suffix = q.toString() ? `?${q}` : '';
-      return get<Publication[]>(`/feed${suffix}`);
+      return getJson<Publication[]>(`/feed${suffix}`);
     },
     async getById(id: string) {
-      return get<Publication | null>(`/feed/${id}`);
+      return getJson<Publication | null>(`/feed/${id}`);
     },
   },
   family: {
     async listMembers() {
-      return get<FamilyMember[]>('/family/members');
+      return getJson<FamilyMember[]>('/family/members');
     },
     async getMember(id: string) {
-      return get<FamilyMember | null>(`/family/members/${id}`);
+      return getJson<FamilyMember | null>(`/family/members/${id}`);
     },
   },
   auth: {
-    async login(identifier: string) {
-      return request<AppUser>('POST', '/auth/login', { identifier });
+    async sendCode(identifier: string) {
+      return requestJson<{ sent: boolean }>('POST', '/auth/send-code', { identifier });
     },
-    async register(identifier: string) {
-      return request<AppUser>('POST', '/auth/register', { identifier });
+    async verify(identifier: string, code: string) {
+      return requestJson<{ access_token: string; token_type: string; user: AppUser }>('POST', '/auth/verify', { identifier, code });
     },
     async me() {
-      return get<AppUser | null>('/auth/me');
+      return getJson<AppUser | null>('/auth/me');
     },
   },
   profile: {
     async getMyProfile() {
-      return get<FamilyMember>('/profile/me');
+      return getJson<FamilyMember>('/profile/me');
     },
     async updateMyProfile(patch: Partial<FamilyMember>) {
-      return request<FamilyMember>('PATCH', '/profile/me', patch);
+      const payload: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === undefined) continue;
+        const snake = key.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
+        payload[snake] = value;
+      }
+      return requestJson<FamilyMember>('PATCH', '/profile/me', payload);
     },
     async listMyMedia() {
-      return get<MediaItem[]>('/profile/media');
+      return getJson<MediaItem[]>('/profile/me/media');
     },
   },
 };

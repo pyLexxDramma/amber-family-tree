@@ -7,6 +7,12 @@ export interface FeedListParams {
   topicTag?: string;
 }
 
+export interface VerifyResponse {
+  access_token: string;
+  token_type: string;
+  user: AppUser;
+}
+
 export interface FeedApi {
   list(params?: FeedListParams): Promise<Publication[]>;
   getById(id: string): Promise<Publication | null>;
@@ -18,8 +24,8 @@ export interface FamilyApi {
 }
 
 export interface AuthApi {
-  login(identifier: string): Promise<AppUser>;
-  register(identifier: string): Promise<AppUser>;
+  sendCode(identifier: string): Promise<{ sent: boolean }>;
+  verify(identifier: string, code: string): Promise<VerifyResponse>;
   me(): Promise<AppUser | null>;
 }
 

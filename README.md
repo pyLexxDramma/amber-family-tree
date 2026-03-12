@@ -10,4 +10,36 @@
 
 ## Информация о проекте
 
-- **Приложение:** [https://angelo-test.ru]
+- **Приложение:** `https://angelo-test.ru`
+
+---
+
+## Локальный запуск (фронт + бэк)
+
+### Backend (Docker)
+
+```bash
+cd backend
+cp .env.example .env
+docker compose up --build
+```
+
+API: `http://localhost:8000`  
+Swagger: `http://localhost:8000/docs`
+
+### Frontend (Vite)
+
+```bash
+npm install
+VITE_USE_MOCK_API=false npm run dev
+```
+
+Фронт: `http://localhost:8080`  
+Запросы к API идут на `/api/...` и в dev проксируются на backend:8000.
+
+---
+
+## Деплой на Fornex (VPS)
+
+- **Основная схема**: один домен, API под `/api` через nginx.
+- Документация: `docs/deploy-fornex.md`, `docs/fornex-full-build.md`.

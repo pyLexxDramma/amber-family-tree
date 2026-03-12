@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { ArrowLeft } from 'lucide-react';
+import { api } from '@/integrations/api';
 
 const ConfirmCode: React.FC = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const ConfirmCode: React.FC = () => {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(30);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (resendTimer <= 0) return;
@@ -18,12 +20,21 @@ const ConfirmCode: React.FC = () => {
     return () => clearTimeout(t);
   }, [resendTimer]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (code.length < 4) { setError('Введите полный код'); return; }
-    if (code === '0000') { setError('Неверный код'); return; }
-    if (code === '9999') { setError('Время кода истекло'); return; }
-    if (mode === 'register') navigate('/onboarding');
-    else navigate(ROUTES.classic.tree);
+    if (!contact) { setError('Не удалось определить телефон или email'); return; }
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const res = await api.auth.verify(contact, code);
+      localStorage.setItem('token', res.access_token);
+      if (mode === 'register') navigate('/onboarding');
+      else navigate(ROUTES.classic.tree);
+    } catch {
+      setError('Неверный код или ошибка сервера');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,15 +59,27 @@ const ConfirmCode: React.FC = () => {
 
         {error && <p className="text-destructive text-sm font-semibold">{error}</p>}
 
-        <button onClick={handleConfirm} className="w-full h-12 rounded-2xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20">
-          Подтвердить
+        <button disabled={isSubmitting} onClick={handleConfirm} className="w-full h-12 rounded-2xl bg-primary text-primary-foreground text-base font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-60">
+          {isSubmitting ? 'Проверяем…' : 'Подтвердить'}
         </button>
 
         <div className="text-center text-sm text-muted-foreground">
           {resendTimer > 0 ? (
             <span>Отправить код ещё раз через {resendTimer} с</span>
           ) : (
-            <button type="button" className="underline text-primary hover:text-primary/80 transition-colors font-semibold" onClick={() => setResendTimer(30)}>
+            <button
+              type="button"
+              className="underline text-primary hover:text-primary/80 transition-colors font-semibold"
+              onClick={async () => {
+                if (!contact) return;
+                try {
+                  await api.auth.sendCode(contact);
+                  setResendTimer(30);
+                } catch {
+                  setError('Не удалось отправить код');
+                }
+              }}
+            >
               Отправить код ещё раз
             </button>
           )}

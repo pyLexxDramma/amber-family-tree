@@ -4,8 +4,8 @@
 
 ## 1. Базовый URL API
 
-- Один базовый адрес для всех запросов (например `https://api.angelo-test.ru/v1` или прокси с фронта).
-- На фронте используется переменная окружения `VITE_API_BASE` (без слэша в конце).
+- В продакшене используется схема «один домен»: фронт на `/`, API на `/api`.
+- На фронте можно задать `VITE_API_URL` (опционально). Если не задана, берётся `window.location.origin`, и запросы идут на `/api/...` текущего домена.
 
 ## 2. Авторизация
 
@@ -20,7 +20,7 @@
 
 ## 4. Эндпоинты под контракт
 
-Во фронте уже подготовлен HTTP-клиент (`src/integrations/realApi.ts`), который ожидает такие пути (относительно `VITE_API_BASE`):
+Во фронте уже подготовлен HTTP-клиент (`src/integrations/realApi.ts`), который ожидает такие пути (относительно `/api`):
 
 | Метод контракта | HTTP | Путь | Тело/параметры |
 |-----------------|------|------|----------------|
@@ -28,14 +28,14 @@
 | feed.getById | GET | /feed/:id | — |
 | family.listMembers | GET | /family/members | — |
 | family.getMember | GET | /family/members/:id | — |
-| auth.login | POST | /auth/login | { identifier } |
-| auth.register | POST | /auth/register | { identifier } |
+| auth.sendCode | POST | /auth/send-code | { identifier } |
+| auth.verify | POST | /auth/verify | { identifier, code } |
 | auth.me | GET | /auth/me | — |
 | profile.getMyProfile | GET | /profile/me | — |
 | profile.updateMyProfile | PATCH | /profile/me | Partial<FamilyMember> |
-| profile.listMyMedia | GET | /profile/media | — |
+| profile.listMyMedia | GET | /profile/me/media | — |
 
-Если бэк будет использовать другие пути или имена полей — нужно прислать маппинг, фронт поправит в `realApi.ts`. Токен авторизации фронт передаёт в заголовке `Authorization: Bearer <token>` (ключ в localStorage — `angelo_token`, сохранять после логина/регистрации можно по договорённости).
+Если бэк будет использовать другие пути или имена полей — нужен маппинг, фронт правится в `realApi.ts`. Токен авторизации фронт передаёт в заголовке `Authorization: Bearer <token>` (ключ в localStorage — `token`).
 
 ## 5. Регистрация и логин
 
