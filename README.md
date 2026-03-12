@@ -43,3 +43,15 @@ VITE_USE_MOCK_API=false npm run dev
 
 - **Основная схема**: один домен, API под `/api` через nginx.
 - Документация: `docs/deploy-fornex.md`, `docs/fornex-full-build.md`.
+
+---
+
+## Демо-режим (моки данных + реальный вход)
+
+Для показа заказчику можно включить моки данных (лента/семья/профиль), но оставить реальную авторизацию через backend:
+
+```bash
+VITE_DEMO_MOCK_DATA=true VITE_USE_MOCK_API=false npm run dev
+```
+
+Для продакшена на Fornex `VITE_DEMO_MOCK_DATA` не задавать (или `false`).

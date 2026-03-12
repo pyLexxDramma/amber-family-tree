@@ -58,6 +58,7 @@ app.include_router(profile.router, prefix="/api")
 |----------------------|------------------------|----------------------------|
 | `VITE_USE_MOCK_API`  | `false` (реальный API)| `false`                    |
 | `VITE_API_URL`       | не задавать            | не задавать                |
+| `VITE_DEMO_MOCK_DATA` | опционально `true` (моки данных + реальный auth) | не задавать / `false` |
 
 При незаданном `VITE_API_URL` используется текущий origin, запросы идут на `/api/...` того же домена.
 
