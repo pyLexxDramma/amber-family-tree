@@ -194,7 +194,7 @@ server {
     listen 80;
     server_name yourdomain.com;
 
-    root /var/www/angelo/dist;
+    root /var/www/angelo;
     index index.html;
     location / {
         try_files $uri $uri/ /index.html;
@@ -233,7 +233,7 @@ server {
    cd backend
    docker compose up -d --build
    ```
-5. Скопировать содержимое `dist/` в каталог, указанный в nginx как `root` (например, `/var/www/angelo/dist`).
+5. Скопировать содержимое `dist/` в каталог, указанный в nginx как `root` (например, `/var/www/angelo`).
 6. Перезагрузить nginx.
 7. Настроить DNS: A-запись домена на IP VPS.
 

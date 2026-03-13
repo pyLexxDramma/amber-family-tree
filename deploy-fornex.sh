@@ -1,11 +1,11 @@
 #!/bin/bash
 # Deploy Angelo to Fornex VPS. Run on server: ./deploy-fornex.sh
 # Or via SSH: ssh user@host "cd /opt/angelo && ./deploy-fornex.sh"
-# Override: PROJECT_DIR=/path WEB_ROOT=/var/www/angelo/dist ./deploy-fornex.sh
+# Override: PROJECT_DIR=/path WEB_ROOT=/var/www/angelo ./deploy-fornex.sh
 set -e
 
 PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
-WEB_ROOT="${WEB_ROOT:-/var/www/angelo/dist}"
+WEB_ROOT="${WEB_ROOT:-/var/www/angelo}"
 
 cd "$PROJECT_DIR"
 echo ">>> git pull"

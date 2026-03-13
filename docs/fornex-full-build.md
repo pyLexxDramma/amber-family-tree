@@ -129,7 +129,7 @@ server {
     listen 80;
     server_name angelo-test.ru;
 
-    root /var/www/angelo/dist;
+    root /var/www/angelo;
     index index.html;
     location / {
         try_files $uri $uri/ /index.html;
@@ -179,7 +179,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ```bash
 sudo mkdir -p /var/www/angelo
-sudo cp -r /opt/angelo/dist/* /var/www/angelo/dist/
+sudo cp -r /opt/angelo/dist/* /var/www/angelo/
 ```
 
 При следующих обновлениях фронта — пересобрать `npm run build` и снова скопировать содержимое `dist/` в этот каталог.
@@ -212,9 +212,9 @@ sudo cp -r /opt/angelo/dist/* /var/www/angelo/dist/
 ssh user@your-fornex-ip "cd /opt/angelo && ./deploy-fornex.sh"
 ```
 
-Скрипт выполняет: `git pull` → `docker compose up -d --build` (backend) → `npm run build` (frontend) → копирование `dist/` в `/var/www/angelo/dist/` → перезагрузка nginx.
+Скрипт выполняет: `git pull` → `docker compose up -d --build` (backend) → `npm run build` (frontend) → копирование `dist/` в `/var/www/angelo/` → перезагрузка nginx.
 
-Переменные: `PROJECT_DIR`, `WEB_ROOT` (по умолчанию `/var/www/angelo/dist`).
+Переменные: `PROJECT_DIR`, `WEB_ROOT` (по умолчанию `/var/www/angelo`).
 
 ---
 
