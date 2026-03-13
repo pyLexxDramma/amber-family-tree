@@ -25,9 +25,13 @@ app = FastAPI(
 app.include_router(auth.router, prefix="/api")
 app.include_router(auth.router)
 app.include_router(family.router, prefix="/api")
+app.include_router(family.router)
 app.include_router(feed.router, prefix="/api")
+app.include_router(feed.router)
 app.include_router(media.router, prefix="/api")
+app.include_router(media.router)
 app.include_router(profile.router, prefix="/api")
+app.include_router(profile.router)
 
 
 @app.get("/health")
