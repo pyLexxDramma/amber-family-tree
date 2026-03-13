@@ -5,6 +5,7 @@ from app.models.family_member import FamilyMember
 from app.models.publication import Publication
 from app.models.media_item import MediaItem
 from app.models.comment import Comment
+from app.models.comment_like import CommentLike
 from app.models.like import Like
 from app.models.invitation import Invitation
 from app.models.message import Message
@@ -17,6 +18,7 @@ __all__ = [
     "Publication",
     "MediaItem",
     "Comment",
+    "CommentLike",
     "Like",
     "Invitation",
     "Message",

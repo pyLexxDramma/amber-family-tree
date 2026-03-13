@@ -20,6 +20,8 @@ export interface FeedApi {
   addComment(publicationId: string, text: string): Promise<Comment>;
   addLike(publicationId: string): Promise<Publication>;
   removeLike(publicationId: string): Promise<Publication>;
+  addCommentLike(publicationId: string, commentId: string): Promise<Comment>;
+  removeCommentLike(publicationId: string, commentId: string): Promise<Comment>;
 }
 
 export interface FamilyApi {

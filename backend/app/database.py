@@ -16,6 +16,7 @@ from app.models import (  # noqa: F401
     Publication,
     MediaItem,
     Comment,
+    CommentLike,
     Like,
     Invitation,
     Message,

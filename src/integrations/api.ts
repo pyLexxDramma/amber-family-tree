@@ -18,6 +18,10 @@ export const api: AngeloApi = {
     list: (params) => selectApi().feed.list(params),
     getById: (id) => selectApi().feed.getById(id),
     addComment: (publicationId, text) => selectApi().feed.addComment(publicationId, text),
+    addLike: (publicationId) => selectApi().feed.addLike(publicationId),
+    removeLike: (publicationId) => selectApi().feed.removeLike(publicationId),
+    addCommentLike: (publicationId, commentId) => selectApi().feed.addCommentLike(publicationId, commentId),
+    removeCommentLike: (publicationId, commentId) => selectApi().feed.removeCommentLike(publicationId, commentId),
   },
   family: {
     listMembers: () => selectApi().family.listMembers(),

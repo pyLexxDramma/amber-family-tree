@@ -32,3 +32,6 @@ class Comment(Base):
     author_member: Mapped["FamilyMember"] = relationship(
         "FamilyMember", back_populates="comments"
     )
+    likes: Mapped[list["CommentLike"]] = relationship(
+        "CommentLike", back_populates="comment", cascade="all, delete-orphan"
+    )

@@ -42,6 +42,7 @@ export interface Comment {
   authorId: string;
   text: string;
   createdAt: string;
+  likes?: string[];
 }
 
 export interface Message {

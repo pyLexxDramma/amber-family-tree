@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import select
@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 from app.core.security import get_current_user
 from app.database import get_db
 from app.models.comment import Comment
+from app.models.comment_like import CommentLike
 from app.models.like import Like
 from app.models.media_item import MediaItem
 from app.models.publication import Publication
@@ -53,11 +54,13 @@ def _media_to_response(m: MediaItem) -> dict:
 
 
 def _comment_to_response(c: Comment) -> dict:
+    like_ids = [str(l.member_id) for l in getattr(c, "likes", [])]
     return CommentResponse(
         id=str(c.id),
         author_id=str(c.author_id),
         text=c.text,
         created_at=c.created_at.isoformat() if c.created_at else "",
+        likes=like_ids,
     ).model_dump(by_alias=False)
 
 
@@ -96,7 +99,7 @@ async def _load_publication_for_response(
         select(Publication)
         .options(
             selectinload(Publication.media),
-            selectinload(Publication.comments),
+            selectinload(Publication.comments).selectinload(Comment.likes),
             selectinload(Publication.likes),
         )
         .where(Publication.id == publication_id)
@@ -132,7 +135,7 @@ async def list_feed(
         q = q.limit(limit)
     q = q.options(
         selectinload(Publication.media),
-        selectinload(Publication.comments),
+        selectinload(Publication.comments).selectinload(Comment.likes),
         selectinload(Publication.likes),
     )
     result = await db.execute(q)
@@ -208,7 +211,7 @@ async def create_publication(
         select(Publication)
         .options(
             selectinload(Publication.media),
-            selectinload(Publication.comments),
+            selectinload(Publication.comments).selectinload(Comment.likes),
             selectinload(Publication.likes),
         )
         .where(Publication.id == pub.id)
@@ -298,6 +301,106 @@ async def add_like(
         )
     like_ids = [str(l.member_id) for l in pub.likes]
     return _publication_to_response(pub, like_ids)
+
+
+@router.post("/{publication_id}/comments/{comment_id}/like")
+async def add_comment_like(
+    publication_id: UUID,
+    comment_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User has no member profile",
+        )
+    result = await db.execute(
+        select(Comment)
+        .join(Publication, Publication.id == Comment.publication_id)
+        .where(Comment.id == comment_id)
+        .where(Comment.publication_id == publication_id)
+        .where(Publication.family_id == current_user.family_id)
+        .options(selectinload(Comment.likes))
+    )
+    comment = result.scalar_one_or_none()
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comment not found",
+        )
+    existing = await db.execute(
+        select(CommentLike).where(
+            and_(
+                CommentLike.comment_id == comment_id,
+                CommentLike.member_id == current_user.member_id,
+            )
+        )
+    )
+    if existing.scalar_one_or_none():
+        return _comment_to_response(comment)
+    like = CommentLike(
+        id=uuid4(),
+        comment_id=comment_id,
+        member_id=current_user.member_id,
+    )
+    db.add(like)
+    await db.commit()
+    await db.refresh(comment)
+    result = await db.execute(
+        select(Comment)
+        .where(Comment.id == comment_id)
+        .options(selectinload(Comment.likes))
+    )
+    comment = result.scalar_one()
+    return _comment_to_response(comment)
+
+
+@router.delete("/{publication_id}/comments/{comment_id}/like")
+async def remove_comment_like(
+    publication_id: UUID,
+    comment_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User has no member profile",
+        )
+    result = await db.execute(
+        select(Comment)
+        .join(Publication, Publication.id == Comment.publication_id)
+        .where(Comment.id == comment_id)
+        .where(Comment.publication_id == publication_id)
+        .where(Publication.family_id == current_user.family_id)
+        .options(selectinload(Comment.likes))
+    )
+    comment = result.scalar_one_or_none()
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comment not found",
+        )
+    existing = await db.execute(
+        select(CommentLike).where(
+            and_(
+                CommentLike.comment_id == comment_id,
+                CommentLike.member_id == current_user.member_id,
+            )
+        )
+    )
+    like = existing.scalar_one_or_none()
+    if like:
+        await db.delete(like)
+        await db.commit()
+    result = await db.execute(
+        select(Comment)
+        .where(Comment.id == comment_id)
+        .options(selectinload(Comment.likes))
+    )
+    comment = result.scalar_one()
+    return _comment_to_response(comment)
 
 
 @router.delete("/{publication_id}/like")

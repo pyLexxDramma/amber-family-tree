@@ -24,6 +24,7 @@ class CommentResponse(BaseModel):
     authorId: str = Field(..., alias="author_id")
     text: str
     createdAt: str = Field(..., alias="created_at")
+    likes: list[str] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}
 

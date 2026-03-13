@@ -113,6 +113,21 @@ const PublicationDetails: React.FC = () => {
     }
   };
 
+  const toggleCommentLike = async (commentId: string) => {
+    if (!pub || !myMemberId) return;
+    try {
+      const current = (pub.comments ?? []).find(c => c.id === commentId);
+      const liked = current ? (current.likes ?? []).includes(myMemberId) : false;
+      const updated = liked
+        ? await api.feed.removeCommentLike(pub.id, commentId)
+        : await api.feed.addCommentLike(pub.id, commentId);
+      setPub(prev => prev ? { ...prev, comments: (prev.comments ?? []).map(c => c.id === commentId ? { ...c, ...updated } : c) } : prev);
+      platform.hapticFeedback('light');
+    } catch {
+      toast({ title: 'Не удалось поставить лайк' });
+    }
+  };
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
@@ -231,6 +246,8 @@ const PublicationDetails: React.FC = () => {
                     const avatarSrc = authorId && (memberMap.get(authorId) as { avatar?: string } | undefined)?.avatar
                       ? (memberMap.get(authorId) as { avatar: string }).avatar
                       : (authorId ? getPrototypeAvatar(authorId, currentUserId).src : '');
+                    const commentLikes = c.likes ?? [];
+                    const isCommentLiked = myMemberId ? commentLikes.includes(myMemberId) : false;
                     return (
                       <div key={cid} className="flex gap-3">
                         <button
@@ -250,6 +267,18 @@ const PublicationDetails: React.FC = () => {
                             {timeAgo && <span className="text-[var(--proto-text-muted)] font-normal ml-1">· {timeAgo}</span>}
                           </p>
                           <p className="text-sm text-[var(--proto-text)] mt-0.5 leading-relaxed">{c.text}</p>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleCommentLike(cid)}
+                              disabled={!myMemberId}
+                              className="inline-flex items-center gap-1 text-xs text-[var(--proto-text-muted)] hover:text-[var(--proto-text)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              aria-label="Лайк комментария"
+                            >
+                              <Heart className="h-3.5 w-3.5" fill={isCommentLiked ? 'currentColor' : 'none'} />
+                              {commentLikes.length}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
