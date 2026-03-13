@@ -39,6 +39,7 @@ export interface PresignUploadRequest {
   filename: string;
   content_type: string;
   publication_id?: string;
+  file_size_bytes?: number;
 }
 
 export interface PresignUploadResponse {

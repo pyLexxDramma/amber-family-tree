@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -10,6 +10,14 @@ from app.schemas.media import PresignRequest, PresignResponse
 router = APIRouter(prefix="/media", tags=["media"])
 
 
+def _max_bytes_for_content_type(settings) -> dict:
+    return {
+        "image": settings.max_photo_mb * 1_000_000,
+        "video": settings.max_video_mb * 1_000_000,
+        "audio": settings.max_audio_mb * 1_000_000,
+    }
+
+
 @router.post("/presign", response_model=PresignResponse)
 async def presign(
     body: PresignRequest,
@@ -17,6 +25,12 @@ async def presign(
     db: AsyncSession = Depends(get_db),
 ) -> PresignResponse:
     settings = get_settings()
+    if body.file_size_bytes is not None:
+        limits = _max_bytes_for_content_type(settings)
+        ct = (body.content_type or "").lower()
+        max_bytes = limits.get(ct.split("/")[0], settings.max_document_mb * 1_000_000)
+        if body.file_size_bytes > max_bytes:
+            raise HTTPException(400, f"File too large (max {max_bytes // 1_000_000} MB for this type)")
     import uuid
     key = f"uploads/{current_user.id}/{uuid.uuid4()}_{body.filename}"
     try:

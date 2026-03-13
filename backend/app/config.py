@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     s3_region: str = Field("us-east-1", alias="S3_REGION")
     s3_bucket: str = Field(..., alias="S3_BUCKET")
 
+    max_photo_mb: int = Field(20, alias="MAX_PHOTO_MB")
+    max_video_mb: int = Field(500, alias="MAX_VIDEO_MB")
+    max_audio_mb: int = Field(100, alias="MAX_AUDIO_MB")
+    max_document_mb: int = Field(100, alias="MAX_DOCUMENT_MB")
+
     otp_expiry_seconds: int = Field(600, alias="OTP_EXPIRY_SECONDS")
     otp_debug_log_code: bool = Field(False, alias="OTP_DEBUG_LOG_CODE")
 

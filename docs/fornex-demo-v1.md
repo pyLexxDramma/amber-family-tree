@@ -119,8 +119,9 @@
 - **Ограничения на размер**
   - **Ответ**: есть ограничения в BRD для MVP; в масштабе хочется снять (4K 60fps и т.п.).
   - **Статус**:
-    - Фронт: лимит сделан настраиваемым (`VITE_MAX_UPLOAD_MB`, дефолт 1024MB).
-    - Nginx: нужно выставлять `client_max_body_size` под целевые размеры.
+    - Фронт: лимиты по типам — фото 20 MB, видео 500 MB, аудио 100 MB, документы 100 MB. Env: `VITE_MAX_PHOTO_MB`, `VITE_MAX_VIDEO_MB`, `VITE_MAX_AUDIO_MB`, `VITE_MAX_DOCUMENT_MB`.
+    - Бэк: валидация в presign по `file_size_bytes` и `content_type`; env: `MAX_PHOTO_MB`, `MAX_VIDEO_MB`, `MAX_AUDIO_MB`, `MAX_DOCUMENT_MB`.
+    - Nginx: нужно выставлять `client_max_body_size` ≥ 500 MB для видео.
 
 - **Версии изображений (original/preview/thumb)**
   - **Ответ**: original хранить и скачивать, thumb для плитки, preview для ленты/публикации.

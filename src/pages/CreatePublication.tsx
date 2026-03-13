@@ -13,10 +13,7 @@ import { topicTags } from '@/data/mock-publications';
 import { ArrowLeft, Image, Video, Mic, FileText, Type, Upload, X, AlertTriangle } from 'lucide-react';
 import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
-
-const maxUploadMb = Number(String(import.meta.env.VITE_MAX_UPLOAD_MB ?? '1024'));
-const maxUploadBytes = Number.isFinite(maxUploadMb) && maxUploadMb > 0 ? Math.floor(maxUploadMb * 1_000_000) : 1_024_000_000;
-const MAX_SIZES: Record<string, number> = { photo: maxUploadBytes, video: maxUploadBytes, audio: maxUploadBytes, document: maxUploadBytes };
+import { getMaxBytesForPublicationType } from '@/lib/uploadLimits';
 
 type UploadItem = {
   id: string;
@@ -72,7 +69,7 @@ const CreatePublication: React.FC = () => {
 
   const addFiles = (list: FileList) => {
     if (!type) return;
-    const maxSize = MAX_SIZES[type] ?? maxUploadBytes;
+    const maxSize = getMaxBytesForPublicationType(type);
     const now = Date.now();
     const items: UploadItem[] = Array.from(list).map((file, idx) => {
       const err = file.size > maxSize ? `File too large (max ${Math.floor(maxSize / 1_000_000)}MB)` : undefined;
@@ -91,13 +88,13 @@ const CreatePublication: React.FC = () => {
     try {
       let uploadedKeys: string[] = [];
       if (type !== 'text') {
-        const maxSize = MAX_SIZES[type] ?? maxUploadBytes;
+        const maxSize = getMaxBytesForPublicationType(type);
         const needUpload = files.filter(f => f.status === 'pending' && !f.error && f.size <= maxSize);
         for (const item of needUpload) {
           setFiles(prev => prev.map(f => (f.id === item.id ? { ...f, status: 'uploading', error: undefined } : f)));
           const startedAt = performance.now();
           try {
-            const presign = await api.media.presign({ filename: item.file.name, content_type: item.file.type || 'application/octet-stream' });
+            const presign = await api.media.presign({ filename: item.file.name, content_type: item.file.type || 'application/octet-stream', file_size_bytes: item.file.size });
             const putRes = await fetch(presign.upload_url, { method: 'PUT', headers: { 'Content-Type': item.file.type || 'application/octet-stream' }, body: item.file });
             if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
             const uploadMs = Math.round(performance.now() - startedAt);

@@ -7,6 +7,7 @@ import { Video } from 'lucide-react';
 import type { MediaItem, MediaType } from '@/types';
 import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
+import { getMaxBytesForContentType } from '@/lib/uploadLimits';
 
 type FilterType = 'all' | 'photo' | 'video';
 type CategoryFilter = 'popular' | 'collection' | 'family';
@@ -66,9 +67,24 @@ const MyMedia: React.FC = () => {
     try {
       const createdAt = new Date().toISOString();
       for (const file of Array.from(files)) {
+        const contentType = file.type || 'application/octet-stream';
+        const maxBytes = getMaxBytesForContentType(contentType);
+        if (file.size > maxBytes) {
+          setUploadStats(s => [{
+            name: file.name,
+            type: contentType,
+            sizeBytes: file.size,
+            uploadMs: 0,
+            mbps: 0,
+            createdAt: new Date().toISOString(),
+            status: 'error',
+            error: `File too large (max ${Math.floor(maxBytes / 1_000_000)} MB)`,
+          }, ...s]);
+          continue;
+        }
         const startedAt = performance.now();
         try {
-          const presign = await api.media.presign({ filename: file.name, content_type: file.type || 'application/octet-stream' });
+          const presign = await api.media.presign({ filename: file.name, content_type: contentType, file_size_bytes: file.size });
           const putRes = await fetch(presign.upload_url, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
           if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
 
