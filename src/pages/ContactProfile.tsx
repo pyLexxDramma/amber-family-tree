@@ -1,20 +1,68 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { getMember, currentUserId } from '@/data/mock-members';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
 import { Users, Heart, MessageCircle, Calendar, ChevronRight } from 'lucide-react';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
+import type { FamilyMember } from '@/types';
+import { api } from '@/integrations/api';
+
+type Rel = { type: string; memberId: string };
+
+function normalizeRelations(relations: unknown): Rel[] {
+  if (!Array.isArray(relations)) return [];
+  return relations
+    .map((r) => {
+      if (!r || typeof r !== 'object') return null;
+      const type = (r as any).type;
+      const memberId = (r as any).memberId ?? (r as any).member_id;
+      if (typeof type !== 'string' || typeof memberId !== 'string') return null;
+      return { type, memberId };
+    })
+    .filter(Boolean) as Rel[];
+}
 
 const ContactProfile: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const member = getMember(id || '');
   const platform = usePlatform();
+  const [member, setMember] = useState<FamilyMember | null | undefined>(undefined);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
 
-  if (!member) {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!id) {
+        setMember(null);
+        return;
+      }
+      try {
+        const [m, list] = await Promise.all([
+          api.family.getMember(id),
+          api.family.listMembers(),
+        ]);
+        if (cancelled) return;
+        setMember(m);
+        setMembers(list);
+      } catch {
+        if (cancelled) return;
+        setMember(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  if (member === undefined) {
+    return (
+      <AppLayout>
+        <div className="prototype-screen p-6 text-center text-[var(--proto-text)] font-medium min-h-touch flex items-center justify-center">Загрузка…</div>
+      </AppLayout>
+    );
+  }
+
+  if (member === null) {
     return (
       <AppLayout>
         <div className="prototype-screen p-6 text-center text-[var(--proto-text)] font-medium min-h-touch flex items-center justify-center">Контакт не найден</div>
@@ -22,11 +70,20 @@ const ContactProfile: React.FC = () => {
     );
   }
 
-  const parentIds = member.relations.filter((r) => r.type === 'parent').map((r) => r.memberId);
-  const childIds = member.relations.filter((r) => r.type === 'child').map((r) => r.memberId);
-  const parents = parentIds.map((mid) => getMember(mid)).filter(Boolean);
-  const children = childIds.map((mid) => getMember(mid)).filter(Boolean);
+  const memberMap = useMemo(() => {
+    const map = new Map<string, FamilyMember>();
+    for (const m of members) map.set(m.id, m);
+    map.set(member.id, member);
+    return map;
+  }, [member, members]);
+
+  const rels = normalizeRelations(member.relations);
+  const parentIds = rels.filter((r) => r.type === 'parent').map((r) => r.memberId);
+  const childIds = rels.filter((r) => r.type === 'child').map((r) => r.memberId);
+  const parents = parentIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
+  const children = childIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
   const displayName = member.nickname || `${member.firstName} ${member.lastName}`.trim();
+  const heroSrc = (member as { avatar?: string }).avatar || getPrototypeAvatarUrl(member.id);
 
   const formatDate = (d: string) => {
     try {
@@ -48,7 +105,7 @@ const ContactProfile: React.FC = () => {
         <TopBar title={displayName} onBack={() => navigate(-1)} light />
         <div className="mx-auto max-w-full w-full flex-1 px-3 sm:px-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <div className="relative w-full" style={{ minHeight: '50vh' }}>
-            <img src={getPrototypeAvatarUrl(member.id, currentUserId)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <p className="text-white/80 text-sm">
@@ -108,7 +165,7 @@ const ContactProfile: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[var(--proto-text)]">
-                      {parents.length === 0 ? 'Родители не указаны' : parents.map(p => p!.nickname || p!.firstName).join(', ')}
+                      {parents.length === 0 ? 'Родители не указаны' : parents.map(p => p.nickname || p.firstName).join(', ')}
                     </p>
                     <p className="text-xs text-[var(--proto-text-muted)]">{parents.length > 0 ? `Родител${parents.length > 1 ? 'и' : 'ь'}` : ''}</p>
                   </div>
@@ -125,7 +182,7 @@ const ContactProfile: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[var(--proto-text)]">
-                      {children.length === 0 ? 'Дети не указаны' : children.map(c => c!.nickname || c!.firstName).join(', ')}
+                      {children.length === 0 ? 'Дети не указаны' : children.map(c => c.nickname || c.firstName).join(', ')}
                     </p>
                     <p className="text-xs text-[var(--proto-text-muted)]">{children.length > 0 ? `Дет${children.length > 1 ? 'и' : 'ь'}` : ''}</p>
                   </div>
