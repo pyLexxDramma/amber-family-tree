@@ -52,10 +52,10 @@ const CreatePublication: React.FC = () => {
   }, [preselectedType, type]);
 
   const accept = useMemo(() => {
-    if (type === 'photo') return 'image/*';
-    if (type === 'video') return 'video/*';
-    if (type === 'audio') return 'audio/*';
-    if (type === 'media') return 'image/*,video/*,audio/*';
+    if (type === 'photo') return 'image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif';
+    if (type === 'video') return 'video/*,.mp4,.mov,.webm';
+    if (type === 'audio') return 'audio/*,.mp3,.m4a,.wav,.ogg';
+    if (type === 'media') return 'image/*,video/*,audio/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.mp3,.m4a,.wav,.ogg';
     if (type === 'document') return '.pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';
     return '';
   }, [type]);
@@ -228,22 +228,23 @@ const CreatePublication: React.FC = () => {
                       <button disabled={f.status === 'uploading'} onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))} className="rounded-lg p-1 hover:bg-[var(--proto-border)] disabled:opacity-60"><X className="h-4 w-4 text-[var(--proto-text-muted)]" /></button>
                     </div>
                   ))}
-                  <input
-                    id="create-file-input"
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept={accept}
-                    className="sr-only"
-                    onChange={e => {
-                      const list = e.currentTarget.files;
-                      e.currentTarget.value = '';
-                      if (list && list.length) addFiles(list);
-                    }}
-                  />
-                  <label htmlFor="create-file-input" className="mt-2 inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-[var(--proto-active)] px-4 py-2 text-sm font-semibold text-[var(--proto-active)] hover:opacity-90">
-                    <Upload className="h-3.5 w-3.5" /> Добавить файл
-                  </label>
+                  <div className="relative mt-2 inline-block">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept={accept}
+                      className="absolute inset-0 z-10 w-full min-h-[40px] cursor-pointer opacity-0"
+                      onChange={e => {
+                        const list = e.currentTarget.files;
+                        if (list?.length) addFiles(list);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                    <div className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-[var(--proto-active)] px-4 py-2 text-sm font-semibold text-[var(--proto-active)] hover:opacity-90 pointer-events-none">
+                      <Upload className="h-3.5 w-3.5" /> Добавить файл
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
