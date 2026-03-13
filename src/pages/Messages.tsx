@@ -99,9 +99,14 @@ const Messages: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
+      <div className="prototype-screen bg-[var(--proto-bg)] flex flex-col">
         <TopBar title={title} onBack={() => navigate(-1)} light />
         <div className="flex-1 overflow-auto px-3 py-4 space-y-2">
+          {items.length === 0 && (
+            <div className="py-10 text-center text-sm text-[var(--proto-text-muted)]">
+              Напишите первое сообщение
+            </div>
+          )}
           {items.map((m) => {
             const mine = myId && m.senderId === myId;
             return (
@@ -119,7 +124,7 @@ const Messages: React.FC = () => {
             e.preventDefault();
             send();
           }}
-          className="p-3 border-t border-[var(--proto-border)] bg-[var(--proto-card)] flex gap-2"
+          className="sticky bottom-0 p-3 border-t border-[var(--proto-border)] bg-[var(--proto-card)] flex gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]"
         >
           <input
             value={text}
