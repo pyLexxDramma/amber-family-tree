@@ -48,11 +48,11 @@ const MyProfile: React.FC = () => {
         } />
         <div className="mx-auto max-w-full px-3 pt-4 pb-4 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl">
           <div className="relative mb-8 overflow-hidden rounded-xl bg-[var(--proto-card)] flex items-center justify-center" style={{ aspectRatio: '4/3' }}>
-            <img src={getPrototypeAvatarUrl(currentUserId, currentUserId)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={(user as { avatar?: string }).avatar ?? getPrototypeAvatarUrl(user.id, currentUserId)} alt="" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-5">
               <p className="text-white/70 text-xs font-medium mb-1">{plan?.name === 'Free' ? 'Бесплатный' : plan?.name === 'Premium' ? 'Премиум' : plan?.name} · план</p>
-              <h1 className="font-serif text-2xl font-semibold text-white">{user.firstName} {user.lastName}</h1>
+              <h1 className="font-serif text-2xl font-semibold text-white">{`${(user as { firstName?: string; first_name?: string }).firstName ?? (user as { first_name?: string }).first_name ?? ''} ${(user as { lastName?: string; last_name?: string }).lastName ?? (user as { last_name?: string }).last_name ?? ''}`.trim() || 'Профиль'}</h1>
               <p className="text-white/80 text-sm mt-1">{user.city}</p>
             </div>
           </div>

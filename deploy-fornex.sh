@@ -25,6 +25,11 @@ echo ">>> copy dist to $WEB_ROOT"
 sudo mkdir -p "$WEB_ROOT"
 sudo cp -r dist/* "$WEB_ROOT/"
 
+echo ">>> fix nginx root (if needed)"
+for f in /etc/nginx/sites-available/angelo /etc/nginx/sites-available/angelo-test.ru; do
+  [ -f "$f" ] && sudo sed -i 's|root /var/www/angelo/dist|root /var/www/angelo|' "$f" 2>/dev/null || true
+done
+
 echo ">>> reload nginx"
 sudo nginx -t 2>/dev/null && sudo systemctl reload nginx 2>/dev/null || true
 
