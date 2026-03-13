@@ -37,10 +37,9 @@ async def verify(
     db: AsyncSession = Depends(get_db),
 ):
     # Minimal: accept any code, create or get user and return token + AppUser
-    result = await db.execute(
-        select(User).where(User.identifier == body.identifier)
-    )
+    result = await db.execute(select(User).where(User.identifier == body.identifier))
     user = result.scalar_one_or_none()
+    member: FamilyMember | None = None
     if not user:
         family = Family(id=uuid4(), name=None)
         db.add(family)
@@ -57,7 +56,6 @@ async def verify(
             relations=[],
         )
         db.add(member)
-        await db.flush()
         user = User(
             id=uuid4(),
             identifier=body.identifier,
@@ -71,8 +69,9 @@ async def verify(
     else:
         await db.commit()
         await db.refresh(user)
+        if user.member_id:
+            member = await db.get(FamilyMember, user.member_id)
 
-    member = user.member
     if not member:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
