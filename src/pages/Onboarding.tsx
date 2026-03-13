@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Camera } from 'lucide-react';
+import { api } from '@/integrations/api';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ lastName: '', firstName: '', middleName: '', birthDate: '', city: '', about: '' });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
@@ -20,7 +26,48 @@ const Onboarding: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
-  const handleNext = () => { if (validate()) navigate(ROUTES.classic.tree); };
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    e.currentTarget.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 20 * 1_000_000) {
+      setAvatarError('Макс. 20 МБ');
+      return;
+    }
+    setAvatarError(null);
+    setAvatarUploading(true);
+    try {
+      const presign = await api.media.presign({ filename: file.name, content_type: file.type, file_size_bytes: file.size });
+      const putRes = await fetch(presign.upload_url, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+      if (!putRes.ok) throw new Error('upload failed');
+      setAvatarUrl(presign.url);
+    } catch {
+      setAvatarError('Не удалось загрузить');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const saveAndNavigate = async (skipValidation = false) => {
+    if (!skipValidation && !validate()) return;
+    setSaving(true);
+    try {
+      await api.profile.updateMyProfile({
+        lastName: form.lastName.trim() || undefined,
+        firstName: form.firstName.trim() || undefined,
+        middleName: form.middleName.trim() || undefined,
+        birthDate: form.birthDate || undefined,
+        city: form.city.trim() || undefined,
+        about: form.about.trim() || undefined,
+        avatar: avatarUrl || undefined,
+      });
+      navigate(ROUTES.classic.tree);
+    } catch {
+      setErrors({ _save: 'Не удалось сохранить' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const field = (key: keyof typeof form, label: string, required = false, type = 'text') => (
     <div>
@@ -62,12 +109,32 @@ const Onboarding: React.FC = () => {
 
       <div className="flex justify-center my-8">
         <div className="relative">
-          <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
-            <span className="text-2xl font-serif text-foreground/30">?</span>
-          </div>
-          <button type="button" className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background text-xs font-light">
-            <Camera className="h-3.5 w-3.5" aria-hidden />
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
+            className="sr-only"
+            onChange={handleAvatarSelect}
+          />
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarUploading}
+            className="relative block"
+          >
+            <div className="h-24 w-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl font-serif text-foreground/30">?</span>
+              )}
+            </div>
+            <span className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background">
+              <Camera className="h-3.5 w-3.5" aria-hidden />
+            </span>
           </button>
+          {avatarError && <p className="text-destructive text-xs mt-1 text-center">{avatarError}</p>}
+          {avatarUploading && <p className="text-muted-foreground text-xs mt-1 text-center">Загрузка…</p>}
         </div>
       </div>
 
@@ -80,20 +147,23 @@ const Onboarding: React.FC = () => {
         {field('about', 'О себе')}
       </div>
 
+      {errors._save && <p className="text-destructive text-sm mt-2">{errors._save}</p>}
       <div className="mt-12 flex gap-4">
         <button
           type="button"
-          onClick={() => navigate(ROUTES.classic.tree)}
-          className="touch-target flex-1 min-h-[52px] rounded-2xl border-2 border-foreground/25 text-base font-medium hover:bg-foreground hover:text-background transition-all duration-200"
+          onClick={() => saveAndNavigate(true)}
+          disabled={saving}
+          className="touch-target flex-1 min-h-[52px] rounded-2xl border-2 border-foreground/25 text-base font-medium hover:bg-foreground hover:text-background transition-all duration-200 disabled:opacity-60"
         >
           Пропустить
         </button>
         <button
           type="button"
-          onClick={handleNext}
-          className="touch-target flex-1 min-h-[52px] rounded-2xl bg-primary text-primary-foreground text-base font-medium hover:bg-primary/90 active:opacity-95 transition-all duration-200 shadow-md"
+          onClick={() => saveAndNavigate(false)}
+          disabled={saving}
+          className="touch-target flex-1 min-h-[52px] rounded-2xl bg-primary text-primary-foreground text-base font-medium hover:bg-primary/90 active:opacity-95 transition-all duration-200 shadow-md disabled:opacity-60"
         >
-          Далее
+          {saving ? 'Сохранение…' : 'Далее'}
         </button>
       </div>
     </div>

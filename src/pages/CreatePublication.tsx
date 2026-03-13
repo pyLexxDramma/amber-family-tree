@@ -230,7 +230,7 @@ const CreatePublication: React.FC = () => {
                     <div key={f.id} className={`flex items-center gap-2 rounded-xl p-3 text-sm border-2 ${f.error ? 'border-red-500/50 bg-red-500/5' : 'border-[var(--proto-border)]'}`}>
                       <div className="flex-1">
                         <p className="font-semibold text-[var(--proto-text)]">{f.name}</p>
-                        <p className="text-xs text-[var(--proto-text-muted)]">{(f.size / 1_000_000).toFixed(1)} МБ</p>
+                        <p className="text-xs text-[var(--proto-text-muted)]">{f.size >= 1_000_000 ? `${(f.size / 1_000_000).toFixed(1)} МБ` : `${(f.size / 1024).toFixed(1)} КБ`}</p>
                         {f.status === 'uploading' && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Загрузка…</p>}
                         {f.status === 'uploaded' && <p className="text-xs text-green-700 mt-0.5">Загружено{typeof f.uploadMs === 'number' ? ` (${f.uploadMs} мс)` : ''}</p>}
                         {f.error && <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{f.error}</p>}
