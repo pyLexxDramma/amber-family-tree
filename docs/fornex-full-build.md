@@ -143,12 +143,24 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+    client_max_body_size 512m;
+    location /angelo-media/ {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 ```
 
 - **server_name** — подставить свой домен (например `angelo-test.ru`).
 - **root** — путь к каталогу со сборкой фронта (см. п. 6).
 - **proxy_pass** — если nginx запущен в Docker в одном compose с backend, заменить на `http://api:8000`.
+- **location /angelo-media/** — обязателен для загрузки файлов (presigned URL). Без него — «Failed to fetch» при PUT.
+- **S3_PUBLIC_ENDPOINT_URL** в backend/.env должен быть `https://ваш-домен.ru` (без слэша в конце).
 
 Включить сайт, проверить конфиг и перезагрузить nginx:
 

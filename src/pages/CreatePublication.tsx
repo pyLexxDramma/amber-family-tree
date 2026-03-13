@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { ArrowLeft, Image, Video, Mic, FileText, Type, Upload, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Image, Video, Mic, FileText, Type, Upload, X, AlertTriangle, Users, Lock, Globe } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
+import { usePrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
 import { getMaxBytesForContentType, getMaxBytesForPublicationType } from '@/lib/uploadLimits';
 
 type UploadItem = {
@@ -39,7 +41,9 @@ const CreatePublication: React.FC = () => {
   const [files, setFiles] = useState<UploadItem[]>([]);
   const [tagError, setTagError] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { visibility, setVisibility } = usePrivacyVisibility();
 
   const preselectedType = useMemo(() => {
     const t = new URLSearchParams(location.search).get('type');
@@ -129,6 +133,12 @@ const CreatePublication: React.FC = () => {
 
       const today = new Date().toISOString().slice(0, 10);
       const pubType = type === 'media' ? (files[0]?.file.type.startsWith('video/') ? 'video' : files[0]?.file.type.startsWith('audio/') ? 'audio' : 'photo') : type;
+      let visibleFor: string[] | null = null;
+      let excludeFor: string[] | null = null;
+      if (visibility === 'only_me') {
+        const me = await api.profile.getMyProfile();
+        visibleFor = [me.id];
+      }
       await requestJson('POST', '/feed', {
         type: pubType,
         title: title || null,
@@ -139,8 +149,8 @@ const CreatePublication: React.FC = () => {
         topic_tag: topicTag,
         co_author_ids: [],
         participant_ids: [],
-        visible_for: null,
-        exclude_for: null,
+        visible_for: visibleFor,
+        exclude_for: excludeFor,
         media_keys: uploadedKeys,
       });
       navigate(ROUTES.classic.feed);
@@ -249,10 +259,43 @@ const CreatePublication: React.FC = () => {
               </div>
             )}
 
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px]">
+            <button
+              type="button"
+              onClick={() => setVisibilityOpen(true)}
+              className="w-full rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 min-h-[96px] text-left hover:border-[var(--proto-active)]/40 transition-colors"
+            >
               <p className="text-sm font-semibold text-[var(--proto-text)] mb-1">Видимость</p>
-              <p className="text-xs font-medium text-[var(--proto-text-muted)]">Всем участникам семьи. Нажмите, чтобы настроить.</p>
-            </div>
+              <p className="text-xs font-medium text-[var(--proto-text-muted)]">
+                {visibility === 'all' && 'Всем'}
+                {visibility === 'family' && 'Всем участникам семьи'}
+                {visibility === 'only_me' && 'Только мне'}
+                {' · Нажмите, чтобы изменить'}
+              </p>
+            </button>
+            <Sheet open={visibilityOpen} onOpenChange={setVisibilityOpen}>
+              <SheetContent side="bottom" className="rounded-t-3xl">
+                <SheetHeader>
+                  <SheetTitle>Видимость публикации</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 flex flex-col gap-2">
+                  {[
+                    { id: 'all' as const, label: 'Всем', icon: Globe },
+                    { id: 'family' as const, label: 'Всем участникам семьи', icon: Users },
+                    { id: 'only_me' as const, label: 'Только мне', icon: Lock },
+                  ].map(opt => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => { setVisibility(opt.id); setVisibilityOpen(false); }}
+                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left ${visibility === opt.id ? 'border-[var(--proto-active)] bg-[var(--proto-active)]/10' : 'border-[var(--proto-border)]'}`}
+                    >
+                      <opt.icon className="h-5 w-5 text-[var(--proto-active)]" />
+                      <span className="font-medium">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
 
             <div className="flex gap-3 pt-2">
               <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => navigate(-1)}>Отмена</Button>
