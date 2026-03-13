@@ -98,10 +98,10 @@ const Messages: React.FC = () => {
   }
 
   return (
-    <AppLayout>
-      <div className="prototype-screen bg-[var(--proto-bg)] flex flex-col">
+    <AppLayout hideNav>
+      <div className="prototype-screen min-h-screen min-h-[100dvh] bg-[var(--proto-bg)] flex flex-col">
         <TopBar title={title} onBack={() => navigate(-1)} light />
-        <div className="flex-1 overflow-auto px-3 py-4 space-y-2">
+        <div className="flex-1 overflow-auto px-3 py-4 pb-24 space-y-2">
           {items.length === 0 && (
             <div className="py-10 text-center text-sm text-[var(--proto-text-muted)]">
               Напишите первое сообщение
@@ -119,27 +119,30 @@ const Messages: React.FC = () => {
           })}
           <div ref={endRef} />
         </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send();
-          }}
-          className="sticky bottom-0 p-3 border-t border-[var(--proto-border)] bg-[var(--proto-card)] flex gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]"
-        >
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Сообщение…"
-            className="flex-1 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] h-10 px-3 text-sm text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:border-[var(--proto-active)]/50"
-          />
-          <button
-            type="submit"
-            disabled={!text.trim() || isSending}
-            className="rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        <div className="px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] border-t border-[var(--proto-border)] bg-[var(--proto-bg)]">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            className="flex items-center gap-2 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-2 shadow-sm"
           >
-            Отправить
-          </button>
-        </form>
+            <input
+              autoFocus
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Сообщение…"
+              className="flex-1 h-10 px-3 text-sm bg-transparent text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!text.trim() || isSending}
+              className="h-10 px-4 rounded-xl text-sm font-medium bg-[var(--proto-active)] text-white hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Отправить
+            </button>
+          </form>
+        </div>
       </div>
     </AppLayout>
   );
