@@ -30,7 +30,7 @@ export const BottomNav: React.FC = () => {
           return (
             <button
               key={item.path}
-              onClick={() => navigate(isCreate ? `${ROUTES.classic.create}?type=photo` : item.path)}
+              onClick={() => navigate(isCreate ? ROUTES.classic.create : item.path)}
               className={`flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-w-[56px] transition-colors rounded-lg ${isPrototype ? 'hover:bg-[var(--proto-border)]' : 'hover:bg-muted/50'}`}
               aria-current={active ? 'page' : undefined}
             >

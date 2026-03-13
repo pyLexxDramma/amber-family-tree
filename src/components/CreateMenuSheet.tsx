@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Image, Video, Mic, FileText, Type } from 'lucide-react';
+import { Image, Video, Mic, FileText, Type, Upload } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
-type CreateType = 'photo' | 'video' | 'audio' | 'document' | 'text';
+type CreateType = 'photo' | 'video' | 'audio' | 'media' | 'document' | 'text';
 
 export function CreateMenuSheet(props: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ export function CreateMenuSheet(props: { open: boolean; onOpenChange: (open: boo
     { id: 'photo', label: 'Фото', Icon: Image },
     { id: 'video', label: 'Видео', Icon: Video },
     { id: 'audio', label: 'Аудио', Icon: Mic },
+    { id: 'media', label: 'Медиа', Icon: Upload },
     { id: 'document', label: 'Документ', Icon: FileText },
     { id: 'text', label: 'Текст', Icon: Type },
   ];
