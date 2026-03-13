@@ -12,12 +12,18 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { MoreVertical } from 'lucide-react';
-import type { Publication } from '@/types';
+import type { FamilyMember, Publication } from '@/types';
+
+const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
+const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
+const memberDisplayName = (m: { firstName?: string; first_name?: string; lastName?: string; last_name?: string; nickname?: string } | null) =>
+  m ? ((m as { nickname?: string }).nickname || `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name}`.trim() || 'Автор') : 'Автор';
 
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [pub, setPub] = useState<Publication | null | undefined>(undefined);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
 
   useEffect(() => {
     if (!id) {
@@ -25,6 +31,7 @@ const PublicationDetails: React.FC = () => {
       return;
     }
     api.feed.getById(id).then(setPub);
+    api.family.listMembers().then(setMembers);
   }, [id]);
 
   if (pub === undefined) {
@@ -43,15 +50,26 @@ const PublicationDetails: React.FC = () => {
     );
   }
 
-  const author = getMember(pub.authorId);
+  const aid = authorIdOf(pub);
+  const memberMap = new Map(members.map(m => [m.id, m]));
+  const author = memberMap.get(aid) ?? getMember(aid);
   const photos = pub.media.filter(m => m.type === 'photo');
-  const authorAvatar = getPrototypeAvatar(pub.authorId, currentUserId);
+  const authorAvatarSrc = author && (author as { avatar?: string }).avatar
+    ? (author as { avatar: string }).avatar
+    : getPrototypeAvatar(aid, currentUserId).src;
   const comment = pub.comments[0];
-  const commentAuthor = comment ? getMember(comment.authorId) : null;
-  const commentTimeAgo = comment ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: ru }) : null;
-  const commentAvatar = comment ? getPrototypeAvatar(comment.authorId, currentUserId) : { src: '', objectPosition: undefined as string | undefined };
-  const mainPhoto = getPrototypePublicationPhotoByTopic(pub.topicTag);
-  const participants = pub.participantIds.slice(0, 6).map(pid => getMember(pid)).filter(Boolean);
+  const commentAuthorId = comment ? ((comment as { authorId?: string; author_id?: string }).authorId ?? (comment as { author_id?: string }).author_id) : null;
+  const commentAuthor = commentAuthorId ? (memberMap.get(commentAuthorId) ?? getMember(commentAuthorId)) : null;
+  const commentCreated = comment ? ((comment as { createdAt?: string; created_at?: string }).createdAt ?? (comment as { created_at?: string }).created_at) : null;
+  const commentTimeAgo = commentCreated ? formatDistanceToNow(new Date(commentCreated), { addSuffix: true, locale: ru }) : null;
+  const commentAvatar = commentAuthorId ? (memberMap.get(commentAuthorId) && (memberMap.get(commentAuthorId) as { avatar?: string }).avatar
+    ? { src: (memberMap.get(commentAuthorId) as { avatar: string }).avatar, objectPosition: undefined as string | undefined }
+    : getPrototypeAvatar(commentAuthorId, currentUserId)) : { src: '', objectPosition: undefined as string | undefined };
+  const mainPhoto = photos[0]?.url
+    ? { src: photos[0].url, objectPosition: 'center center' as const }
+    : getPrototypePublicationPhotoByTopic(pub.topicTag);
+  const pids = participantIdsOf(pub).slice(0, 6);
+  const participants = pids.map(pid => memberMap.get(pid) ?? getMember(pid)).filter(Boolean);
   const tags = [pub.topicTag, 'Тэг 1', 'Тэг 2'].filter(Boolean);
   const PUBLICATION_SCREENSHOT_TEXT = 'Моя бабушка Тамара и дедушка Максим. Фотография сделана в 1932 году. г. Валдай, Новгородская область.';
 
@@ -77,19 +95,18 @@ const PublicationDetails: React.FC = () => {
         <div className="mx-auto max-w-full px-3 pt-2 pb-6 space-y-4 overflow-auto flex-1 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
           <button
             type="button"
-            onClick={() => navigate(ROUTES.classic.profile(pub.authorId))}
+            onClick={() => navigate(ROUTES.classic.profile(aid))}
             className="flex items-center gap-3 w-full text-left"
           >
             <div className="h-10 w-10 rounded-full overflow-hidden bg-[var(--proto-card)] shrink-0">
               <img
-                src={authorAvatar.src}
+                src={authorAvatarSrc}
                 alt=""
                 className="h-full w-full object-cover"
-                style={authorAvatar.objectPosition ? { objectPosition: authorAvatar.objectPosition } : undefined}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[var(--proto-text)] text-sm">{author ? `${author.firstName} ${author.lastName}` : 'Андрей Филатов'}</p>
+              <p className="font-semibold text-[var(--proto-text)] text-sm">{memberDisplayName(author ?? null)}</p>
               <p className="text-xs text-[var(--proto-text-muted)] flex items-center gap-1">
                 <span>{publishDateFormatted}</span>
                 {pub.place && <><span>·</span><span>{pub.place}</span></>}
@@ -125,23 +142,23 @@ const PublicationDetails: React.FC = () => {
               <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Участники:</p>
               <div className="flex flex-wrap gap-2">
                 {participants.map((p) => {
-                  const av = getPrototypeAvatar(p!.id, currentUserId);
+                  const pid = p!.id;
+                  const avSrc = (p as { avatar?: string }).avatar ?? getPrototypeAvatar(pid, currentUserId).src;
                   return (
                   <button
-                    key={p!.id}
+                    key={pid}
                     type="button"
-                    onClick={() => navigate(ROUTES.classic.profile(p!.id))}
+                    onClick={() => navigate(ROUTES.classic.profile(pid))}
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--proto-card)] text-[var(--proto-text-muted)] text-xs font-medium border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
                   >
                     <span className="h-6 w-6 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
                       <img
-                        src={av.src}
+                        src={avSrc}
                         alt=""
                         className="h-full w-full object-cover"
-                        style={av.objectPosition ? { objectPosition: av.objectPosition } : undefined}
                       />
                     </span>
-                    {p!.nickname || p!.firstName}
+                    {memberDisplayName(p)}
                   </button>
                   );
                 })}
@@ -156,19 +173,18 @@ const PublicationDetails: React.FC = () => {
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => navigate(ROUTES.classic.profile(comment.authorId))}
+                    onClick={() => navigate(ROUTES.classic.profile(commentAuthorId!))}
                     className="h-9 w-9 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
                   >
                     <img
                       src={commentAvatar.src}
                       alt=""
                       className="h-full w-full object-cover"
-                      style={commentAvatar.objectPosition ? { objectPosition: commentAvatar.objectPosition } : undefined}
                     />
                   </button>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--proto-text)]">
-                      {commentAuthor?.nickname || commentAuthor?.firstName || 'Папа'}
+                      {memberDisplayName(commentAuthor ?? null)}
                       {commentTimeAgo && <span className="text-[var(--proto-text-muted)] font-normal ml-1">· {commentTimeAgo}</span>}
                     </p>
                     <p className="text-sm text-[var(--proto-text)] mt-0.5 leading-relaxed">{comment.text}</p>

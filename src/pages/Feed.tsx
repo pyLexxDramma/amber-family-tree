@@ -10,9 +10,14 @@ import {
   getPrototypeFeedPostPhotoByTopic,
 } from '@/lib/prototype-assets';
 import { Search, ArrowUpDown, SlidersHorizontal, Heart, MessageCircle } from 'lucide-react';
-import type { Publication } from '@/types';
+import type { FamilyMember, Publication } from '@/types';
 
 const photoCount = (pub: Publication) => pub.media.filter(m => m.type === 'photo').length;
+
+const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
+const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
+const memberDisplayName = (m: { firstName?: string; first_name?: string; lastName?: string; last_name?: string } | null) =>
+  m ? `${m.firstName ?? m.first_name ?? ''} ${m.lastName ?? m.last_name ?? ''}`.trim() || 'Автор' : 'Автор';
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
@@ -22,9 +27,13 @@ const Feed: React.FC = () => {
   const [mode, setMode] = useState<'all' | 'media'>(viewParam === 'media' ? 'media' : 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState<Publication[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
 
   useEffect(() => {
     api.feed.list().then(setItems);
+    api.family.listMembers().then(setMembers);
+    api.profile.getMyProfile().then(me => setMyMemberId(me.id)).catch(() => {});
   }, []);
 
   const setFeedMode = (m: 'all' | 'media') => {
@@ -32,12 +41,15 @@ const Feed: React.FC = () => {
     setSearchParams(m === 'media' ? { view: 'media' } : {}, { replace: true });
   };
 
+  const memberMap = new Map(members.map(m => [m.id, m]));
+  const currentId = myMemberId ?? currentUserId;
+
   const sorted = [...items].sort((a, b) => b.publishDate.localeCompare(a.publishDate));
   let filtered = mode === 'media'
     ? sorted.filter(p => p.media.some(m => m.type === 'photo' || m.type === 'video'))
     : sorted;
-  if (filterParam === 'my') filtered = filtered.filter(p => p.authorId === currentUserId);
-  if (filterParam === 'with-me') filtered = filtered.filter(p => p.participantIds.includes(currentUserId));
+  if (filterParam === 'my') filtered = filtered.filter(p => authorIdOf(p) === currentId);
+  if (filterParam === 'with-me') filtered = filtered.filter(p => participantIdsOf(p).includes(currentId));
   const list = searchQuery.trim()
     ? filtered.filter(p => (p.title || p.text).toLowerCase().includes(searchQuery.toLowerCase()))
     : filtered;
@@ -91,29 +103,34 @@ const Feed: React.FC = () => {
 
             <div className="space-y-0 divide-y divide-[var(--proto-border)]">
               {list.map(pub => {
-                const author = getMember(pub.authorId);
+                const aid = authorIdOf(pub);
+                const author = memberMap.get(aid) ?? getMember(aid);
                 const nPhotos = photoCount(pub);
-                const postPhoto = getPrototypeFeedPostPhotoByTopic(pub.topicTag);
-                const authorAvatar = getPrototypeAvatar(pub.authorId, currentUserId);
+                const firstPhoto = pub.media.find(m => m.type === 'photo');
+                const postPhoto = firstPhoto?.url
+                  ? { src: firstPhoto.url, objectPosition: 'center center' as const }
+                  : getPrototypeFeedPostPhotoByTopic(pub.topicTag);
+                const authorAvatarUrl = author && (author as { avatar?: string }).avatar
+                  ? (author as { avatar: string }).avatar
+                  : getPrototypeAvatar(aid, currentId).src;
 
                 return (
                   <div key={pub.id} className="py-4 first:pt-4 block">
                     <div className="flex items-center gap-3 mb-2">
                       <button
                         type="button"
-                        onClick={e => { e.stopPropagation(); navigate(ROUTES.classic.profile(pub.authorId)); }}
+                        onClick={e => { e.stopPropagation(); navigate(ROUTES.classic.profile(aid)); }}
                         className="flex items-center gap-3 shrink-0 cursor-pointer hover:opacity-90 transition-opacity text-left"
                       >
                         <span className="h-9 w-9 rounded-full overflow-hidden bg-[var(--proto-card)] flex-shrink-0 block">
                           <img
-                            src={authorAvatar.src}
+                            src={authorAvatarUrl}
                             alt=""
                             className="h-full w-full object-cover"
-                            style={authorAvatar.objectPosition ? { objectPosition: authorAvatar.objectPosition } : undefined}
                           />
                         </span>
                         <span className="font-semibold text-[var(--proto-text)] text-sm">
-                          {author ? `${author.firstName} ${author.lastName}` : 'Андрей Филатов'}
+                          {memberDisplayName(author ?? null)}
                         </span>
                       </button>
                     </div>

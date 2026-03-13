@@ -91,11 +91,11 @@ S3_PUBLIC_ENDPOINT_URL=https://angelo-test.ru
 
 ---
 
-## Шаг 4. Перезапустить backend (чтобы подхватить .env)
+## Шаг 4. Пересоздать контейнер API (restart не подхватывает новый .env)
 
 ```bash
 cd /opt/angelo/backend
-docker compose restart api
+docker compose up -d --force-recreate api
 ```
 
 ---
@@ -114,3 +114,26 @@ sudo systemctl reload nginx
 ## Шаг 6. Проверить загрузку
 
 Откройте сайт в браузере, создайте публикацию с фото. Загрузка должна проходить без «Failed to fetch».
+
+---
+
+## Как проверить настройки (диагностика)
+
+```bash
+# 1. S3_PUBLIC_ENDPOINT_URL в .env
+grep S3_PUBLIC_ENDPOINT_URL /opt/angelo/backend/.env
+# Должно быть: S3_PUBLIC_ENDPOINT_URL=https://angelo-test.ru
+
+# 2. Nginx: есть ли location /angelo-media/
+grep -A2 "angelo-media" /etc/nginx/sites-available/angelo
+
+# 3. MinIO слушает порт 9000
+curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 http://127.0.0.1:9000/
+# Любой ответ (200, 403) — порт доступен
+
+# 4. Через домен (подставьте реальный путь после загрузки фото)
+curl -sI "https://angelo-test.ru/angelo-media/uploads/..."
+# Должен вернуть 200, не 404/502
+```
+
+В браузере: DevTools → Network → загрузить аватар → клик по запросу `presign` → вкладка Response. В ответе поле `url` должно начинаться с `https://angelo-test.ru/angelo-media/`, а не с `http://`.
