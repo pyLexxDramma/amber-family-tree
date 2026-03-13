@@ -102,8 +102,9 @@ const CreatePublication: React.FC = () => {
     setIsPublishing(true);
     try {
       let uploadedKeys: string[] = [];
+      let filesLocal = files.map(f => ({ ...f }));
       if (type !== 'text') {
-        const needUpload = files.filter(f => {
+        const needUpload = filesLocal.filter(f => {
           if (f.status !== 'pending' || f.error) return false;
           const maxSize = type === 'media' ? getMaxBytesForContentType(f.file.type || '') : getMaxBytesForPublicationType(type);
           return f.size <= maxSize;
@@ -117,22 +118,26 @@ const CreatePublication: React.FC = () => {
             if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
             const uploadMs = Math.round(performance.now() - startedAt);
             setFiles(prev => prev.map(f => (f.id === item.id ? { ...f, status: 'uploaded', key: presign.key, uploadMs } : f)));
+            filesLocal = filesLocal.map(f => (f.id === item.id ? { ...f, status: 'uploaded', key: presign.key, uploadMs } : f));
           } catch (e) {
             const uploadMs = Math.round(performance.now() - startedAt);
             const err = e instanceof Error ? e.message : 'upload error';
             setFiles(prev => prev.map(f => (f.id === item.id ? { ...f, status: 'error', error: err, uploadMs } : f)));
+            filesLocal = filesLocal.map(f => (f.id === item.id ? { ...f, status: 'error', error: err, uploadMs } : f));
           }
         }
 
-        const hasBlocking = files.some(f => f.status === 'error' || !!f.error);
+        const hasBlocking = filesLocal.some(f => f.status === 'error' || !!f.error);
         if (hasBlocking) return;
 
-        uploadedKeys = files.filter(f => f.status === 'uploaded' && f.key).map(f => f.key as string);
+        uploadedKeys = filesLocal.filter(f => f.status === 'uploaded' && f.key).map(f => f.key as string);
         if (uploadedKeys.length === 0) return;
       }
 
       const today = new Date().toISOString().slice(0, 10);
-      const pubType = type === 'media' ? (files[0]?.file.type.startsWith('video/') ? 'video' : files[0]?.file.type.startsWith('audio/') ? 'audio' : 'photo') : type;
+      const pubType = type === 'media'
+        ? (filesLocal[0]?.file.type.startsWith('video/') ? 'video' : filesLocal[0]?.file.type.startsWith('audio/') ? 'audio' : 'photo')
+        : type;
       let visibleFor: string[] | null = null;
       let excludeFor: string[] | null = null;
       if (visibility === 'only_me') {

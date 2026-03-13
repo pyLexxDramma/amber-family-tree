@@ -29,7 +29,7 @@ def _member_to_response(m: FamilyMember) -> dict:
         is_active=m.is_active,
         generation=m.generation,
         relations=m.relations or [],
-    ).model_dump(by_alias=True)
+    ).model_dump(by_alias=False)
 
 
 @router.get("/members")

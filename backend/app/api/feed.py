@@ -49,7 +49,7 @@ def _media_to_response(m: MediaItem) -> dict:
         year=m.year,
         category=m.category,
         publication_id=str(m.publication_id) if m.publication_id else None,
-    ).model_dump(by_alias=True)
+    ).model_dump(by_alias=False)
 
 
 def _comment_to_response(c: Comment) -> dict:
@@ -58,7 +58,7 @@ def _comment_to_response(c: Comment) -> dict:
         author_id=str(c.author_id),
         text=c.text,
         created_at=c.created_at.isoformat() if c.created_at else "",
-    ).model_dump(by_alias=True)
+    ).model_dump(by_alias=False)
 
 
 def _publication_to_response(
@@ -84,7 +84,7 @@ def _publication_to_response(
         is_read=p.is_read,
         visible_for=p.visible_for,
         exclude_for=p.exclude_for,
-    ).model_dump(by_alias=True)
+    ).model_dump(by_alias=False)
 
 
 @router.get("")

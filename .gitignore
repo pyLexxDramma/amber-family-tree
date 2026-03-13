@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+.vite/
+.cache/
+coverage/
 .env
 .env.local
 .env.*.local
@@ -36,6 +39,16 @@ __pycache__/
 
 # Kanban sync (generated JSON)
 docs/sync-evening-response.json
+
+# Playwright
+test-results/
+playwright-report/
+
+# Docs artifacts (not needed for app runtime)
+docs/screenshots/
+docs/*.pdf
+docs/*.print.html
+docs/pilot-plan-*.md
 .cursor
 .cursor/agents/implementer.md
 .cursor/agents/orchestrator.md
