@@ -1,4 +1,5 @@
 import type { AppUser, FamilyMember, MediaItem, Publication } from '@/types';
+import type { Comment } from '@/types';
 
 export interface FeedListParams {
   limit?: number;
@@ -16,6 +17,7 @@ export interface VerifyResponse {
 export interface FeedApi {
   list(params?: FeedListParams): Promise<Publication[]>;
   getById(id: string): Promise<Publication | null>;
+  addComment(publicationId: string, text: string): Promise<Comment>;
 }
 
 export interface FamilyApi {

@@ -2,7 +2,7 @@ import type { AngeloApi, FeedListParams } from './api.types';
 import { mockPublications } from '@/data/mock-publications';
 import { currentUserId, getCurrentUser, getMember, mockMembers } from '@/data/mock-members';
 import { myMediaDemoItems } from '@/data/my-media-demo';
-import type { MediaItem } from '@/types';
+import type { Comment, MediaItem } from '@/types';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 
 function filterFeed(params?: FeedListParams) {
@@ -29,6 +29,18 @@ export const mockApi: AngeloApi = {
     },
     async getById(id) {
       return mockPublications.find(p => p.id === id) ?? null;
+    },
+    async addComment(publicationId, text) {
+      const pub = mockPublications.find(p => p.id === publicationId);
+      if (!pub) throw new Error('Publication not found');
+      const comment: Comment = {
+        id: `c_${Date.now()}`,
+        authorId: currentUserId,
+        text,
+        createdAt: new Date().toISOString(),
+      };
+      pub.comments = [...(pub.comments ?? []), comment];
+      return comment;
     },
   },
   family: {

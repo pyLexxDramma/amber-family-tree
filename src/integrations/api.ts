@@ -17,6 +17,7 @@ export const api: AngeloApi = {
   feed: {
     list: (params) => selectApi().feed.list(params),
     getById: (id) => selectApi().feed.getById(id),
+    addComment: (publicationId, text) => selectApi().feed.addComment(publicationId, text),
   },
   family: {
     listMembers: () => selectApi().family.listMembers(),

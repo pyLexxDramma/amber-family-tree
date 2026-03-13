@@ -1,5 +1,5 @@
 import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse } from './api.types';
-import type { AppUser, FamilyMember, MediaItem, Publication } from '@/types';
+import type { AppUser, Comment, FamilyMember, MediaItem, Publication } from '@/types';
 import { getJson, requestJson } from './request';
 
 export const realApi: AngeloApi = {
@@ -15,6 +15,9 @@ export const realApi: AngeloApi = {
     },
     async getById(id: string) {
       return getJson<Publication | null>(`/feed/${id}`);
+    },
+    async addComment(publicationId: string, text: string) {
+      return requestJson<Comment>('POST', `/feed/${publicationId}/comments`, { text });
     },
   },
   family: {
