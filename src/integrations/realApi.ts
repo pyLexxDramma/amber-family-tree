@@ -1,5 +1,5 @@
 import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse } from './api.types';
-import type { AppUser, Comment, FamilyMember, MediaItem, Publication } from '@/types';
+import type { AppUser, Comment, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getJson, requestJson } from './request';
 
 export const realApi: AngeloApi = {
@@ -59,6 +59,14 @@ export const realApi: AngeloApi = {
   media: {
     async presign(body: PresignUploadRequest) {
       return requestJson<PresignUploadResponse>('POST', '/media/presign', body);
+    },
+  },
+  messages: {
+    async listWith(memberId: string) {
+      return getJson<Message[]>(`/messages/with/${memberId}`);
+    },
+    async sendTo(memberId: string, text: string) {
+      return requestJson<Message>('POST', `/messages/with/${memberId}`, { text });
     },
   },
 };

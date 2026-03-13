@@ -7,6 +7,7 @@ from app.models.media_item import MediaItem
 from app.models.comment import Comment
 from app.models.like import Like
 from app.models.invitation import Invitation
+from app.models.message import Message
 
 __all__ = [
     "Base",
@@ -18,4 +19,5 @@ __all__ = [
     "Comment",
     "Like",
     "Invitation",
+    "Message",
 ]

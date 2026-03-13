@@ -1,4 +1,4 @@
-import type { AppUser, FamilyMember, MediaItem, Publication } from '@/types';
+import type { AppUser, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import type { Comment } from '@/types';
 
 export interface FeedListParams {
@@ -54,11 +54,17 @@ export interface MediaApi {
   presign(body: PresignUploadRequest): Promise<PresignUploadResponse>;
 }
 
+export interface MessagesApi {
+  listWith(memberId: string): Promise<Message[]>;
+  sendTo(memberId: string, text: string): Promise<Message>;
+}
+
 export interface AngeloApi {
   feed: FeedApi;
   family: FamilyApi;
   auth: AuthApi;
   profile: ProfileApi;
   media: MediaApi;
+  messages: MessagesApi;
 }
 

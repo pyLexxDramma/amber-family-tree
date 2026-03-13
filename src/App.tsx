@@ -20,6 +20,7 @@ import MyProfile from "./pages/MyProfile";
 import MyMedia from "./pages/MyMedia";
 import EditMyProfile from "./pages/EditMyProfile";
 import ContactProfile from "./pages/ContactProfile";
+import Messages from "./pages/Messages";
 import InviteFlow from "./pages/InviteFlow";
 import StorePage from "./pages/StorePage";
 import PlacesPage from "./pages/PlacesPage";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/my-profile/edit`} element={<EditMyProfile />} />
             <Route path={`${CLASSIC_BASE}/my-media`} element={<MyMedia />} />
             <Route path={`${CLASSIC_BASE}/profile/:id`} element={<ContactProfile />} />
+            <Route path={`${CLASSIC_BASE}/messages/:id`} element={<Messages />} />
             <Route path={`${CLASSIC_BASE}/invite`} element={<InviteFlow />} />
             <Route path={`${CLASSIC_BASE}/store`} element={<StorePage />} />
             <Route path={`${CLASSIC_BASE}/places`} element={<PlacesPage />} />

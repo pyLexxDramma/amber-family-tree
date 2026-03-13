@@ -2,7 +2,7 @@ import type { AngeloApi, FeedListParams } from './api.types';
 import { mockPublications } from '@/data/mock-publications';
 import { currentUserId, getCurrentUser, getMember, mockMembers } from '@/data/mock-members';
 import { myMediaDemoItems } from '@/data/my-media-demo';
-import type { Comment, MediaItem } from '@/types';
+import type { Comment, MediaItem, Message } from '@/types';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 
 function filterFeed(params?: FeedListParams) {
@@ -94,5 +94,25 @@ export const mockApi: AngeloApi = {
       return { upload_url: `https://example.com/upload?key=${encodeURIComponent(key)}`, key, url: `https://example.com/media/${key}` };
     },
   },
+  messages: {
+    async listWith(memberId: string) {
+      return mockMessages
+        .filter(m => (m.senderId === currentUserId && m.recipientId === memberId) || (m.senderId === memberId && m.recipientId === currentUserId))
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    },
+    async sendTo(memberId: string, text: string) {
+      const msg: Message = {
+        id: `m_${Date.now()}`,
+        senderId: currentUserId,
+        recipientId: memberId,
+        text,
+        createdAt: new Date().toISOString(),
+      };
+      mockMessages = [...mockMessages, msg];
+      return msg;
+    },
+  },
 };
+
+let mockMessages: Message[] = [];
 

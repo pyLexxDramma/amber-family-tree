@@ -9,7 +9,7 @@ const demoMockData = String(import.meta.env.VITE_DEMO_MOCK_DATA ?? '').toLowerCa
 function selectApi(): AngeloApi {
   if (isDemoMode()) return mockApi;
   if (useMock) return mockApi;
-  if (demoMockData) return { auth: realApi.auth, feed: mockApi.feed, family: realApi.family, profile: realApi.profile, media: realApi.media };
+  if (demoMockData) return { auth: realApi.auth, feed: mockApi.feed, family: realApi.family, profile: realApi.profile, media: realApi.media, messages: realApi.messages };
   return realApi;
 }
 
@@ -35,6 +35,10 @@ export const api: AngeloApi = {
   },
   media: {
     presign: (body) => selectApi().media.presign(body),
+  },
+  messages: {
+    listWith: (memberId) => selectApi().messages.listWith(memberId),
+    sendTo: (memberId, text) => selectApi().messages.sendTo(memberId, text),
   },
 };
 

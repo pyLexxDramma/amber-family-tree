@@ -44,6 +44,14 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface Message {
+  id: string;
+  senderId: string;
+  recipientId: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface Publication {
   id: string;
   type: PublicationType;

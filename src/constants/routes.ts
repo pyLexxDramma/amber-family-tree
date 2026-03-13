@@ -16,6 +16,7 @@ export const ROUTES = {
     editMyProfile: `${CLASSIC_BASE}/my-profile/edit`,
     myMedia: `${CLASSIC_BASE}/my-media`,
     profile: (id: string) => `${CLASSIC_BASE}/profile/${id}`,
+    messages: (id: string) => `${CLASSIC_BASE}/messages/${id}`,
     publication: (id: string) => `${CLASSIC_BASE}/publication/${id}`,
     invite: `${CLASSIC_BASE}/invite`,
     store: `${CLASSIC_BASE}/store`,

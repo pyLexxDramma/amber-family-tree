@@ -142,7 +142,7 @@ const ContactProfile: React.FC = () => {
                   type="button"
                   onClick={() => {
                     platform.hapticFeedback('light');
-                    toast({ title: 'Чаты в разработке' });
+                    navigate(ROUTES.classic.messages(member.id));
                   }}
                   className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
                   aria-label="Сообщение"
