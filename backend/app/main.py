@@ -23,6 +23,7 @@ app = FastAPI(
 )
 
 app.include_router(auth.router, prefix="/api")
+app.include_router(auth.router)
 app.include_router(family.router, prefix="/api")
 app.include_router(feed.router, prefix="/api")
 app.include_router(media.router, prefix="/api")

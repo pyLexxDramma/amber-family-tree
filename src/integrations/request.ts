@@ -13,9 +13,11 @@ function getToken(): string | null {
 }
 
 function buildUrl(path: string): string {
-  const base = getBaseUrl();
+  const base = getBaseUrl().replace(/\/$/, '');
   const normalized = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${API_PREFIX}${normalized}`;
+  const apiPath = `${API_PREFIX}${normalized}`;
+  if (base.endsWith('/api')) return `${base}${normalized}`;
+  return `${base}${apiPath}`;
 }
 
 function buildHeaders(): Record<string, string> {

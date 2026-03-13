@@ -188,7 +188,25 @@ sudo cp -r /opt/angelo/dist/* /var/www/angelo/dist/
 
 ---
 
-## 9. Краткий порядок действий (чеклист)
+## 9. Скрипт деплоя
+
+После первоначальной настройки (п. 1–8) обновления можно заливать скриптом:
+
+```bash
+# На сервере (в каталоге проекта):
+./deploy-fornex.sh
+
+# Или по SSH с локальной машины:
+ssh user@your-fornex-ip "cd /opt/angelo && ./deploy-fornex.sh"
+```
+
+Скрипт выполняет: `git pull` → `docker compose up -d --build` (backend) → `npm run build` (frontend) → копирование `dist/` в `/var/www/angelo/dist/` → перезагрузка nginx.
+
+Переменные: `PROJECT_DIR`, `WEB_ROOT` (по умолчанию `/var/www/angelo/dist`).
+
+---
+
+## 10. Краткий порядок действий (чеклист)
 
 | № | Действие |
 |---|----------|
@@ -200,5 +218,6 @@ sudo cp -r /opt/angelo/dist/* /var/www/angelo/dist/
 | 6 | Скопировать содержимое `dist/` в каталог nginx (п. 6). |
 | 7 | Настроить nginx (п. 5), DNS и SSL (п. 7). |
 | 8 | Проверить в браузере (п. 8). |
+| 9 | При обновлениях: `git push` → на сервере `./deploy-fornex.sh`. |
 
 После этого приложение доступно по домену с полным подключением к backend в Docker.
