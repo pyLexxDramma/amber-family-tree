@@ -86,6 +86,26 @@ def _publication_to_response(
         exclude_for=p.exclude_for,
     ).model_dump(by_alias=False)
 
+async def _load_publication_for_response(
+    *,
+    db: AsyncSession,
+    publication_id: UUID,
+    family_id: UUID | None,
+) -> Publication | None:
+    q = (
+        select(Publication)
+        .options(
+            selectinload(Publication.media),
+            selectinload(Publication.comments),
+            selectinload(Publication.likes),
+        )
+        .where(Publication.id == publication_id)
+    )
+    if family_id is not None:
+        q = q.where(Publication.family_id == family_id)
+    result = await db.execute(q)
+    return result.scalar_one_or_none()
+
 
 @router.get("")
 async def list_feed(
@@ -130,17 +150,9 @@ async def get_publication(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Publication)
-        .options(
-            selectinload(Publication.media),
-            selectinload(Publication.comments),
-            selectinload(Publication.likes),
-        )
-        .where(Publication.id == publication_id)
-        .where(Publication.family_id == current_user.family_id)
+    pub = await _load_publication_for_response(
+        db=db, publication_id=publication_id, family_id=current_user.family_id
     )
-    pub = result.scalar_one_or_none()
     if not pub:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -252,13 +264,10 @@ async def add_like(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User has no member profile",
         )
-    result = await db.execute(
-        select(Publication)
-        .where(Publication.id == publication_id)
-        .where(Publication.family_id == current_user.family_id)
+    pub = await _load_publication_for_response(
+        db=db, publication_id=publication_id, family_id=current_user.family_id
     )
-    pub = result.scalar_one_or_none()
-    if not pub:
+    if pub is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
@@ -270,7 +279,6 @@ async def add_like(
         )
     )
     if existing.scalar_one_or_none():
-        await db.commit()
         like_ids = [str(l.member_id) for l in pub.likes]
         return _publication_to_response(pub, like_ids)
     like = Like(
@@ -280,17 +288,14 @@ async def add_like(
     )
     db.add(like)
     await db.commit()
-    await db.refresh(pub)
-    result = await db.execute(
-        select(Publication)
-        .options(
-            selectinload(Publication.media),
-            selectinload(Publication.comments),
-            selectinload(Publication.likes),
-        )
-        .where(Publication.id == publication_id)
+    pub = await _load_publication_for_response(
+        db=db, publication_id=publication_id, family_id=current_user.family_id
     )
-    pub = result.scalars().one()
+    if pub is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Publication not found",
+        )
     like_ids = [str(l.member_id) for l in pub.likes]
     return _publication_to_response(pub, like_ids)
 
