@@ -99,7 +99,7 @@ const EditMyProfile: React.FC = () => {
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
-        <TopBar title="Редактировать профиль" onBack={() => navigate(ROUTES.classic.myProfile)} light />
+        <TopBar title="Редактировать профиль" onBack={() => navigate(-1)} light />
         <div className="mx-auto max-w-full px-3 pt-4 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           {isDemo && (
             <p className="text-sm text-[var(--proto-text-muted)] mb-4">В демо изменения сохраняются в браузере и отображаются на странице «О себе».</p>

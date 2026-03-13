@@ -290,7 +290,7 @@ const FamilyTree: React.FC = () => {
         <TopBar
           title="Дерево"
           subtitle={me ? `Вы вошли как: ${me.nickname || me.firstName} ${me.lastName}` : undefined}
-          onBack={() => navigate(ROUTES.classic.feed)}
+          onBack={() => navigate(-1)}
           light
           right={
             <div className="flex items-center gap-2">

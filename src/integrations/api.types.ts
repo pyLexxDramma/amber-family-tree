@@ -18,6 +18,8 @@ export interface FeedApi {
   list(params?: FeedListParams): Promise<Publication[]>;
   getById(id: string): Promise<Publication | null>;
   addComment(publicationId: string, text: string): Promise<Comment>;
+  addLike(publicationId: string): Promise<Publication>;
+  removeLike(publicationId: string): Promise<Publication>;
 }
 
 export interface FamilyApi {

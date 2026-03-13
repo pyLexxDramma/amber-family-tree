@@ -68,7 +68,7 @@ const FamilyList: React.FC = () => {
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
           title="Семья"
-          onBack={() => navigate(ROUTES.home)}
+          onBack={() => navigate(-1)}
           light
           right={
             <button type="button" className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Фильтры">

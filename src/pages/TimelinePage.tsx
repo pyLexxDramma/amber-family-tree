@@ -117,7 +117,7 @@ const TimelinePage: React.FC = () => {
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
           title="Экран «Таймлайн»"
-          onBack={() => navigate(ROUTES.classic.tree)}
+          onBack={() => navigate(-1)}
           light
           right={
             <button type="button" onClick={() => navigate(ROUTES.classic.invite)} className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поделиться">

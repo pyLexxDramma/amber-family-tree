@@ -130,7 +130,7 @@ const MyMedia: React.FC = () => {
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
           title="Лента"
-          onBack={() => navigate(ROUTES.classic.myProfile)}
+          onBack={() => navigate(-1)}
           light
           right={
             <div className="flex items-center gap-2">

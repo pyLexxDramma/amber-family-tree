@@ -11,6 +11,7 @@ import {
 } from '@/lib/prototype-assets';
 import { Search, ArrowUpDown, SlidersHorizontal, Heart, MessageCircle } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
+import { toast } from '@/hooks/use-toast';
 
 const photoCount = (pub: Publication) => pub.media.filter(m => m.type === 'photo').length;
 
@@ -43,6 +44,7 @@ const Feed: React.FC = () => {
 
   const memberMap = new Map(members.map(m => [m.id, m]));
   const currentId = myMemberId ?? currentUserId;
+  const [likingIds, setLikingIds] = useState<Record<string, boolean>>({});
 
   const sorted = [...items].sort((a, b) => b.publishDate.localeCompare(a.publishDate));
   let filtered = mode === 'media'
@@ -54,12 +56,28 @@ const Feed: React.FC = () => {
     ? filtered.filter(p => (p.title || p.text).toLowerCase().includes(searchQuery.toLowerCase()))
     : filtered;
 
+  const toggleLike = async (pubId: string) => {
+    if (!myMemberId) return;
+    if (likingIds[pubId]) return;
+    setLikingIds(v => ({ ...v, [pubId]: true }));
+    try {
+      const cur = items.find(p => p.id === pubId);
+      const liked = cur ? (cur.likes ?? []).includes(myMemberId) : false;
+      const updated = liked ? await api.feed.removeLike(pubId) : await api.feed.addLike(pubId);
+      setItems(prev => prev.map(p => p.id === pubId ? updated : p));
+    } catch {
+      toast({ title: 'Не удалось поставить лайк' });
+    } finally {
+      setLikingIds(v => ({ ...v, [pubId]: false }));
+    }
+  };
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
           title="Лента"
-          onBack={() => navigate(ROUTES.home)}
+          onBack={() => navigate(-1)}
           light
           right={null}
         />
@@ -139,32 +157,43 @@ const Feed: React.FC = () => {
                       onClick={() => navigate(ROUTES.classic.publication(pub.id))}
                       className="w-full text-left block"
                     >
-                    <div className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full mb-2">
-                      <img
-                        src={postPhoto.src}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        style={{ objectPosition: postPhoto.objectPosition }}
-                      />
-                    </div>
-                    <h3 className="font-semibold text-[var(--proto-text)] text-base mb-1">{pub.title || 'Без названия'}</h3>
-                    <p className="text-sm text-[var(--proto-text-muted)] line-clamp-2 mb-2">{pub.text}</p>
+                      <div className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full mb-2">
+                        <img
+                          src={postPhoto.src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          style={{ objectPosition: postPhoto.objectPosition }}
+                        />
+                      </div>
+                      <h3 className="font-semibold text-[var(--proto-text)] text-base mb-1">{pub.title || 'Без названия'}</h3>
+                      <p className="text-sm text-[var(--proto-text-muted)] line-clamp-2 mb-2">{pub.text}</p>
+                    </button>
                     <div className="flex items-center gap-4 text-sm text-[var(--proto-text-muted)]">
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-4 w-4" />
-                        {pub.likes.length}
-                      </span>
-                      <span className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => toggleLike(pub.id)}
+                        disabled={!myMemberId || likingIds[pub.id]}
+                        className="flex items-center gap-1 hover:text-[var(--proto-text)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Лайк"
+                      >
+                        <Heart className="h-4 w-4" fill={myMemberId && (pub.likes ?? []).includes(myMemberId) ? 'currentColor' : 'none'} />
+                        {(pub.likes ?? []).length}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate(ROUTES.classic.publication(pub.id))}
+                        className="flex items-center gap-1 hover:text-[var(--proto-text)] transition-colors"
+                        aria-label="Комментарии"
+                      >
                         <MessageCircle className="h-4 w-4" />
-                        {pub.comments.length}
-                      </span>
+                        {(pub.comments ?? []).length}
+                      </button>
                       {nPhotos > 0 && (
                         <span className="ml-auto">
                           {nPhotos} фотографий
                         </span>
                       )}
                     </div>
-                  </button>
                 </div>
                 );
               })}

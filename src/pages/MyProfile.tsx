@@ -41,7 +41,7 @@ const MyProfile: React.FC = () => {
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
-        <TopBar title="Мой профиль" onBack={() => navigate(ROUTES.classic.family)} light right={
+        <TopBar title="Мой профиль" onBack={() => navigate(-1)} light right={
           <button type="button" onClick={() => navigate(ROUTES.classic.invite)} className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Поделиться">
             <Send className="h-5 w-5" />
           </button>

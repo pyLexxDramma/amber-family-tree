@@ -12,7 +12,7 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { MoreVertical } from 'lucide-react';
+import { Heart, MoreVertical } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -27,6 +27,8 @@ const PublicationDetails: React.FC = () => {
   const platform = usePlatform();
   const [pub, setPub] = useState<Publication | null | undefined>(undefined);
   const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
+  const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement | null>(null);
@@ -39,6 +41,7 @@ const PublicationDetails: React.FC = () => {
     }
     api.feed.getById(id).then(setPub);
     api.family.listMembers().then(setMembers);
+    api.profile.getMyProfile().then(me => setMyMemberId(me.id)).catch(() => {});
   }, [id]);
 
   if (pub === undefined) {
@@ -76,6 +79,7 @@ const PublicationDetails: React.FC = () => {
     : (pub.text || PUBLICATION_SCREENSHOT_TEXT);
   const publishDateFormatted = format(new Date(pub.publishDate), 'dd MMM, yyyy', { locale: ru });
   const comments = [...(pub.comments ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const isLiked = myMemberId ? (pub.likes ?? []).includes(myMemberId) : false;
 
   const submitComment = async () => {
     const text = commentText.trim();
@@ -94,12 +98,27 @@ const PublicationDetails: React.FC = () => {
     }
   };
 
+  const toggleLike = async () => {
+    if (!pub || !myMemberId) return;
+    if (isTogglingLike) return;
+    setIsTogglingLike(true);
+    try {
+      const updated = isLiked ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
+      setPub(updated);
+      platform.hapticFeedback('light');
+    } catch {
+      toast({ title: 'Не удалось поставить лайк' });
+    } finally {
+      setIsTogglingLike(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
         <TopBar
           title="Публикация"
-          onBack={() => navigate(ROUTES.classic.feed)}
+          onBack={() => navigate(-1)}
           light
           right={
             <button type="button" className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Ещё">
@@ -141,6 +160,22 @@ const PublicationDetails: React.FC = () => {
 
           <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Бабушка Тамара и дедушка'}</h1>
           <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleLike}
+              disabled={!myMemberId || isTogglingLike}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] text-sm text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Лайк"
+            >
+              <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
+              {(pub.likes ?? []).length}
+            </button>
+            <span className="text-sm text-[var(--proto-text-muted)]">
+              {(pub.comments ?? []).length} комментариев
+            </span>
+          </div>
 
           <div>
             <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Теги:</p>

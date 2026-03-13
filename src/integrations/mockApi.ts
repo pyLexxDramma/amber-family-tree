@@ -42,6 +42,19 @@ export const mockApi: AngeloApi = {
       pub.comments = [...(pub.comments ?? []), comment];
       return comment;
     },
+    async addLike(publicationId) {
+      const pub = mockPublications.find(p => p.id === publicationId);
+      if (!pub) throw new Error('Publication not found');
+      const likes = pub.likes ?? [];
+      pub.likes = likes.includes(currentUserId) ? likes : [...likes, currentUserId];
+      return pub;
+    },
+    async removeLike(publicationId) {
+      const pub = mockPublications.find(p => p.id === publicationId);
+      if (!pub) throw new Error('Publication not found');
+      pub.likes = (pub.likes ?? []).filter(id => id !== currentUserId);
+      return pub;
+    },
   },
   family: {
     async listMembers() {
