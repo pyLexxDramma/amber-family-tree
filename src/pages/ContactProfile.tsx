@@ -8,6 +8,7 @@ import { Users, Heart, MessageCircle, Calendar, ChevronRight } from 'lucide-reac
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
+import { toast } from '@/hooks/use-toast';
 
 type Rel = { type: string; memberId: string };
 
@@ -30,6 +31,8 @@ const ContactProfile: React.FC = () => {
   const platform = usePlatform();
   const [member, setMember] = useState<FamilyMember | null | undefined>(undefined);
   const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   const memberMap = useMemo(() => {
     const map = new Map<string, FamilyMember>();
@@ -112,13 +115,38 @@ const ContactProfile: React.FC = () => {
                 {member.city || ''}{member.city && member.birthDate ? ' · ' : ''}{member.birthDate ? `Род. ${formatDate(member.birthDate)}` : ''}
               </p>
               <div className="flex items-center gap-3 mt-4">
-                <button className="px-6 py-2 rounded-full border border-white/30 text-white text-sm font-medium hover:bg-white/10 transition-colors">
-                  Подписаться
+                <button
+                  type="button"
+                  onClick={() => {
+                    platform.hapticFeedback('light');
+                    setIsSubscribed(v => !v);
+                    toast({ title: isSubscribed ? 'Вы отписались' : 'Вы подписались' });
+                  }}
+                  className="px-6 py-2 rounded-full border border-white/30 text-white text-sm font-medium hover:bg-white/10 transition-colors"
+                >
+                  {isSubscribed ? 'Вы подписаны' : 'Подписаться'}
                 </button>
-                <button className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
-                  <Heart className="h-4 w-4" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    platform.hapticFeedback('light');
+                    setLiked(v => !v);
+                    toast({ title: liked ? 'Лайк убран' : 'Лайк поставлен' });
+                  }}
+                  className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                  aria-label="Лайк"
+                >
+                  <Heart className="h-4 w-4" fill={liked ? 'currentColor' : 'none'} />
                 </button>
-                <button className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => {
+                    platform.hapticFeedback('light');
+                    toast({ title: 'Чаты в разработке' });
+                  }}
+                  className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                  aria-label="Сообщение"
+                >
                   <MessageCircle className="h-4 w-4" />
                 </button>
               </div>
