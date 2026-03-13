@@ -48,7 +48,7 @@ async def get_my_profile(
         is_active=member.is_active,
         generation=member.generation,
         relations=member.relations or [],
-    ).model_dump(by_alias=True)
+    ).model_dump(by_alias=False)
 
 
 @router.patch("/me")
@@ -83,7 +83,7 @@ async def update_my_profile(
         is_active=member.is_active,
         generation=member.generation,
         relations=member.relations or [],
-    ).model_dump(by_alias=True)
+    ).model_dump(by_alias=False)
 
 
 @router.get("/me/media")
@@ -115,6 +115,6 @@ async def list_my_media(
             year=m.year,
             category=m.category,
             publication_id=str(m.publication_id) if m.publication_id else None,
-        ).model_dump(by_alias=True)
+        ).model_dump(by_alias=False)
         for m in items
     ]
