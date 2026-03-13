@@ -11,36 +11,56 @@ import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 
 function getRelationshipLabel(member: FamilyMember, currentId: string): string {
-  return getFamilyRole(member, currentId);
+  try {
+    return getFamilyRole(member, currentId);
+  } catch {
+    return 'Член семьи';
+  }
 }
 
 const statusLabel = (isActive: boolean) => (isActive ? 'Активен' : 'Неактивен');
 const statusLabelF = (isActive: boolean) => (isActive ? 'Активна' : 'Неактивна');
 
+const memberName = (m: FamilyMember & { first_name?: string; last_name?: string }) =>
+  `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name ?? ''} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name ?? ''}`.trim();
+
+const norm = (m: FamilyMember & { first_name?: string; last_name?: string; avatar?: string; is_active?: boolean; relations?: { memberId?: string; member_id?: string; type: string }[] }) => ({
+  ...m,
+  firstName: (m as { firstName?: string }).firstName ?? m.first_name ?? '',
+  lastName: (m as { lastName?: string }).lastName ?? m.last_name ?? '',
+  isActive: m.isActive ?? m.is_active ?? true,
+  relations: (m.relations ?? []).map(r => ({ memberId: r.memberId ?? (r as { member_id?: string }).member_id, type: r.type })),
+});
+
 const FamilyList: React.FC = () => {
   const navigate = useNavigate();
   const [mainTab, setMainTab] = useState<'about' | 'family'>('family');
   const [subTab, setSubTab] = useState<'profiles' | 'groups'>('profiles');
-  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'inactive'>('active');
+  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'inactive'>('all');
   const [search, setSearch] = useState('');
   const [members, setMembers] = useState<FamilyMember[]>(mockMembers);
-  const myProfileAvatar = getPrototypeAvatar(currentUserId, currentUserId);
+  const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
 
   useEffect(() => {
     api.family.listMembers().then(setMembers);
+    api.profile.getMyProfile().then(setMyProfile).catch(() => {});
   }, []);
 
+  const myId = myProfile?.id ?? currentUserId;
+  const myAvatarSrc = myProfile && (myProfile as { avatar?: string }).avatar
+    ? (myProfile as { avatar: string }).avatar
+    : getPrototypeAvatar(myId, myId).src;
+
   const filtered = members
-    .filter(m => filterTab === 'all' || (filterTab === 'active' ? m.isActive : !m.isActive))
+    .filter(m => filterTab === 'all' || (filterTab === 'active' ? (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true) : !(m.isActive ?? (m as { is_active?: boolean }).is_active ?? true)))
     .filter(m => {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
-      return (
-        m.firstName.toLowerCase().includes(q) ||
-        m.lastName.toLowerCase().includes(q) ||
-        (m.nickname || '').toLowerCase().includes(q) ||
-        (m.city || '').toLowerCase().includes(q)
-      );
+      const fn = (m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name ?? '';
+      const ln = (m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name ?? '';
+      const nick = (m as { nickname?: string }).nickname ?? '';
+      const city = (m as { city?: string }).city ?? '';
+      return fn.toLowerCase().includes(q) || ln.toLowerCase().includes(q) || nick.toLowerCase().includes(q) || city.toLowerCase().includes(q);
     });
 
   return (
@@ -130,11 +150,14 @@ const FamilyList: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      {filtered.map((m, index) => {
-                        const isCurrent = m.id === currentUserId;
-                        const relationLabel = getRelationshipLabel(m, currentUserId);
-                        const avatar = getPrototypeAvatarForMember(m, currentUserId);
-                        const status = m.lastName.endsWith('а') || m.lastName.endsWith('ова') || m.lastName.endsWith('ева') ? statusLabelF(m.isActive) : statusLabel(m.isActive);
+                      {filtered.map((m) => {
+                        const mn = norm(m);
+                        const isCurrent = m.id === myId;
+                        const relationLabel = getRelationshipLabel(mn, myId);
+                        const avatarSrc = (m as { avatar?: string }).avatar ?? getPrototypeAvatarForMember(mn, myId).src;
+                        const ln = (m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name ?? '';
+                        const isActive = m.isActive ?? (m as { is_active?: boolean }).is_active ?? true;
+                        const status = ln.endsWith('а') || ln.endsWith('ова') || ln.endsWith('ева') ? statusLabelF(isActive) : statusLabel(isActive);
 
                         return (
                           <button
@@ -145,17 +168,16 @@ const FamilyList: React.FC = () => {
                           >
                             <div className="h-12 w-12 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
                               <img
-                                src={avatar.src}
+                                src={avatarSrc}
                                 alt=""
                                 className="h-full w-full object-cover"
-                                style={avatar.objectPosition ? { objectPosition: avatar.objectPosition } : undefined}
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-[var(--proto-text)] truncate">{m.firstName} {m.lastName}</p>
+                              <p className="font-semibold text-[var(--proto-text)] truncate">{memberName(m) || 'Участник'}</p>
                               <p className="text-sm text-[var(--proto-text-muted)] truncate">{relationLabel}</p>
                             </div>
-                            <span className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium ${m.isActive ? 'bg-[var(--proto-card)] text-[var(--proto-text)] border border-[var(--proto-border)]' : 'bg-[var(--proto-border)] text-[var(--proto-text-muted)]'}`}>
+                            <span className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium ${isActive ? 'bg-[var(--proto-card)] text-[var(--proto-text)] border border-[var(--proto-border)]' : 'bg-[var(--proto-border)] text-[var(--proto-text-muted)]'}`}>
                               {status}
                             </span>
                           </button>
@@ -178,14 +200,13 @@ const FamilyList: React.FC = () => {
                   onClick={() => navigate(ROUTES.classic.myProfile)}
                   className="w-full flex items-center gap-3 p-4 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/30 transition-colors text-left"
                 >
-<div className="h-14 w-14 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
-                  <img
-                    src={myProfileAvatar.src}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    style={myProfileAvatar.objectPosition ? { objectPosition: myProfileAvatar.objectPosition } : undefined}
-                  />
-                </div>
+                  <div className="h-14 w-14 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
+                    <img
+                      src={myAvatarSrc}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[var(--proto-text)] text-lg">Мой профиль</p>
                     <p className="text-sm text-[var(--proto-text-muted)]">Перейти в профиль</p>
