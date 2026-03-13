@@ -125,7 +125,7 @@ const Messages: React.FC = () => {
               e.preventDefault();
               send();
             }}
-            className="flex items-center gap-2 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-2 shadow-sm"
+            className="flex items-center gap-2 rounded-2xl bg-[var(--proto-card)] border-2 border-[color:var(--proto-active)]/35 p-2 shadow-sm focus-within:ring-2 focus-within:ring-[color:var(--proto-active)]/25 focus-within:border-[color:var(--proto-active)]/55"
           >
             <input
               autoFocus
