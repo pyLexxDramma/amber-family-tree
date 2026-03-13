@@ -31,6 +31,13 @@ const ContactProfile: React.FC = () => {
   const [member, setMember] = useState<FamilyMember | null | undefined>(undefined);
   const [members, setMembers] = useState<FamilyMember[]>([]);
 
+  const memberMap = useMemo(() => {
+    const map = new Map<string, FamilyMember>();
+    for (const m of members) map.set(m.id, m);
+    if (member) map.set(member.id, member);
+    return map;
+  }, [member, members]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -69,13 +76,6 @@ const ContactProfile: React.FC = () => {
       </AppLayout>
     );
   }
-
-  const memberMap = useMemo(() => {
-    const map = new Map<string, FamilyMember>();
-    for (const m of members) map.set(m.id, m);
-    map.set(member.id, member);
-    return map;
-  }, [member, members]);
 
   const rels = normalizeRelations(member.relations);
   const parentIds = rels.filter((r) => r.type === 'parent').map((r) => r.memberId);
