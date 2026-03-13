@@ -1,0 +1,435 @@
+<!DOCTYPE html><html><head><title></title><meta charset="utf-8"><style>* {
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 100%;
+}
+
+body {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+		'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+	line-height: 1.6;
+	font-size: 0.6875em; /* 11 pt */
+	color: #111;
+	margin: 0;
+}
+
+body > :first-child {
+	padding-top: 0;
+	margin-top: 0;
+}
+
+body > :last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	padding: 0.5em 0 0.25em;
+}
+
+h5,
+h6 {
+	padding: 0;
+}
+
+h5 {
+	font-size: 1em;
+}
+
+h6 {
+	font-size: 0.875em;
+	text-transform: uppercase;
+}
+
+p {
+	margin: 0.25em 0 1em;
+}
+
+blockquote {
+	margin: 0.5em 0 1em;
+	padding-left: 0.5em;
+	padding-right: 1em;
+	border-left: 4px solid gainsboro;
+	font-style: italic;
+}
+
+ul,
+ol {
+	margin: 0;
+	margin-left: 1em;
+	padding: 0 1.5em 0.5em;
+}
+
+pre {
+	white-space: pre-wrap;
+}
+
+h1 code,
+h2 code,
+h3 code,
+h4 code,
+h5 code,
+h6 code,
+p code,
+li code,
+pre code {
+	background-color: #f8f8f8;
+	padding: 0.1em 0.375em;
+	border: 1px solid #f8f8f8;
+	border-radius: 0.25em;
+	font-family: monospace;
+	font-size: 1.2em;
+}
+
+pre code {
+	display: block;
+	padding: 0.5em;
+}
+
+.page-break {
+	page-break-after: always;
+}
+
+img {
+	max-width: 100%;
+	margin: 1em 0;
+}
+
+table {
+	border-spacing: 0;
+	border-collapse: collapse;
+	display: block;
+	margin: 0 0 1em;
+	width: 100%;
+	overflow: auto;
+}
+
+table th,
+table td {
+	padding: 0.5em 1em;
+	border: 1px solid gainsboro;
+}
+
+table th {
+	font-weight: 600;
+}
+
+table tr {
+	background-color: white;
+	border-top: 1px solid gainsboro;
+}
+
+table tr:nth-child(2n) {
+	background-color: whitesmoke;
+}
+/*# sourceURL=C:\Users\lexxd\AppData\Local\npm-cache\_npx\55158e48eb5c59f7\node_modules\md-to-pdf\markdown.css*/</style><style>pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub
+  Description: Light theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-light
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #24292e;
+  background: #ffffff
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #d73a49
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #6f42c1
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #005cc5
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #032f62
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #e36209
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #6a737d
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #22863a
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #24292e
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #005cc5;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #735c0f
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #24292e;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #24292e;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #22863a;
+  background-color: #f0fff4
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #b31d28;
+  background-color: #ffeef0
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}/*# sourceURL=C:\Users\lexxd\AppData\Local\npm-cache\_npx\55158e48eb5c59f7\node_modules\highlight.js\styles\github.css*/</style></head>
+	<body class="">
+		<h2 id="гайд-для-заказчика-как-оценить-angelo">Гайд для заказчика: как оценить Angelo</h2>
+<p>Стенд для проверки: <code>https://angelo-test.ru</code></p>
+<p>В приложении есть <strong>2 режима</strong>:</p>
+<ul>
+<li><strong>Демо‑режим</strong> — быстро посмотреть интерфейс и сценарии на “примерных” данных.</li>
+<li><strong>Реальный режим</strong> — проверить реальную работу сервера: регистрация, сохранение профиля, загрузка медиа, публикации.</li>
+</ul>
+<p>Если вы видите “чужие” фото/имена или демонстрационные заглушки — проверьте, что вы <strong>не в демо‑режиме</strong>.</p>
+<hr>
+<h2 id="1-деморежим-быстро-посмотреть-ux">1) Демо‑режим (быстро посмотреть UX)</h2>
+<h3 id="как-включить">Как включить</h3>
+<ul>
+<li>На главной странице нажать <strong>маленькую кнопку “Демо”</strong>.</li>
+</ul>
+<h3 id="скриншаги-куда-нажимать">Скрин‑шаги (куда нажимать)</h3>
+<ol>
+<li>Главная страница: кнопка <strong>“Демо”</strong></li>
+</ol>
+<p><img src="./screenshots/01-welcome.png" alt=""></p>
+<ol start="2">
+<li>Демо‑лента (пример данных)</li>
+</ol>
+<p><img src="./screenshots/02-demo-feed.png" alt=""></p>
+<h3 id="что-смотреть-рекомендуемая-проверка-510-минут">Что смотреть (рекомендуемая проверка 5–10 минут)</h3>
+<ul>
+<li><strong>Навигация</strong>: нижнее меню, переходы по разделам.</li>
+<li><strong>Лента</strong>: список публикаций, открытие публикации, скролл, фильтры/поиск (если доступны).</li>
+<li><strong>Семья</strong>: “Обо мне”, “Семья”, поиск.</li>
+<li><strong>Дерево</strong>: клики по участникам, переходы в профили.</li>
+</ul>
+<h3 id="что-важно-понимать">Что важно понимать</h3>
+<ul>
+<li>В демо данные/фото могут быть <strong>моковые</strong> (примерные), не из вашей семьи.</li>
+<li>Некоторые действия в демо могут <strong>не сохраняться на сервере</strong> (только “витрина”).</li>
+</ul>
+<hr>
+<h2 id="2-реальный-режим-проверка-понастоящему">2) Реальный режим (проверка “по‑настоящему”)</h2>
+<h3 id="как-включить-1">Как включить</h3>
+<ul>
+<li>На главной нажать <strong>“Войти”</strong> или <strong>“Создать аккаунт”</strong> (это выключает демо‑режим).</li>
+</ul>
+<h3 id="скриншаги-рекомендуемый-сценарий-проверки">Скрин‑шаги (рекомендуемый сценарий проверки)</h3>
+<ol>
+<li>Регистрация</li>
+</ol>
+<p><img src="./screenshots/03-register.png" alt=""></p>
+<ol start="2">
+<li>Подтверждение кода</li>
+</ol>
+<p><img src="./screenshots/04-confirm-code.png" alt=""></p>
+<ol start="3">
+<li>Онбординг: заполнение профиля и загрузка аватара</li>
+</ol>
+<p><img src="./screenshots/05-onboarding.png" alt=""></p>
+<p><img src="./screenshots/06-onboarding-filled.png" alt=""></p>
+<ol start="4">
+<li>Дерево после онбординга</li>
+</ol>
+<p><img src="./screenshots/07-tree.png" alt=""></p>
+<ol start="5">
+<li>“Семья” → “Обо мне”</li>
+</ol>
+<p><img src="./screenshots/08-family-about-me.png" alt=""></p>
+<ol start="6">
+<li>“Создать” → выбор типа</li>
+</ol>
+<p><img src="./screenshots/09-create-choose-type.png" alt=""></p>
+<ol start="7">
+<li>Публикация “Текст” (выбор темы + заполнение)</li>
+</ol>
+<p><img src="./screenshots/10-create-text.png" alt=""></p>
+<ol start="8">
+<li>Лента после публикации</li>
+</ol>
+<p><img src="./screenshots/11-feed-after-publish.png" alt=""></p>
+<ol start="9">
+<li>Магазин</li>
+</ol>
+<p><img src="./screenshots/12-store.png" alt=""></p>
+<h3 id="что-обязательно-проверить-чтобы-оценить-продукт">Что обязательно проверить, чтобы оценить продукт</h3>
+<h4 id="a-регистрациявход">A) Регистрация/вход</h4>
+<ul>
+<li>Создайте аккаунт по телефону или email.</li>
+<li>Подтвердите код.</li>
+</ul>
+<p>Примечание для тестового стенда: <strong>код может не проверяться</strong> — можно ввести любой 6‑значный код.</p>
+<h4 id="b-онбординг-профиль">B) Онбординг (профиль)</h4>
+<ul>
+<li>Заполните минимум:<ul>
+<li>Фамилия</li>
+<li>Имя</li>
+<li>Дата рождения</li>
+</ul>
+</li>
+<li>Загрузите <strong>аватар</strong> (это проверка реальной загрузки в хранилище).</li>
+<li>Нажмите <strong>“Далее”</strong>.</li>
+</ul>
+<p>Ожидаемо:</p>
+<ul>
+<li>Аватар после загрузки отображается сразу на экране и сохраняется.</li>
+</ul>
+<h4 id="c-мой-профиль--редактировать-профиль">C) “Мой профиль” / “Редактировать профиль”</h4>
+<ul>
+<li>Откройте <strong>“Мой профиль”</strong>.</li>
+<li>Проверьте, что показывается <strong>ваш аватар</strong>, а не заглушка.</li>
+<li>Нажмите <strong>“Редактировать профиль”</strong>:<ul>
+<li>поменяйте “О себе” / “Город”</li>
+<li>попробуйте <strong>сменить аватар</strong></li>
+<li>сохраните</li>
+</ul>
+</li>
+</ul>
+<p>Ожидаемо:</p>
+<ul>
+<li>После сохранения данные и аватар остаются такими же при обновлении страницы.</li>
+</ul>
+<h4 id="d-публикации">D) Публикации</h4>
+<p>Сделайте 2 публикации:</p>
+<ul>
+<li><strong>Текстовую</strong> (без файлов)</li>
+<li><strong>С фото</strong> (или видео/аудио — по желанию)</li>
+</ul>
+<p>Ожидаемо:</p>
+<ul>
+<li>Публикации появляются в ленте.</li>
+<li>В карточке публикации:<ul>
+<li>автор — вы</li>
+<li>медиа — ваше, загруженное</li>
+</ul>
+</li>
+<li>Публикация открывается в деталях.</li>
+</ul>
+<hr>
+<h2 id="3-типичные-симптомы-и-что-это-значит">3) Типичные “симптомы” и что это значит</h2>
+<ul>
+<li><strong>В ленте видны моковые фото/другие авторы</strong>:<ul>
+<li>вероятно включён демо‑режим, или часть экранов работает в демо‑логике.</li>
+</ul>
+</li>
+<li><strong>Аватар загрузился, но не отображается / 403 на картинке</strong>:<ul>
+<li>обычно проблема доступа к хранилищу (MinIO) или настройка публичного URL.</li>
+</ul>
+</li>
+<li><strong>500 Internal Server Error</strong>:<ul>
+<li>проблема на стороне сервера/nginx (нужны логи и URL).</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="4-как-правильно-сообщать-об-ошибках-чтобы-быстро-исправили">4) Как правильно сообщать об ошибках (чтобы быстро исправили)</h2>
+<p>Пожалуйста, присылайте:</p>
+<ul>
+<li><strong>Что делали</strong>: шаги 1→2→3 (как можно точнее).</li>
+<li><strong>Где</strong>: ссылка на страницу (URL).</li>
+<li><strong>Что ожидали</strong> и <strong>что получили</strong>.</li>
+<li><strong>Скриншот/видео</strong>.</li>
+<li><strong>DevTools</strong>:<ul>
+<li>Console: ошибки (красные строки)</li>
+<li>Network: запросы со статусом 4xx/5xx (особенно <code>presign</code>, <code>PUT</code>, <code>/api/*</code>)</li>
+</ul>
+</li>
+<li><strong>Время</strong> (примерно) и ваш браузер.</li>
+</ul>
+<p>Шаблон:</p>
+<ul>
+<li>Шаги:</li>
+<li>URL:</li>
+<li>Ожидалось:</li>
+<li>Получилось:</li>
+<li>Console errors:</li>
+<li>Network (status/URL):</li>
+</ul>
+<hr>
+<h2 id="5-для-тех-команды-прозрачность-проверки-стенда">5) Для тех. команды (прозрачность проверки стенда)</h2>
+<p>На <code>https://angelo-test.ru</code> выполнен автоматический smoke‑прогон (Playwright):</p>
+<ul>
+<li>Регистрация → confirm code → онбординг (загрузка аватара) → навигация → создание текст‑публикации</li>
+<li>Критические проверки: <strong>нет HTTP 5xx</strong>, <strong>нет pageerror</strong>, <strong>нет console error</strong></li>
+</ul>
+<p>Файл сценария: <code>e2e/smoke.spec.ts</code></p>
+
+	
+
+</body></html>

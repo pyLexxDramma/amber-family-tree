@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Angelo — Гайд для заказчика</title>
+    <style>
+      :root { color-scheme: light; }
+      html, body { padding: 0; margin: 0; }
+      body { font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #111; }
+      .page { max-width: 900px; margin: 0 auto; padding: 28px 28px 40px; }
+      h2, h3 { margin: 18px 0 10px; }
+      h2 { font-size: 22px; }
+      h3 { font-size: 16px; }
+      p { margin: 8px 0; }
+      ul { margin: 8px 0 8px 18px; padding: 0; }
+      li { margin: 6px 0; }
+      hr { border: 0; border-top: 1px solid #ddd; margin: 18px 0; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.95em; }
+      pre { background: #f6f6f6; border: 1px solid #e6e6e6; border-radius: 10px; padding: 12px; overflow: auto; }
+      img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid #e6e6e6; }
+      @page { margin: 14mm; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h2>Гайд для заказчика: как оценить Angelo</h2>
+<p>Стенд для проверки: <code>https://angelo-test.ru</code></p>
+<p>В приложении есть <strong>2 режима</strong>:</p>
+<ul>
+<li><strong>Демо‑режим</strong> — быстро посмотреть интерфейс и сценарии на “примерных” данных.</li>
+<li><strong>Реальный режим</strong> — проверить реальную работу сервера: регистрация, сохранение профиля, загрузка медиа, публикации.</li>
+</ul>
+<p>Если вы видите “чужие” фото/имена или демонстрационные заглушки — проверьте, что вы <strong>не в демо‑режиме</strong>.</p>
+<hr>
+<h2>1) Демо‑режим (быстро посмотреть UX)</h2>
+<h3>Как включить</h3>
+<ul>
+<li>На главной странице нажать <strong>маленькую кнопку “Демо”</strong>.</li>
+</ul>
+<h3>Скрин‑шаги (куда нажимать)</h3>
+<ol>
+<li>Главная страница: кнопка <strong>“Демо”</strong></li>
+</ol>
+<p><img src="./screenshots/01-welcome.png" alt=""></p>
+<ol start="2">
+<li>Демо‑лента (пример данных)</li>
+</ol>
+<p><img src="./screenshots/02-demo-feed.png" alt=""></p>
+<h3>Что смотреть (рекомендуемая проверка 5–10 минут)</h3>
+<ul>
+<li><strong>Навигация</strong>: нижнее меню, переходы по разделам.</li>
+<li><strong>Лента</strong>: список публикаций, открытие публикации, скролл, фильтры/поиск (если доступны).</li>
+<li><strong>Семья</strong>: “Обо мне”, “Семья”, поиск.</li>
+<li><strong>Дерево</strong>: клики по участникам, переходы в профили.</li>
+</ul>
+<h3>Что важно понимать</h3>
+<ul>
+<li>В демо данные/фото могут быть <strong>моковые</strong> (примерные), не из вашей семьи.</li>
+<li>Некоторые действия в демо могут <strong>не сохраняться на сервере</strong> (только “витрина”).</li>
+</ul>
+<hr>
+<h2>2) Реальный режим (проверка “по‑настоящему”)</h2>
+<h3>Как включить</h3>
+<ul>
+<li>На главной нажать <strong>“Войти”</strong> или <strong>“Создать аккаунт”</strong> (это выключает демо‑режим).</li>
+</ul>
+<h3>Скрин‑шаги (рекомендуемый сценарий проверки)</h3>
+<ol>
+<li>Регистрация</li>
+</ol>
+<p><img src="./screenshots/03-register.png" alt=""></p>
+<ol start="2">
+<li>Подтверждение кода</li>
+</ol>
+<p><img src="./screenshots/04-confirm-code.png" alt=""></p>
+<ol start="3">
+<li>Онбординг: заполнение профиля и загрузка аватара</li>
+</ol>
+<p><img src="./screenshots/05-onboarding.png" alt=""></p>
+<p><img src="./screenshots/06-onboarding-filled.png" alt=""></p>
+<ol start="4">
+<li>Дерево после онбординга</li>
+</ol>
+<p><img src="./screenshots/07-tree.png" alt=""></p>
+<ol start="5">
+<li>“Семья” → “Обо мне”</li>
+</ol>
+<p><img src="./screenshots/08-family-about-me.png" alt=""></p>
+<ol start="6">
+<li>“Создать” → выбор типа</li>
+</ol>
+<p><img src="./screenshots/09-create-choose-type.png" alt=""></p>
+<ol start="7">
+<li>Публикация “Текст” (выбор темы + заполнение)</li>
+</ol>
+<p><img src="./screenshots/10-create-text.png" alt=""></p>
+<ol start="8">
+<li>Лента после публикации</li>
+</ol>
+<p><img src="./screenshots/11-feed-after-publish.png" alt=""></p>
+<ol start="9">
+<li>Магазин</li>
+</ol>
+<p><img src="./screenshots/12-store.png" alt=""></p>
+<h3>Что обязательно проверить, чтобы оценить продукт</h3>
+<h4>A) Регистрация/вход</h4>
+<ul>
+<li>Создайте аккаунт по телефону или email.</li>
+<li>Подтвердите код.</li>
+</ul>
+<p>Примечание для тестового стенда: <strong>код может не проверяться</strong> — можно ввести любой 6‑значный код.</p>
+<h4>B) Онбординг (профиль)</h4>
+<ul>
+<li>Заполните минимум:<ul>
+<li>Фамилия</li>
+<li>Имя</li>
+<li>Дата рождения</li>
+</ul>
+</li>
+<li>Загрузите <strong>аватар</strong> (это проверка реальной загрузки в хранилище).</li>
+<li>Нажмите <strong>“Далее”</strong>.</li>
+</ul>
+<p>Ожидаемо:</p>
+<ul>
+<li>Аватар после загрузки отображается сразу на экране и сохраняется.</li>
+</ul>
+<h4>C) “Мой профиль” / “Редактировать профиль”</h4>
+<ul>
+<li>Откройте <strong>“Мой профиль”</strong>.</li>
+<li>Проверьте, что показывается <strong>ваш аватар</strong>, а не заглушка.</li>
+<li>Нажмите <strong>“Редактировать профиль”</strong>:<ul>
+<li>поменяйте “О себе” / “Город”</li>
+<li>попробуйте <strong>сменить аватар</strong></li>
+<li>сохраните</li>
+</ul>
+</li>
+</ul>
+<p>Ожидаемо:</p>
+<ul>
+<li>После сохранения данные и аватар остаются такими же при обновлении страницы.</li>
+</ul>
+<h4>D) Публикации</h4>
+<p>Сделайте 2 публикации:</p>
+<ul>
+<li><strong>Текстовую</strong> (без файлов)</li>
+<li><strong>С фото</strong> (или видео/аудио — по желанию)</li>
+</ul>
+<p>Ожидаемо:</p>
+<ul>
+<li>Публикации появляются в ленте.</li>
+<li>В карточке публикации:<ul>
+<li>автор — вы</li>
+<li>медиа — ваше, загруженное</li>
+</ul>
+</li>
+<li>Публикация открывается в деталях.</li>
+</ul>
+<hr>
+<h2>3) Типичные “симптомы” и что это значит</h2>
+<ul>
+<li><strong>В ленте видны моковые фото/другие авторы</strong>:<ul>
+<li>вероятно включён демо‑режим, или часть экранов работает в демо‑логике.</li>
+</ul>
+</li>
+<li><strong>Аватар загрузился, но не отображается / 403 на картинке</strong>:<ul>
+<li>обычно проблема доступа к хранилищу (MinIO) или настройка публичного URL.</li>
+</ul>
+</li>
+<li><strong>500 Internal Server Error</strong>:<ul>
+<li>проблема на стороне сервера/nginx (нужны логи и URL).</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>4) Как правильно сообщать об ошибках (чтобы быстро исправили)</h2>
+<p>Пожалуйста, присылайте:</p>
+<ul>
+<li><strong>Что делали</strong>: шаги 1→2→3 (как можно точнее).</li>
+<li><strong>Где</strong>: ссылка на страницу (URL).</li>
+<li><strong>Что ожидали</strong> и <strong>что получили</strong>.</li>
+<li><strong>Скриншот/видео</strong>.</li>
+<li><strong>DevTools</strong>:<ul>
+<li>Console: ошибки (красные строки)</li>
+<li>Network: запросы со статусом 4xx/5xx (особенно <code>presign</code>, <code>PUT</code>, <code>/api/*</code>)</li>
+</ul>
+</li>
+<li><strong>Время</strong> (примерно) и ваш браузер.</li>
+</ul>
+<p>Шаблон:</p>
+<ul>
+<li>Шаги:</li>
+<li>URL:</li>
+<li>Ожидалось:</li>
+<li>Получилось:</li>
+<li>Console errors:</li>
+<li>Network (status/URL):</li>
+</ul>
+<hr>
+<h2>5) Для тех. команды (прозрачность проверки стенда)</h2>
+<p>На <code>https://angelo-test.ru</code> выполнен автоматический smoke‑прогон (Playwright):</p>
+<ul>
+<li>Регистрация → confirm code → онбординг (загрузка аватара) → навигация → создание текст‑публикации</li>
+<li>Критические проверки: <strong>нет HTTP 5xx</strong>, <strong>нет pageerror</strong>, <strong>нет console error</strong></li>
+</ul>
+<p>Файл сценария: <code>e2e/smoke.spec.ts</code></p>
+
+    </div>
+  </body>
+</html>
