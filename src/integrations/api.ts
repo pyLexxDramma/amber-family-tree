@@ -22,6 +22,8 @@ export const api: AngeloApi = {
     removeLike: (publicationId) => selectApi().feed.removeLike(publicationId),
     addCommentLike: (publicationId, commentId) => selectApi().feed.addCommentLike(publicationId, commentId),
     removeCommentLike: (publicationId, commentId) => selectApi().feed.removeCommentLike(publicationId, commentId),
+    updatePublication: (publicationId, patch) => selectApi().feed.updatePublication(publicationId, patch),
+    deletePublication: (publicationId) => selectApi().feed.deletePublication(publicationId),
   },
   family: {
     listMembers: () => selectApi().family.listMembers(),

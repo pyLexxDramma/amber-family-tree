@@ -16,6 +16,10 @@ import { Heart, MoreVertical } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/integrations/request';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
@@ -34,6 +38,12 @@ const PublicationDetails: React.FC = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement | null>(null);
   const myMemberIdRef = useRef<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editText, setEditText] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
   const ensureMyMemberId = async () => {
@@ -57,6 +67,10 @@ const PublicationDetails: React.FC = () => {
     api.family.listMembers().then(setMembers);
     api.profile.getMyProfile().then(me => setMyMemberId(me.id)).catch(() => {});
   }, [id]);
+
+  useEffect(() => {
+    myMemberIdRef.current = myMemberId;
+  }, [myMemberId]);
 
   if (pub === undefined) {
     return (
@@ -92,6 +106,7 @@ const PublicationDetails: React.FC = () => {
   const comments = [...(pub.comments ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
   const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : false;
+  const isAuthor = !!effectiveMemberId && effectiveMemberId === aid;
 
   const submitComment = async () => {
     const text = commentText.trim();
@@ -123,13 +138,68 @@ const PublicationDetails: React.FC = () => {
         return;
       }
       const likedNow = (pub.likes ?? []).includes(mid);
+      setPub(prev => {
+        if (!prev) return prev;
+        const likes = prev.likes ?? [];
+        const next = likedNow ? likes.filter(x => x !== mid) : (likes.includes(mid) ? likes : [...likes, mid]);
+        return { ...prev, likes: next };
+      });
       const updated = likedNow ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
       setPub(updated);
       platform.hapticFeedback('light');
     } catch {
+      try {
+        const fresh = await api.feed.getById(pub.id);
+        if (fresh) setPub(fresh);
+      } catch {}
       toast({ title: 'Не удалось поставить лайк' });
     } finally {
       setIsTogglingLike(false);
+    }
+  };
+
+  const openEdit = () => {
+    setEditTitle(pub.title ?? '');
+    setEditText(pub.text ?? '');
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!pub) return;
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const updated = await api.feed.updatePublication(pub.id, {
+        title: editTitle.trim() ? editTitle.trim() : null,
+        text: editText,
+      });
+      setPub(updated);
+      setEditOpen(false);
+      platform.hapticFeedback('light');
+    } catch (e) {
+      let desc: string | undefined;
+      if (e instanceof ApiError) desc = `HTTP ${e.status}: ${e.bodyText.slice(0, 160)}`;
+      toast({ title: 'Не удалось сохранить изменения', description: desc });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const doDelete = async () => {
+    if (!pub) return;
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await api.feed.deletePublication(pub.id);
+      setDeleteOpen(false);
+      platform.hapticFeedback('light');
+      navigate(-1);
+    } catch (e) {
+      let desc: string | undefined;
+      if (e instanceof ApiError) desc = `HTTP ${e.status}: ${e.bodyText.slice(0, 160)}`;
+      toast({ title: 'Не удалось удалить публикацию', description: desc });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -236,6 +306,17 @@ const PublicationDetails: React.FC = () => {
           {publicationDescription ? (
             <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
           ) : null}
+
+          {isAuthor && (
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1 rounded-2xl h-11 border-2 bg-white" onClick={openEdit}>
+                Редактировать
+              </Button>
+              <Button type="button" variant="outline" className="flex-1 rounded-2xl h-11 border-2 border-red-300 text-red-700 bg-white hover:bg-red-50" onClick={() => setDeleteOpen(true)}>
+                Удалить
+              </Button>
+            </div>
+          )}
 
           <div className="flex items-center gap-3">
             <button
@@ -376,6 +457,58 @@ const PublicationDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+          <DialogHeader className="text-center sm:text-center">
+            <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Редактировать</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-3">
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)]"
+              placeholder="Название"
+            />
+            <Textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] min-h-[160px]"
+              placeholder="Текст публикации"
+            />
+            <Button
+              type="button"
+              className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
+              onClick={saveEdit}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Сохраняю…' : 'Сохранить'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+          <DialogHeader className="text-center sm:text-center">
+            <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Удалить публикацию?</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-3">
+            <p className="text-sm text-[var(--proto-text-muted)] text-center">Это действие нельзя отменить.</p>
+            <Button
+              type="button"
+              className="w-full rounded-2xl h-12 bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50"
+              onClick={doDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Удаляю…' : 'Удалить'}
+            </Button>
+            <Button type="button" variant="outline" className="w-full rounded-2xl h-12 border-2 bg-white" onClick={() => setDeleteOpen(false)}>
+              Отмена
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

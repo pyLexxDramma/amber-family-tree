@@ -74,5 +74,18 @@ class PublicationCreate(BaseModel):
     media_keys: list[str] = Field(default_factory=list, description="S3 keys from presign")
 
 
+class PublicationUpdate(BaseModel):
+    title: str | None = None
+    text: str | None = None
+    event_date: str | None = None
+    event_date_approximate: bool | None = None
+    place: str | None = None
+    topic_tag: str | None = None
+    co_author_ids: list[str] | None = None
+    participant_ids: list[str] | None = None
+    visible_for: list[str] | None = None
+    exclude_for: list[str] | None = None
+
+
 class CommentCreate(BaseModel):
     text: str

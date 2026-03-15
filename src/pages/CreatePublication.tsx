@@ -101,6 +101,7 @@ const CreatePublication: React.FC = () => {
   const [accessPeopleIds, setAccessPeopleIds] = useState<string[]>([]);
   const [guestLink, setGuestLink] = useState(false);
   const [tipClosed, setTipClosed] = useState(false);
+  const [publishAttempted, setPublishAttempted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const objectUrlRef = useRef<Map<string, string>>(new Map());
   const filePickRef = useRef<PickMediaTarget>(null);
@@ -201,6 +202,23 @@ const CreatePublication: React.FC = () => {
     objectUrlRef.current.set(item.id, url);
     return url;
   };
+
+  const publishBlockers = useMemo(() => {
+    const out: string[] = [];
+    if (!topicTag) out.push('Выберите тему');
+    const uploadingOrPending = blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => it.status === 'uploading' || it.status === 'pending'));
+    if (uploadingOrPending) out.push('Дождитесь окончания загрузки файлов');
+    const hasErrors = blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => it.status === 'error' || !!it.error));
+    if (hasErrors) out.push('Исправьте ошибки загрузки файлов');
+    if ((access === 'people' || access === 'groups') && accessPeopleIds.length === 0) out.push('Выберите людей для доступа');
+    if (createKind === 'album') {
+      const hasUploadedMedia = blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => it.status === 'uploaded'));
+      if (!hasUploadedMedia) out.push('Для альбома добавьте хотя бы 1 медиафайл');
+    } else {
+      if (blocks.length === 0 && !title.trim()) out.push('Добавьте хотя бы один блок или задайте название');
+    }
+    return out;
+  }, [access, accessPeopleIds.length, blocks, createKind, title, topicTag]);
 
   const preselectedType = useMemo(() => {
     const t = new URLSearchParams(location.search).get('type');
@@ -942,7 +960,7 @@ const CreatePublication: React.FC = () => {
               <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
                 <Label className="text-sm font-semibold text-[var(--proto-text)]">Тема *</Label>
                 <Select value={topicTag} onValueChange={v => { setTopicTag(v); setTagError(''); }}>
-                  <SelectTrigger className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] h-12 text-[var(--proto-text)]"><SelectValue placeholder="Выберите тему" /></SelectTrigger>
+                  <SelectTrigger className={`mt-2 rounded-xl border-2 bg-[var(--proto-bg)] h-12 text-[var(--proto-text)] ${publishAttempted && !topicTag ? 'border-red-500/60' : 'border-[var(--proto-border)]'}`}><SelectValue placeholder="Выберите тему" /></SelectTrigger>
                   <SelectContent>{topicTags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select>
                 {tagError && <p className="text-red-600 text-sm font-medium mt-1">{tagError}</p>}
@@ -1094,7 +1112,14 @@ const CreatePublication: React.FC = () => {
                 <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => setStep('info')}>Назад</Button>
                 <Button
                   className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
-                  onClick={handlePublish}
+                  onClick={() => {
+                    setPublishAttempted(true);
+                    if (publishBlockers.length) {
+                      toast({ title: 'Нельзя опубликовать', description: publishBlockers[0] });
+                      return;
+                    }
+                    handlePublish();
+                  }}
                   disabled={
                     isPublishing ||
                     blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => !!it.error || it.status === 'error' || it.status === 'uploading')) ||
@@ -1110,6 +1135,16 @@ const CreatePublication: React.FC = () => {
                   {isPublishing ? 'Публикую…' : 'Опубликовать обновления'}
                 </Button>
               </div>
+              {publishBlockers.length > 0 && publishAttempted && (
+                <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
+                  <p className="text-sm font-semibold text-red-700">Почему нельзя опубликовать:</p>
+                  <ul className="mt-2 space-y-1 text-sm text-red-700">
+                    {publishBlockers.map((b) => (
+                      <li key={b}>- {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="pt-2 text-center text-sm">
                 <button type="button" className="text-red-600 font-semibold" disabled>
                   Снять с публикации

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +22,7 @@ from app.schemas.feed import (
     CommentResponse,
     MediaItemResponse,
     PublicationCreate,
+    PublicationUpdate,
     PublicationResponse,
 )
 
@@ -267,6 +268,79 @@ async def add_comment(
     await db.commit()
     await db.refresh(comment)
     return _comment_to_response(comment)
+
+
+@router.patch("/{publication_id}")
+async def update_publication(
+    publication_id: UUID,
+    body: PublicationUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User has no member profile",
+        )
+    pub = await _load_publication_for_response(
+        db=db, publication_id=publication_id, family_id=current_user.family_id
+    )
+    if pub is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Publication not found",
+        )
+    if pub.author_id != current_user.member_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only author can edit publication",
+        )
+    data = body.model_dump(exclude_unset=True)
+    for k, v in data.items():
+        setattr(pub, k, v)
+    await db.commit()
+    pub = await _load_publication_for_response(
+        db=db, publication_id=publication_id, family_id=current_user.family_id
+    )
+    if pub is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Publication not found",
+        )
+    like_ids = [str(l.member_id) for l in pub.likes]
+    return _publication_to_response(pub, like_ids)
+
+
+@router.delete("/{publication_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_publication(
+    publication_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User has no member profile",
+        )
+    result = await db.execute(
+        select(Publication)
+        .where(Publication.id == publication_id)
+        .where(Publication.family_id == current_user.family_id)
+    )
+    pub = result.scalar_one_or_none()
+    if pub is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Publication not found",
+        )
+    if pub.author_id != current_user.member_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only author can delete publication",
+        )
+    await db.delete(pub)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{publication_id}/like")

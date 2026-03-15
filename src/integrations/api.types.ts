@@ -22,6 +22,8 @@ export interface FeedApi {
   removeLike(publicationId: string): Promise<Publication>;
   addCommentLike(publicationId: string, commentId: string): Promise<Comment>;
   removeCommentLike(publicationId: string, commentId: string): Promise<Comment>;
+  updatePublication(publicationId: string, patch: { title?: string | null; text?: string | null }): Promise<Publication>;
+  deletePublication(publicationId: string): Promise<{ deleted: true }>;
 }
 
 export interface FamilyApi {

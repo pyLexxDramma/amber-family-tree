@@ -31,6 +31,13 @@ export const realApi: AngeloApi = {
     async removeCommentLike(publicationId: string, commentId: string) {
       return requestJson<Comment>('DELETE', `/feed/${publicationId}/comments/${commentId}/like`);
     },
+    async updatePublication(publicationId: string, patch: { title?: string | null; text?: string | null }) {
+      return requestJson<Publication>('PATCH', `/feed/${publicationId}`, patch);
+    },
+    async deletePublication(publicationId: string) {
+      await requestJson<null>('DELETE', `/feed/${publicationId}`);
+      return { deleted: true as const };
+    },
   },
   family: {
     async listMembers() {
