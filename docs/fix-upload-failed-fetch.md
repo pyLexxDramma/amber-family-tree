@@ -31,6 +31,19 @@ sudo nano /etc/nginx/sites-available/angelo
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # CORS для браузерного PUT (иначе на ПК будет "Failed to fetch")
+        add_header Access-Control-Allow-Origin $http_origin always;
+        add_header Access-Control-Allow-Methods "GET, PUT, POST, DELETE, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type, X-Amz-Date, X-Amz-Content-Sha256, X-Amz-Security-Token, X-Requested-With" always;
+        add_header Access-Control-Expose-Headers "ETag, x-amz-request-id" always;
+
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+
+        proxy_request_buffering off;
+        proxy_buffering off;
     }
 ```
 
@@ -64,6 +77,18 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        add_header Access-Control-Allow-Origin $http_origin always;
+        add_header Access-Control-Allow-Methods "GET, PUT, POST, DELETE, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Authorization, Content-Type, X-Amz-Date, X-Amz-Content-Sha256, X-Amz-Security-Token, X-Requested-With" always;
+        add_header Access-Control-Expose-Headers "ETag, x-amz-request-id" always;
+
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+
+        proxy_request_buffering off;
+        proxy_buffering off;
     }
 }
 ```

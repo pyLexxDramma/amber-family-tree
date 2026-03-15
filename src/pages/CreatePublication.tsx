@@ -198,6 +198,14 @@ const CreatePublication: React.FC = () => {
           content_type: item.file.type || 'application/octet-stream',
           file_size_bytes: item.file.size,
         });
+        if (typeof window !== 'undefined') {
+          try {
+            const u = new URL(presign.upload_url);
+            if (u.protocol !== 'https:' && window.location.protocol === 'https:') {
+              throw new Error('presign returned non-https upload url');
+            }
+          } catch {}
+        }
         const putRes = await fetch(presign.upload_url, {
           method: 'PUT',
           headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
@@ -212,12 +220,19 @@ const CreatePublication: React.FC = () => {
         }));
       } catch (e) {
         const uploadMs = Math.round(performance.now() - startedAt);
-        const err = e instanceof Error ? e.message : 'upload error';
+        const raw = e instanceof Error ? e.message : 'upload error';
+        const err =
+          raw.toLowerCase().includes('failed to fetch') || raw.toLowerCase().includes('networkerror')
+            ? 'Сетевая ошибка. На сервере обычно не настроен CORS для загрузки файлов (PUT/OPTIONS) или неверный HTTPS.'
+            : raw === 'presign returned non-https upload url'
+              ? 'Ссылка на загрузку пришла по HTTP. Нужен HTTPS (иначе браузер блокирует).'
+              : raw;
         setBlocks(prev => prev.map(b => {
           if (b.id !== blockId) return b;
           if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
           return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'error', error: err, uploadMs } : it) };
         }));
+        toast({ title: 'Не удалось загрузить файл', description: err });
       }
     }
   };
