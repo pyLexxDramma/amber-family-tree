@@ -51,14 +51,14 @@ const ConfirmCode: React.FC = () => {
       </p>
 
       <div className="flex flex-col items-center gap-8">
-        <div className="p-4 rounded-2xl bg-card border border-border/40 w-full max-w-[280px] shadow-sm">
+        <div className="p-4 rounded-2xl bg-card border border-border/40 w-full max-w-[320px] shadow-sm">
           <InputOTP maxLength={6} value={code} onChange={v => { setCode(v); setError(''); }}>
-            <InputOTPGroup className="justify-center gap-1 sm:gap-2">
+            <InputOTPGroup className="w-full justify-center gap-2">
               {[0,1,2,3,4,5].map(i => (
                 <InputOTPSlot
                   key={i}
                   index={i}
-                  className="h-12 w-9 sm:w-10 text-base sm:text-lg font-semibold bg-background !border !border-border !rounded-xl first:!rounded-xl last:!rounded-xl"
+                  className="h-12 flex-1 max-w-10 text-base sm:text-lg font-semibold bg-background !border !border-border !rounded-xl first:!rounded-xl last:!rounded-xl"
                 />
               ))}
             </InputOTPGroup>
