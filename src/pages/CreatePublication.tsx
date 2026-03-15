@@ -124,11 +124,9 @@ const CreatePublication: React.FC = () => {
     filePickRef.current = target;
     setPickMediaFor(target.kind);
     setPickMediaTarget(target);
-    requestAnimationFrame(() => {
-      if (!fileInputRef.current) return;
-      fileInputRef.current.accept = acceptForKind(target.kind);
-      fileInputRef.current.click();
-    });
+    if (!fileInputRef.current) return;
+    fileInputRef.current.accept = acceptForKind(target.kind);
+    fileInputRef.current.click();
   };
 
   const objectUrlFor = (item: UploadItem) => {
@@ -389,6 +387,10 @@ const CreatePublication: React.FC = () => {
               return;
             }
             const items = makeUploadItems(list, kind);
+            toast({
+              title: `Выбрано файлов: ${items.length}`,
+              description: items[0]?.name ? `Первый файл: ${items[0].name}` : undefined,
+            });
             const addToExisting = target?.blockId;
             if (addToExisting) {
               setBlocks(prev => prev.map(b => {
