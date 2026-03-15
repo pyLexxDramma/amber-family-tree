@@ -60,6 +60,7 @@ type PickMediaTarget =
 const CreatePublication: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const clientBuild = '2026-03-15.1';
   const [type, setType] = useState<string | null>(null);
   const [step, setStep] = useState<'story' | 'info' | 'publish'>('story');
   const [createKind, setCreateKind] = useState<'story' | 'album'>('story');
@@ -104,6 +105,7 @@ const CreatePublication: React.FC = () => {
   const objectUrlRef = useRef<Map<string, string>>(new Map());
   const filePickRef = useRef<PickMediaTarget>(null);
   const startedUploadsRef = useRef<Set<string>>(new Set());
+  const [pickDebug, setPickDebug] = useState('');
   const { visibility, setVisibility } = usePrivacyVisibility();
 
   useEffect(() => {
@@ -127,6 +129,7 @@ const CreatePublication: React.FC = () => {
     setPickMediaTarget(target);
     if (!fileInputRef.current) return;
     fileInputRef.current.accept = acceptForKind(target.kind);
+    setPickDebug(`open:${target.kind}${target.blockId ? `:${target.blockId}` : ''}`);
     fileInputRef.current.click();
   };
 
@@ -388,6 +391,7 @@ const CreatePublication: React.FC = () => {
               return;
             }
             const items = makeUploadItems(list, kind);
+            setPickDebug(`selected:${kind}:${items.length}`);
             toast({
               title: `Выбрано файлов: ${items.length}`,
               description: items[0]?.name ? `Первый файл: ${items[0].name}` : undefined,
@@ -707,6 +711,10 @@ const CreatePublication: React.FC = () => {
               >
                 Предпросмотр
               </Button>
+
+              <p className="text-[11px] text-center text-[var(--proto-text-muted)]">
+                build {clientBuild}{pickDebug ? ` · ${pickDebug}` : ''}
+              </p>
             </div>
           )}
 
