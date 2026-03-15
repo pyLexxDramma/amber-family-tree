@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { Image, Video, Mic, Type, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2 } from 'lucide-react';
+import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
@@ -76,12 +76,12 @@ const CreatePublication: React.FC = () => {
   }, [type]);
 
   const blockTypes = [
-    { id: 'text' as const, label: 'Text', icon: Type },
-    { id: 'photo' as const, label: 'Photos', icon: Image },
-    { id: 'video' as const, label: 'Video', icon: Video },
-    { id: 'audio' as const, label: 'Audio', icon: Mic },
-    { id: 'embed' as const, label: 'Embed', icon: Code },
-    { id: 'link' as const, label: 'Link Album', icon: Link2 },
+    { id: 'text' as const, label: 'Текст', icon: AlignLeft },
+    { id: 'photo' as const, label: 'Фото', icon: Camera },
+    { id: 'video' as const, label: 'Видео', icon: Video },
+    { id: 'audio' as const, label: 'Аудио', icon: Mic },
+    { id: 'embed' as const, label: 'Вставка', icon: Code },
+    { id: 'link' as const, label: 'Альбом', icon: Link2 },
   ];
 
   const addFiles = (list: FileList) => {
@@ -380,56 +380,63 @@ const CreatePublication: React.FC = () => {
         </div>
 
         <Sheet open={blockPickerOpen} onOpenChange={setBlockPickerOpen}>
-          <SheetContent side="bottom" className="rounded-t-3xl">
-            <SheetHeader>
-              <SheetTitle>Add Story Block</SheetTitle>
-            </SheetHeader>
-            <div className="mt-5">
-              <p className="text-xs font-semibold text-[var(--proto-text-muted)] tracking-wider uppercase mb-3">Select block type</p>
-              <div className="grid grid-cols-2 gap-3">
-                {blockTypes.map(bt => (
-                  <button
-                    key={bt.id}
-                    type="button"
-                    onClick={() => {
-                      setBlockPickerOpen(false);
-                      if (bt.id === 'text') {
-                        setType('text');
-                        return;
-                      }
-                      if (bt.id === 'photo') {
-                        setType('photo');
-                        setTimeout(() => fileInputRef.current?.click(), 0);
-                        return;
-                      }
-                      if (bt.id === 'video') {
-                        setType('video');
-                        setTimeout(() => fileInputRef.current?.click(), 0);
-                        return;
-                      }
-                      if (bt.id === 'audio') {
-                        setType('audio');
-                        setTimeout(() => fileInputRef.current?.click(), 0);
-                        return;
-                      }
-                      if (bt.id === 'embed') {
-                        setType('text');
-                        return;
-                      }
-                      if (bt.id === 'link') {
-                        setType('photo');
-                        setTimeout(() => fileInputRef.current?.click(), 0);
-                        return;
-                      }
-                    }}
-                    className="rounded-2xl border p-4 text-left transition-colors bg-[var(--proto-card)] border-[var(--proto-border)] hover:border-[var(--proto-active)]/40"
-                  >
-                    <div className="flex items-center justify-between">
-                      <bt.icon className="h-5 w-5 text-[var(--proto-active)]" />
-                    </div>
-                    <p className="mt-3 text-sm font-semibold text-[var(--proto-text)]">{bt.label}</p>
-                  </button>
-                ))}
+          <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] rounded-none p-0 border-0">
+            <div className="h-full flex flex-col bg-[var(--proto-bg)]">
+              <div className="px-6 pt-7 pb-5 border-b border-[var(--proto-border)]">
+                <SheetHeader className="text-center sm:text-center">
+                  <SheetTitle className="font-serif text-2xl">Добавить блок</SheetTitle>
+                </SheetHeader>
+              </div>
+
+              <div className="flex-1 overflow-auto px-6 pt-6 pb-10">
+                <p className="text-xs font-semibold text-[var(--proto-text-muted)] tracking-wider uppercase text-center mb-6">
+                  Выберите тип блока
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  {blockTypes.map(bt => (
+                    <button
+                      key={bt.id}
+                      type="button"
+                      onClick={() => {
+                        setBlockPickerOpen(false);
+                        if (bt.id === 'text') {
+                          setType('text');
+                          return;
+                        }
+                        if (bt.id === 'photo') {
+                          setType('photo');
+                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          return;
+                        }
+                        if (bt.id === 'video') {
+                          setType('video');
+                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          return;
+                        }
+                        if (bt.id === 'audio') {
+                          setType('audio');
+                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          return;
+                        }
+                        if (bt.id === 'embed') {
+                          setType('text');
+                          return;
+                        }
+                        if (bt.id === 'link') {
+                          setType('photo');
+                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          return;
+                        }
+                      }}
+                      className="aspect-square rounded-2xl border bg-[var(--proto-card)] border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors flex flex-col items-center justify-center gap-3"
+                    >
+                      <bt.icon className="h-8 w-8 text-[var(--proto-active)]" />
+                      <span className="text-sm font-semibold text-[var(--proto-text)] text-center">
+                        {bt.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </SheetContent>
