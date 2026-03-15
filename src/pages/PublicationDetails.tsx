@@ -33,6 +33,7 @@ const PublicationDetails: React.FC = () => {
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement | null>(null);
+  const myMemberIdRef = useRef<string | null>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
   const ensureMyMemberId = async () => {
@@ -40,6 +41,7 @@ const PublicationDetails: React.FC = () => {
     try {
       const me = await api.profile.getMyProfile();
       setMyMemberId(me.id);
+      myMemberIdRef.current = me.id;
       return me.id;
     } catch {
       return null;
@@ -84,15 +86,12 @@ const PublicationDetails: React.FC = () => {
     : getPrototypePublicationPhotoByTopic(pub.topicTag);
   const pids = participantIdsOf(pub).slice(0, 6);
   const participants = pids.map(pid => memberMap.get(pid) ?? getMember(pid)).filter(Boolean);
-  const tags = [pub.topicTag, 'Тэг 1', 'Тэг 2'].filter(Boolean);
-  const PUBLICATION_SCREENSHOT_TEXT = 'Моя бабушка Тамара и дедушка Максим. Фотография сделана в 1932 году. г. Валдай, Новгородская область.';
-
-  const publicationDescription = (pub.title || '').toLowerCase().includes('бабушка') && (pub.title || '').toLowerCase().includes('дедушка')
-    ? PUBLICATION_SCREENSHOT_TEXT
-    : (pub.text || PUBLICATION_SCREENSHOT_TEXT);
+  const tags = [pub.topicTag].filter(Boolean);
+  const publicationDescription = pub.text || '';
   const publishDateFormatted = format(new Date(pub.publishDate), 'dd MMM, yyyy', { locale: ru });
   const comments = [...(pub.comments ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  const isLiked = myMemberId ? (pub.likes ?? []).includes(myMemberId) : false;
+  const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
+  const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : false;
 
   const submitComment = async () => {
     const text = commentText.trim();
@@ -123,7 +122,8 @@ const PublicationDetails: React.FC = () => {
         toast({ title: 'Нужно войти, чтобы поставить лайк' });
         return;
       }
-      const updated = isLiked ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
+      const likedNow = (pub.likes ?? []).includes(mid);
+      const updated = likedNow ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
       setPub(updated);
       platform.hapticFeedback('light');
     } catch {
@@ -232,8 +232,10 @@ const PublicationDetails: React.FC = () => {
             </div>
           )}
 
-          <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Бабушка Тамара и дедушка'}</h1>
-          <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
+          <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Без названия'}</h1>
+          {publicationDescription ? (
+            <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
+          ) : null}
 
           <div className="flex items-center gap-3">
             <button

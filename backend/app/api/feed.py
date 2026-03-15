@@ -65,7 +65,8 @@ def _media_to_response(m: MediaItem) -> dict:
 
 
 def _comment_to_response(c: Comment) -> dict:
-    like_ids = [str(l.member_id) for l in getattr(c, "likes", [])]
+    likes_rel = getattr(c, "__dict__", {}).get("likes") or []
+    like_ids = [str(l.member_id) for l in likes_rel]
     return CommentResponse(
         id=str(c.id),
         author_id=str(c.author_id),

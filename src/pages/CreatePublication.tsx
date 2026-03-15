@@ -1100,7 +1100,11 @@ const CreatePublication: React.FC = () => {
                     blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => !!it.error || it.status === 'error' || it.status === 'uploading')) ||
                     (!topicTag) ||
                     ((access === 'people' || access === 'groups') && accessPeopleIds.length === 0) ||
-                    (blocks.length === 0 && !title.trim())
+                    (
+                      createKind === 'album'
+                        ? !blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => it.status === 'uploaded'))
+                        : (blocks.length === 0 && !title.trim())
+                    )
                   }
                 >
                   {isPublishing ? 'Публикую…' : 'Опубликовать обновления'}
