@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, MoreHorizontal, MapPin, ChevronRight, Menu } from 'lucide-react';
+import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, MapPin, ChevronRight, Menu, Trash2, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/integrations/api';
@@ -52,11 +52,16 @@ type TitleEditState =
   | { mode: 'view' }
   | { mode: 'edit'; draft: string; original: string };
 
+type PickMediaTarget =
+  | { kind: 'photos' | 'video' | 'audio' | 'attachment'; blockId?: string }
+  | null;
+
 const CreatePublication: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [type, setType] = useState<string | null>(null);
   const [step, setStep] = useState<'story' | 'info' | 'publish'>('story');
+  const [createKind, setCreateKind] = useState<'story' | 'album'>('story');
   const [title, setTitle] = useState('');
   const [titleEdit, setTitleEdit] = useState<TitleEditState>({ mode: 'edit', draft: '', original: '' });
   const [blocks, setBlocks] = useState<StoryBlock[]>([]);
@@ -66,6 +71,7 @@ const CreatePublication: React.FC = () => {
   const [place, setPlace] = useState('');
   const [topicTag, setTopicTag] = useState('');
   const [pickMediaFor, setPickMediaFor] = useState<StoryBlockType | null>(null);
+  const [pickMediaTarget, setPickMediaTarget] = useState<PickMediaTarget>(null);
   const [tagError, setTagError] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [visibilityOpen, setVisibilityOpen] = useState(false);
@@ -73,6 +79,7 @@ const CreatePublication: React.FC = () => {
   const [textEditorOpen, setTextEditorOpen] = useState(false);
   const [textEditorBlockId, setTextEditorBlockId] = useState<string | null>(null);
   const [textEditorValue, setTextEditorValue] = useState('');
+  const [textEditorKind, setTextEditorKind] = useState<'text' | 'life_lesson'>('text');
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
@@ -87,6 +94,8 @@ const CreatePublication: React.FC = () => {
   const [storyTagsDraft, setStoryTagsDraft] = useState('');
   const [relatedStoriesDraft, setRelatedStoriesDraft] = useState('');
   const [access, setAccess] = useState<'all' | 'groups' | 'people' | 'private'>('all');
+  const [accessPeopleOpen, setAccessPeopleOpen] = useState(false);
+  const [accessPeopleIds, setAccessPeopleIds] = useState<string[]>([]);
   const [guestLink, setGuestLink] = useState(false);
   const [tipClosed, setTipClosed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -108,6 +117,7 @@ const CreatePublication: React.FC = () => {
 
   useEffect(() => {
     if (access === 'private') setVisibility('only_me');
+    else if (access === 'all') setVisibility('family');
     else setVisibility('family');
   }, [access, setVisibility]);
 
@@ -135,14 +145,14 @@ const CreatePublication: React.FC = () => {
     return null;
   }, [pickMediaFor]);
 
-  const blockTypes: Array<{ id: StoryBlockType; label: string; icon: React.ComponentType<{ className?: string }>; locked?: boolean }> = [
+  const blockTypes: Array<{ id: StoryBlockType; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { id: 'text', label: 'Текст', icon: AlignLeft },
     { id: 'photos', label: 'Фото', icon: Camera },
-    { id: 'video', label: 'Видео', icon: Video, locked: true },
+    { id: 'video', label: 'Видео', icon: Video },
     { id: 'audio', label: 'Аудио', icon: Mic },
     { id: 'embed', label: 'Вставка', icon: Code },
     { id: 'link_album', label: 'Альбом', icon: Link2 },
-    { id: 'attachment', label: 'Вложение', icon: Upload, locked: true },
+    { id: 'attachment', label: 'Вложение', icon: Upload },
     { id: 'life_lesson', label: 'Жизненный урок', icon: Pencil },
   ];
 
@@ -241,11 +251,15 @@ const CreatePublication: React.FC = () => {
           : 'text';
       let visibleFor: string[] | null = null;
       let excludeFor: string[] | null = null;
-      if (visibility === 'only_me') {
+      if (access === 'private') {
         const me = await api.profile.getMyProfile();
         visibleFor = [me.id];
+      } else if (access === 'people' || access === 'groups') {
+        const me = await api.profile.getMyProfile();
+        const set = new Set<string>([me.id, ...accessPeopleIds]);
+        visibleFor = Array.from(set);
       }
-      await requestJson('POST', '/feed', {
+      const created = await requestJson<{ id: string }>('POST', '/feed', {
         type: pubType,
         title: title || null,
         text: bodyText,
@@ -259,7 +273,7 @@ const CreatePublication: React.FC = () => {
         exclude_for: excludeFor,
         media_keys: uploadedKeys,
       });
-      navigate(ROUTES.classic.feed);
+      navigate(ROUTES.classic.publication(created.id));
     } finally {
       setIsPublishing(false);
     }
@@ -295,15 +309,32 @@ const CreatePublication: React.FC = () => {
             const list = e.currentTarget.files;
             e.currentTarget.value = '';
             if (!list?.length) return;
-            if (!pickMediaFor) return;
-            const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-            const items = makeUploadItems(list, pickMediaFor);
-            if (pickMediaFor === 'photos' || pickMediaFor === 'video' || pickMediaFor === 'audio') {
-              setBlocks(prev => [...prev, { id, type: pickMediaFor, items }]);
-            } else if (pickMediaFor === 'attachment') {
-              setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
+            const kind = pickMediaTarget?.kind ?? pickMediaFor;
+            if (!kind) return;
+            const items = makeUploadItems(list, kind);
+            const addToExisting = pickMediaTarget?.blockId;
+            if (addToExisting) {
+              setBlocks(prev => prev.map(b => {
+                if (b.id !== addToExisting) return b;
+                if (b.type === 'photos' || b.type === 'video' || b.type === 'audio') {
+                  if (b.type !== kind) return b;
+                  return { ...b, items: [...b.items, ...items] };
+                }
+                if (b.type === 'attachment' && kind === 'attachment') {
+                  return { ...b, items: [...b.items, ...items] };
+                }
+                return b;
+              }));
+            } else {
+              const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+              if (kind === 'photos' || kind === 'video' || kind === 'audio') {
+                setBlocks(prev => [...prev, { id, type: kind, items }]);
+              } else if (kind === 'attachment') {
+                setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
+              }
             }
             setPickMediaFor(null);
+            setPickMediaTarget(null);
           }}
         />
         <div className="mx-auto max-w-full px-3 pt-2 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
@@ -327,6 +358,30 @@ const CreatePublication: React.FC = () => {
         <div className="mx-auto max-w-full px-3 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           {step === 'story' && (
             <div className="space-y-4">
+              <div className="flex justify-center">
+                <div className="inline-flex rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreateKind('story');
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-semibold transition-colors ${createKind === 'story' ? 'bg-[var(--proto-active)] text-white' : 'text-[var(--proto-text-muted)] hover:text-[var(--proto-text)]'}`}
+                  >
+                    История
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreateKind('album');
+                      setBlocks(prev => prev.filter(b => b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment'));
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-semibold transition-colors ${createKind === 'album' ? 'bg-[var(--proto-active)] text-white' : 'text-[var(--proto-text-muted)] hover:text-[var(--proto-text)]'}`}
+                  >
+                    Альбом
+                  </button>
+                </div>
+              </div>
+
               {titleEdit.mode === 'edit' ? (
                 <div>
                   <div className="flex items-center gap-3">
@@ -335,7 +390,7 @@ const CreatePublication: React.FC = () => {
                         value={titleEdit.draft}
                         onChange={e => setTitleEdit(v => v.mode === 'edit' ? { ...v, draft: e.target.value.slice(0, 80) } : v)}
                         className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)]"
-                        placeholder="Название истории"
+                        placeholder={createKind === 'album' ? 'Название альбома' : 'Название истории'}
                       />
                     </div>
                     <button
@@ -411,14 +466,77 @@ const CreatePublication: React.FC = () => {
                     b.type === 'link_album' ? (b.url || '') :
                     `${b.items.length} файл(ов)`;
                   const canEditText = b.type === 'text' || b.type === 'life_lesson';
+                  const isMedia = b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment';
                   return (
                     <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-[var(--proto-text-muted)]">{label}</p>
-                          <p className="mt-1 text-sm text-[var(--proto-text)] whitespace-pre-wrap break-words line-clamp-3">
-                            {preview || '—'}
-                          </p>
+                          {isMedia ? (
+                            <div className="mt-2 space-y-2">
+                              {b.items.map((it) => (
+                                <div key={it.id} className={`flex items-center gap-2 rounded-xl p-3 text-sm border ${it.error ? 'border-red-500/50 bg-red-500/5' : 'border-[var(--proto-border)] bg-[var(--proto-card)]'}`}>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-[var(--proto-text)] truncate">{it.name}</p>
+                                    <p className="text-xs text-[var(--proto-text-muted)]">
+                                      {it.size >= 1_000_000 ? `${(it.size / 1_000_000).toFixed(1)} МБ` : `${(it.size / 1024).toFixed(1)} КБ`}
+                                      {it.status === 'uploaded' && typeof it.uploadMs === 'number' ? ` · ${it.uploadMs} мс` : ''}
+                                    </p>
+                                    {it.status === 'uploading' && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Загрузка…</p>}
+                                    {it.status === 'uploaded' && <p className="text-xs text-green-700 mt-0.5">Загружено</p>}
+                                    {it.error && <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{it.error}</p>}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    disabled={it.status === 'uploading'}
+                                    onClick={() => {
+                                      setBlocks(prev => prev.map(bb => {
+                                        if (bb.id !== b.id) return bb;
+                                        if (bb.type !== 'photos' && bb.type !== 'video' && bb.type !== 'audio' && bb.type !== 'attachment') return bb;
+                                        return { ...bb, items: bb.items.filter(x => x.id !== it.id) };
+                                      }));
+                                    }}
+                                    className="rounded-lg p-1 hover:bg-[var(--proto-border)] disabled:opacity-60"
+                                    aria-label="Удалить файл"
+                                  >
+                                    <X className="h-4 w-4 text-[var(--proto-text-muted)]" />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const kind = b.type === 'photos' ? 'photos' : b.type === 'video' ? 'video' : b.type === 'audio' ? 'audio' : 'attachment';
+                                  setPickMediaFor(kind);
+                                  setPickMediaTarget({ kind: kind as any, blockId: b.id });
+                                  setTimeout(() => fileInputRef.current?.click(), 0);
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--proto-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--proto-text)] hover:border-[var(--proto-active)]/40 transition-colors"
+                              >
+                                <Plus className="h-4 w-4 text-[var(--proto-active)]" />
+                                Добавить файл
+                              </button>
+                            </div>
+                          ) : b.type === 'embed' || b.type === 'link_album' ? (
+                            <Input
+                              value={b.type === 'embed' ? b.url : b.url}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setBlocks(prev => prev.map(bb => {
+                                  if (bb.id !== b.id) return bb;
+                                  if (bb.type === 'embed') return { ...bb, url: v };
+                                  if (bb.type === 'link_album') return { ...bb, url: v };
+                                  return bb;
+                                }));
+                              }}
+                              placeholder={b.type === 'embed' ? 'Ссылка для вставки…' : 'Ссылка на альбом…'}
+                              className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                            />
+                          ) : (
+                            <p className="mt-1 text-sm text-[var(--proto-text)] whitespace-pre-wrap break-words line-clamp-3">
+                              {preview || '—'}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {canEditText && (
@@ -427,6 +545,7 @@ const CreatePublication: React.FC = () => {
                               onClick={() => {
                                 setTextEditorBlockId(b.id);
                                 setTextEditorValue(b.type === 'text' ? b.text : (b.type === 'life_lesson' ? b.text : ''));
+                                setTextEditorKind(b.type === 'life_lesson' ? 'life_lesson' : 'text');
                                 setTextEditorOpen(true);
                               }}
                               className="h-9 w-9 rounded-full hover:bg-[var(--proto-border)] transition-colors flex items-center justify-center"
@@ -437,10 +556,11 @@ const CreatePublication: React.FC = () => {
                           )}
                           <button
                             type="button"
+                            onClick={() => setBlocks(prev => prev.filter(bb => bb.id !== b.id))}
                             className="h-9 w-9 rounded-full hover:bg-[var(--proto-border)] transition-colors flex items-center justify-center"
-                            aria-label="Действия"
+                            aria-label="Удалить блок"
                           >
-                            <MoreHorizontal className="h-4 w-4 text-[var(--proto-text-muted)]" />
+                            <Trash2 className="h-4 w-4 text-[var(--proto-text-muted)]" />
                           </button>
                         </div>
                       </div>
@@ -448,6 +568,15 @@ const CreatePublication: React.FC = () => {
                   );
                 })}
               </div>
+
+              <button
+                type="button"
+                onClick={() => setBlockPickerOpen(true)}
+                className="mx-auto mt-2 h-14 w-14 rounded-full bg-[var(--proto-active)] text-white flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                aria-label="Добавить блок"
+              >
+                <Plus className="h-7 w-7" />
+              </button>
 
               <Button
                 type="button"
@@ -718,7 +847,11 @@ const CreatePublication: React.FC = () => {
                 <p className="mt-1 text-xs text-[var(--proto-text-muted)]">Назначенный доступ</p>
                 <Select
                   value={access}
-                  onValueChange={(v) => setAccess(v as any)}
+                  onValueChange={(v) => {
+                    const nv = v as any;
+                    setAccess(nv);
+                    if (nv === 'groups' || nv === 'people') setAccessPeopleOpen(true);
+                  }}
                 >
                   <SelectTrigger className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] h-12 text-[var(--proto-text)]">
                     <SelectValue placeholder="Выберите доступ" />
@@ -730,6 +863,21 @@ const CreatePublication: React.FC = () => {
                     <SelectItem value="private">Только я</SelectItem>
                   </SelectContent>
                 </Select>
+                {(access === 'groups' || access === 'people') && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setAccessPeopleOpen(true)}
+                      className="w-full flex items-center justify-between rounded-xl bg-white border border-[var(--proto-border)] px-4 py-3 text-left"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--proto-text)]">Выбранные люди</p>
+                        <p className="text-xs text-[var(--proto-text-muted)]">{accessPeopleIds.length} выбрано</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
@@ -772,6 +920,7 @@ const CreatePublication: React.FC = () => {
                     isPublishing ||
                     blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => !!it.error || it.status === 'error' || it.status === 'uploading')) ||
                     (!topicTag) ||
+                    ((access === 'people' || access === 'groups') && accessPeopleIds.length === 0) ||
                     (blocks.length === 0 && !title.trim())
                   }
                 >
@@ -803,33 +952,35 @@ const CreatePublication: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 {blockTypes.map((bt) => {
                   const Icon = bt.icon;
-                  const locked = !!bt.locked;
                   return (
                     <button
                       key={bt.id}
                       type="button"
-                      disabled={locked}
                       onClick={() => {
                         setBlockPickerOpen(false);
                         const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
                         if (bt.id === 'text') {
                           setTextEditorBlockId(null);
                           setTextEditorValue('');
+                          setTextEditorKind('text');
                           setTextEditorOpen(true);
                           return;
                         }
                         if (bt.id === 'photos') {
                           setPickMediaFor('photos');
+                          setPickMediaTarget({ kind: 'photos' });
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
                         if (bt.id === 'video') {
                           setPickMediaFor('video');
+                          setPickMediaTarget({ kind: 'video' });
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
                         if (bt.id === 'audio') {
                           setPickMediaFor('audio');
+                          setPickMediaTarget({ kind: 'audio' });
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
@@ -843,32 +994,26 @@ const CreatePublication: React.FC = () => {
                         }
                         if (bt.id === 'attachment') {
                           setPickMediaFor('attachment');
+                          setPickMediaTarget({ kind: 'attachment' });
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
                         if (bt.id === 'life_lesson') {
-                          setBlocks(prev => [...prev, { id, type: 'life_lesson', text: '' }]);
+                          setTextEditorBlockId(null);
+                          setTextEditorValue('');
+                          setTextEditorKind('life_lesson');
+                          setTextEditorOpen(true);
                           return;
                         }
                       }}
-                      className={`rounded-2xl border px-4 py-6 text-center transition-colors flex flex-col items-center justify-center gap-3 ${locked ? 'bg-white/60 border-[var(--proto-border)] opacity-60 cursor-not-allowed' : 'bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 shadow-sm'}`}
+                      className="rounded-2xl border px-4 py-6 text-center transition-colors flex flex-col items-center justify-center gap-3 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 shadow-sm"
                     >
                       <Icon className="h-7 w-7 text-[var(--proto-active)]" />
                       <span className="text-sm font-semibold text-[var(--proto-text)]">{bt.label}</span>
-                      {locked && (
-                        <span className="text-[10px] font-medium text-[var(--proto-text-muted)]">
-                          Недоступно
-                        </span>
-                      )}
                     </button>
                   );
                 })}
               </div>
-              {blockTypes.some(b => b.locked) && (
-                <div className="mt-4 text-center text-xs text-[var(--proto-text-muted)]">
-                  Улучшите тариф, чтобы разблокировать блоки
-                </div>
-              )}
             </div>
           </DialogContent>
         </Dialog>
@@ -876,7 +1021,7 @@ const CreatePublication: React.FC = () => {
         <Dialog open={textEditorOpen} onOpenChange={setTextEditorOpen}>
           <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
             <DialogHeader className="text-center sm:text-center">
-              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Добавить текст</DialogTitle>
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">{textEditorKind === 'life_lesson' ? 'Жизненный урок' : 'Добавить текст'}</DialogTitle>
             </DialogHeader>
             <div className="mt-2">
               <div className="flex items-center gap-2 rounded-xl border border-[var(--proto-border)] bg-white px-3 py-2 text-[var(--proto-text-muted)]">
@@ -902,7 +1047,7 @@ const CreatePublication: React.FC = () => {
                     setBlocks(prev => prev.map(b => (b.id === textEditorBlockId && b.type === 'text') ? { ...b, text: v } : (b.id === textEditorBlockId && b.type === 'life_lesson') ? { ...b, text: v } : b));
                   } else {
                     const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-                    setBlocks(prev => [...prev, { id, type: 'text', text: v }]);
+                    setBlocks(prev => [...prev, { id, type: textEditorKind, text: v } as any]);
                   }
                   setTextEditorValue('');
                   setTextEditorBlockId(null);
@@ -977,6 +1122,42 @@ const CreatePublication: React.FC = () => {
               type="button"
               className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
               onClick={() => setCoAuthorsOpen(false)}
+            >
+              Готово
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={accessPeopleOpen} onOpenChange={setAccessPeopleOpen}>
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">
+                {access === 'groups' ? 'Группы (выбор людей)' : 'Отдельные люди'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-2 space-y-2 max-h-[60vh] overflow-auto">
+              {members.map(m => {
+                const checked = accessPeopleIds.includes(m.id);
+                const name = m.nickname || `${m.firstName} ${m.lastName}`.trim();
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setAccessPeopleIds(prev => checked ? prev.filter(x => x !== m.id) : [...prev, m.id])}
+                    className="w-full flex items-center gap-3 rounded-xl bg-white border border-[var(--proto-border)] px-4 py-3 text-left"
+                  >
+                    <span className={`h-5 w-5 rounded border flex items-center justify-center ${checked ? 'bg-[var(--proto-active)] border-[var(--proto-active)] text-white' : 'border-[var(--proto-border)] text-transparent'}`}>
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--proto-text)]">{name || 'Участник'}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              type="button"
+              className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+              onClick={() => setAccessPeopleOpen(false)}
             >
               Готово
             </Button>

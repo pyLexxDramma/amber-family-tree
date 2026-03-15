@@ -63,6 +63,7 @@ const PublicationDetails: React.FC = () => {
   const aid = authorIdOf(pub);
   const author = memberMap.get(aid) ?? getMember(aid);
   const photos = pub.media.filter(m => m.type === 'photo');
+  const otherMedia = pub.media.filter(m => m.type !== 'photo');
   const authorAvatarSrc = author && (author as { avatar?: string }).avatar
     ? (author as { avatar: string }).avatar
     : getPrototypeAvatar(aid, currentUserId).src;
@@ -172,6 +173,45 @@ const PublicationDetails: React.FC = () => {
               style={{ objectPosition: mainPhoto.objectPosition }}
             />
           </div>
+
+          {photos.length > 1 && (
+            <div>
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Фото:</p>
+              <div className="grid grid-cols-3 gap-2">
+                {photos.slice(1, 10).map((m) => (
+                  <div key={m.id} className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-square">
+                    <img src={m.thumbnail || m.url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+              {photos.length > 10 && (
+                <p className="mt-2 text-xs text-[var(--proto-text-muted)]">Ещё {photos.length - 10} фото</p>
+              )}
+            </div>
+          )}
+
+          {otherMedia.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Файлы:</p>
+              <div className="space-y-2">
+                {otherMedia.slice(0, 10).map((m) => (
+                  <a
+                    key={m.id}
+                    href={m.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between gap-3 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3 hover:border-[var(--proto-active)]/30 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
+                      <p className="text-xs text-[var(--proto-text-muted)]">{m.type}</p>
+                    </div>
+                    <span className="text-xs text-[var(--proto-text-muted)]">Открыть</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Бабушка Тамара и дедушка'}</h1>
           <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
