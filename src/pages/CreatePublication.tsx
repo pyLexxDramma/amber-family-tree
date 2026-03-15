@@ -234,7 +234,14 @@ const CreatePublication: React.FC = () => {
         headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
         body: item.file,
       });
-      if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
+      if (!putRes.ok) {
+        let extra = '';
+        try {
+          const t = (await putRes.text()).trim();
+          if (t) extra = ` ${t.slice(0, 220)}`;
+        } catch {}
+        throw new Error(`upload failed: ${putRes.status}${extra}`);
+      }
       const uploadMs = Math.round(performance.now() - startedAt);
       setUploadItem(blockId, item.id, { status: 'uploaded', key: presign.key, uploadMs });
     } catch (e) {
