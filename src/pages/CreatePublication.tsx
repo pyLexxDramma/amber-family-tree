@@ -77,6 +77,7 @@ const CreatePublication: React.FC = () => {
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [blockPickerOpen, setBlockPickerOpen] = useState(false);
   const [textEditorOpen, setTextEditorOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [textEditorBlockId, setTextEditorBlockId] = useState<string | null>(null);
   const [textEditorValue, setTextEditorValue] = useState('');
   const [textEditorKind, setTextEditorKind] = useState<'text' | 'life_lesson'>('text');
@@ -99,7 +100,23 @@ const CreatePublication: React.FC = () => {
   const [guestLink, setGuestLink] = useState(false);
   const [tipClosed, setTipClosed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const objectUrlRef = useRef<Map<string, string>>(new Map());
   const { visibility, setVisibility } = usePrivacyVisibility();
+
+  useEffect(() => {
+    return () => {
+      for (const url of objectUrlRef.current.values()) URL.revokeObjectURL(url);
+      objectUrlRef.current.clear();
+    };
+  }, []);
+
+  const objectUrlFor = (item: UploadItem) => {
+    const existing = objectUrlRef.current.get(item.id);
+    if (existing) return existing;
+    const url = URL.createObjectURL(item.file);
+    objectUrlRef.current.set(item.id, url);
+    return url;
+  };
 
   const preselectedType = useMemo(() => {
     const t = new URLSearchParams(location.search).get('type');
@@ -166,9 +183,56 @@ const CreatePublication: React.FC = () => {
     });
   };
 
+  const uploadItemsNow = async (blockId: string, items: UploadItem[]) => {
+    for (const item of items) {
+      if (item.status !== 'pending' || item.error) continue;
+      setBlocks(prev => prev.map(b => {
+        if (b.id !== blockId) return b;
+        if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
+        return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'uploading', error: undefined } : it) };
+      }));
+      const startedAt = performance.now();
+      try {
+        const presign = await api.media.presign({
+          filename: item.file.name,
+          content_type: item.file.type || 'application/octet-stream',
+          file_size_bytes: item.file.size,
+        });
+        const putRes = await fetch(presign.upload_url, {
+          method: 'PUT',
+          headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
+          body: item.file,
+        });
+        if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
+        const uploadMs = Math.round(performance.now() - startedAt);
+        setBlocks(prev => prev.map(b => {
+          if (b.id !== blockId) return b;
+          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
+          return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'uploaded', key: presign.key, uploadMs } : it) };
+        }));
+      } catch (e) {
+        const uploadMs = Math.round(performance.now() - startedAt);
+        const err = e instanceof Error ? e.message : 'upload error';
+        setBlocks(prev => prev.map(b => {
+          if (b.id !== blockId) return b;
+          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
+          return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'error', error: err, uploadMs } : it) };
+        }));
+      }
+    }
+  };
+
   const handlePublish = async () => {
     if (!topicTag) {
       setTagError('Тема обязательна');
+      return;
+    }
+    const hasUploading = blocks.some(b => {
+      if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return false;
+      return b.items.some(it => it.status === 'uploading');
+    });
+    if (hasUploading) {
+      toast({ title: 'Дождитесь окончания загрузки файлов' });
       return;
     }
     setIsPublishing(true);
@@ -325,6 +389,7 @@ const CreatePublication: React.FC = () => {
                 }
                 return b;
               }));
+              setTimeout(() => { void uploadItemsNow(addToExisting, items); }, 0);
             } else {
               const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
               if (kind === 'photos' || kind === 'video' || kind === 'audio') {
@@ -332,6 +397,7 @@ const CreatePublication: React.FC = () => {
               } else if (kind === 'attachment') {
                 setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
               }
+              setTimeout(() => { void uploadItemsNow(id, items); }, 0);
             }
             setPickMediaFor(null);
             setPickMediaTarget(null);
@@ -491,25 +557,44 @@ const CreatePublication: React.FC = () => {
                                       {it.size >= 1_000_000 ? `${(it.size / 1_000_000).toFixed(1)} МБ` : `${(it.size / 1024).toFixed(1)} КБ`}
                                       {it.status === 'uploaded' && typeof it.uploadMs === 'number' ? ` · ${it.uploadMs} мс` : ''}
                                     </p>
+                                  {it.status === 'pending' && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Готово к загрузке</p>}
                                     {it.status === 'uploading' && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Загрузка…</p>}
                                     {it.status === 'uploaded' && <p className="text-xs text-green-700 mt-0.5">Загружено</p>}
                                     {it.error && <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{it.error}</p>}
                                   </div>
-                                  <button
-                                    type="button"
-                                    disabled={it.status === 'uploading'}
-                                    onClick={() => {
-                                      setBlocks(prev => prev.map(bb => {
-                                        if (bb.id !== b.id) return bb;
-                                        if (bb.type !== 'photos' && bb.type !== 'video' && bb.type !== 'audio' && bb.type !== 'attachment') return bb;
-                                        return { ...bb, items: bb.items.filter(x => x.id !== it.id) };
-                                      }));
-                                    }}
-                                    className="rounded-lg p-1 hover:bg-[var(--proto-border)] disabled:opacity-60"
-                                    aria-label="Удалить файл"
-                                  >
-                                    <X className="h-4 w-4 text-[var(--proto-text-muted)]" />
-                                  </button>
+                                  <div className="flex items-center gap-1">
+                                    {it.status === 'error' && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setBlocks(prev => prev.map(bb => {
+                                            if (bb.id !== b.id) return bb;
+                                            if (bb.type !== 'photos' && bb.type !== 'video' && bb.type !== 'audio' && bb.type !== 'attachment') return bb;
+                                            return { ...bb, items: bb.items.map(x => x.id === it.id ? { ...x, status: 'pending', error: undefined } : x) };
+                                          }));
+                                          setTimeout(() => { void uploadItemsNow(b.id, [{ ...it, status: 'pending', error: undefined }]); }, 0);
+                                        }}
+                                        className="rounded-lg px-2 py-1 text-xs font-semibold border border-[var(--proto-border)] bg-white hover:border-[var(--proto-active)]/40 transition-colors"
+                                      >
+                                        Повторить
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      disabled={it.status === 'uploading'}
+                                      onClick={() => {
+                                        setBlocks(prev => prev.map(bb => {
+                                          if (bb.id !== b.id) return bb;
+                                          if (bb.type !== 'photos' && bb.type !== 'video' && bb.type !== 'audio' && bb.type !== 'attachment') return bb;
+                                          return { ...bb, items: bb.items.filter(x => x.id !== it.id) };
+                                        }));
+                                      }}
+                                      className="rounded-lg p-1 hover:bg-[var(--proto-border)] disabled:opacity-60"
+                                      aria-label="Удалить файл"
+                                    >
+                                      <X className="h-4 w-4 text-[var(--proto-text-muted)]" />
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                               <button
@@ -600,12 +685,15 @@ const CreatePublication: React.FC = () => {
                 Следующий шаг <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
 
-              <div className="pt-3">
-                <p className="text-xs font-semibold text-[var(--proto-active)] tracking-wider text-center">ПРЕДПРОСМОТР ИСТОРИИ</p>
-                <p className="mt-1 text-xs text-center text-[var(--proto-text-muted)]">
-                  Примерное время чтения: {Math.max(1, Math.round((blocks.filter(b => b.type === 'text' || b.type === 'life_lesson').map(b => (b.type === 'text' ? b.text : b.text).split(/\s+/).filter(Boolean).length).reduce((a, n) => a + n, 0)) / 200))} мин
-                </p>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-2xl h-12 border-2 bg-white"
+                onClick={() => setPreviewOpen(true)}
+                disabled={!title.trim() && blocks.length === 0}
+              >
+                Предпросмотр
+              </Button>
             </div>
           )}
 
@@ -1173,6 +1261,110 @@ const CreatePublication: React.FC = () => {
               onClick={() => setAccessPeopleOpen(false)}
             >
               Готово
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Предпросмотр</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2 max-h-[70vh] overflow-auto space-y-4">
+              <h2 className="font-serif text-2xl font-semibold text-[var(--proto-text)] text-center">
+                {title.trim() ? title : 'Без названия'}
+              </h2>
+              {blocks.length === 0 ? (
+                <p className="text-sm text-[var(--proto-text-muted)] text-center">Добавьте хотя бы один блок</p>
+              ) : (
+                <div className="space-y-3">
+                  {blocks.map((b) => {
+                    if (b.type === 'text') {
+                      return (
+                        <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
+                          <p className="text-sm text-[var(--proto-text)] whitespace-pre-wrap break-words">{b.text}</p>
+                        </div>
+                      );
+                    }
+                    if (b.type === 'life_lesson') {
+                      return (
+                        <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">Жизненный урок</p>
+                          <p className="mt-2 text-sm text-[var(--proto-text)] whitespace-pre-wrap break-words">{b.text}</p>
+                        </div>
+                      );
+                    }
+                    if (b.type === 'embed' || b.type === 'link_album') {
+                      const label = b.type === 'embed' ? 'Вставка' : 'Альбом';
+                      return (
+                        <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">{label}</p>
+                          <a
+                            href={b.url || '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`mt-2 block text-sm font-semibold break-words ${b.url ? 'text-[var(--proto-active)]' : 'text-[var(--proto-text-muted)]'}`}
+                          >
+                            {b.url ? b.url : 'Ссылка не указана'}
+                          </a>
+                        </div>
+                      );
+                    }
+                    if (b.type === 'photos') {
+                      const imgs = b.items.filter(it => it.file.type.startsWith('image/'));
+                      return (
+                        <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">Фото</p>
+                          {imgs.length === 0 ? (
+                            <p className="mt-2 text-sm text-[var(--proto-text-muted)]">Файлы не выбраны</p>
+                          ) : (
+                            <div className="mt-3 grid grid-cols-3 gap-2">
+                              {imgs.slice(0, 9).map((it) => (
+                                <div key={it.id} className="rounded-lg overflow-hidden border border-[var(--proto-border)] bg-[var(--proto-card)] aspect-square">
+                                  <img src={objectUrlFor(it)} alt="" className="w-full h-full object-cover" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    if (b.type === 'video' || b.type === 'audio' || b.type === 'attachment') {
+                      const label = b.type === 'video' ? 'Видео' : b.type === 'audio' ? 'Аудио' : 'Вложение';
+                      return (
+                        <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">{label}</p>
+                          {b.items.length === 0 ? (
+                            <p className="mt-2 text-sm text-[var(--proto-text-muted)]">Файлы не выбраны</p>
+                          ) : (
+                            <div className="mt-3 space-y-2">
+                              {b.items.slice(0, 6).map(it => (
+                                <div key={it.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-3 py-2">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{it.name}</p>
+                                    <p className="text-xs text-[var(--proto-text-muted)]">
+                                      {it.status === 'uploading' ? 'Загрузка…' : it.status === 'uploaded' ? 'Загружено' : it.status === 'error' ? 'Ошибка' : 'Готово'}
+                                    </p>
+                                  </div>
+                                  {it.status === 'error' && <span className="text-xs font-semibold text-red-600">!</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              )}
+            </div>
+            <Button
+              type="button"
+              className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+              onClick={() => setPreviewOpen(false)}
+            >
+              Вернуться
             </Button>
           </DialogContent>
         </Dialog>
