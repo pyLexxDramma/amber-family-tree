@@ -392,7 +392,8 @@ const CreatePublication: React.FC = () => {
                 <p className="text-xs font-semibold text-[var(--proto-text-muted)] tracking-wider uppercase text-center mb-6">
                   Выберите тип блока
                 </p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="mx-auto max-w-sm">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {blockTypes.map(bt => (
                     <button
                       key={bt.id}
@@ -428,7 +429,7 @@ const CreatePublication: React.FC = () => {
                           return;
                         }
                       }}
-                      className="aspect-square rounded-2xl border bg-[var(--proto-card)] border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors flex flex-col items-center justify-center gap-3"
+                      className="aspect-square rounded-2xl border bg-white border-[var(--proto-border)] shadow-sm hover:shadow-md hover:border-[var(--proto-active)]/40 transition-all flex flex-col items-center justify-center gap-3"
                     >
                       <bt.icon className="h-8 w-8 text-[var(--proto-active)]" />
                       <span className="text-sm font-semibold text-[var(--proto-text)] text-center">
@@ -436,6 +437,7 @@ const CreatePublication: React.FC = () => {
                       </span>
                     </button>
                   ))}
+                  </div>
                 </div>
               </div>
             </div>
