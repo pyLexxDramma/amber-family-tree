@@ -439,14 +439,23 @@ const CreatePublication: React.FC = () => {
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => setBlockPickerOpen(true)}
-                className="mx-auto h-14 w-14 rounded-full bg-[var(--proto-active)] text-white flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
-                aria-label="Добавить блок"
-              >
-                <Plus className="h-7 w-7" />
-              </button>
+              <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={() => setBlockPickerOpen(true)}
+                  className="h-14 w-14 rounded-full bg-[var(--proto-active)] text-white flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                  aria-label="Добавить блок"
+                  title="Добавить блок истории"
+                >
+                  <Plus className="h-7 w-7" />
+                </button>
+                <p className="mt-2 text-sm font-semibold text-[var(--proto-text)]">Добавить блок</p>
+                {blocks.length === 0 && (
+                  <p className="mt-0.5 text-xs text-[var(--proto-text-muted)] text-center">
+                    Текст, фото, видео, аудио и другие блоки
+                  </p>
+                )}
+              </div>
 
               <div className="space-y-3">
                 {blocks.map((b) => {
@@ -569,14 +578,18 @@ const CreatePublication: React.FC = () => {
                 })}
               </div>
 
-              <button
-                type="button"
-                onClick={() => setBlockPickerOpen(true)}
-                className="mx-auto mt-2 h-14 w-14 rounded-full bg-[var(--proto-active)] text-white flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
-                aria-label="Добавить блок"
-              >
-                <Plus className="h-7 w-7" />
-              </button>
+              {blocks.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setBlockPickerOpen(true)}
+                  className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-[var(--proto-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--proto-text)] hover:border-[var(--proto-active)]/40 transition-colors"
+                  aria-label="Добавить ещё блок"
+                  title="Добавить ещё блок в конец"
+                >
+                  <Plus className="h-5 w-5 text-[var(--proto-active)]" />
+                  Добавить ещё блок
+                </button>
+              )}
 
               <Button
                 type="button"
