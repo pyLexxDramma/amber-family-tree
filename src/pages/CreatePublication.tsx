@@ -101,13 +101,19 @@ const CreatePublication: React.FC = () => {
   const [accessPeopleIds, setAccessPeopleIds] = useState<string[]>([]);
   const [guestLink, setGuestLink] = useState(false);
   const [tipClosed, setTipClosed] = useState(false);
+  const [storyAttempted, setStoryAttempted] = useState(false);
+  const [infoAttempted, setInfoAttempted] = useState(false);
   const [publishAttempted, setPublishAttempted] = useState(false);
+  const [pendingScroll, setPendingScroll] = useState<null | 'story' | 'topic' | 'access'>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const objectUrlRef = useRef<Map<string, string>>(new Map());
   const filePickRef = useRef<PickMediaTarget>(null);
   const startedUploadsRef = useRef<Set<string>>(new Set());
   const [pickDebug, setPickDebug] = useState('');
   const { visibility, setVisibility } = usePrivacyVisibility();
+  const storyRequiredRef = useRef<HTMLDivElement | null>(null);
+  const topicRequiredRef = useRef<HTMLDivElement | null>(null);
+  const accessRequiredRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     return () => {
@@ -115,6 +121,23 @@ const CreatePublication: React.FC = () => {
       objectUrlRef.current.clear();
     };
   }, []);
+
+  const scrollToRef = (ref: React.RefObject<HTMLElement | null>) => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  useEffect(() => {
+    if (!pendingScroll) return;
+    const t = setTimeout(() => {
+      if (pendingScroll === 'story') scrollToRef(storyRequiredRef);
+      if (pendingScroll === 'topic') scrollToRef(topicRequiredRef);
+      if (pendingScroll === 'access') scrollToRef(accessRequiredRef);
+      setPendingScroll(null);
+    }, 50);
+    return () => clearTimeout(t);
+  }, [pendingScroll]);
 
   const acceptForKind = (k: PickMediaTarget['kind']) => {
     if (k === 'photos') return 'image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif';
@@ -219,6 +242,18 @@ const CreatePublication: React.FC = () => {
     }
     return out;
   }, [access, accessPeopleIds.length, blocks, createKind, title, topicTag]);
+
+  const storyBlockers = useMemo(() => {
+    const out: string[] = [];
+    if (blocks.length === 0 && !title.trim()) out.push('Добавьте хотя бы один блок или задайте название');
+    return out;
+  }, [blocks.length, title]);
+
+  const infoBlockers = useMemo(() => {
+    const out: string[] = [];
+    if (!topicTag) out.push('Выберите тему');
+    return out;
+  }, [topicTag]);
 
   const preselectedType = useMemo(() => {
     const t = new URLSearchParams(location.search).get('type');
@@ -573,7 +608,16 @@ const CreatePublication: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex flex-col items-center">
+              <div ref={storyRequiredRef} className="flex flex-col items-center">
+                <div className="w-full rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] px-4 py-3 mb-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[var(--proto-text)]">Контент</p>
+                    <span className="text-xs font-semibold text-red-600">обязательно</span>
+                  </div>
+                  <p className={`mt-1 text-xs ${storyAttempted && storyBlockers.length ? 'text-red-700' : 'text-[var(--proto-text-muted)]'}`}>
+                    Добавьте блок или укажите название
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setBlockPickerOpen(true)}
@@ -745,8 +789,15 @@ const CreatePublication: React.FC = () => {
               <Button
                 type="button"
                 className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
-                onClick={() => setStep('info')}
-                disabled={!title.trim() && blocks.length === 0}
+                onClick={() => {
+                  setStoryAttempted(true);
+                  if (storyBlockers.length) {
+                    setPendingScroll('story');
+                    toast({ title: 'Заполните обязательные поля', description: storyBlockers[0] });
+                    return;
+                  }
+                  setStep('info');
+                }}
               >
                 Следующий шаг <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
@@ -760,6 +811,17 @@ const CreatePublication: React.FC = () => {
               >
                 Предпросмотр
               </Button>
+
+              {storyAttempted && storyBlockers.length > 0 && (
+                <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
+                  <p className="text-sm font-semibold text-red-700">Обязательные поля:</p>
+                  <ul className="mt-2 space-y-1 text-sm text-red-700">
+                    {storyBlockers.map((b) => (
+                      <li key={b}>- {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <p className="text-[11px] text-center text-[var(--proto-text-muted)]">
                 build {clientBuild}{pickDebug ? ` · ${pickDebug}` : ''}
@@ -957,10 +1019,13 @@ const CreatePublication: React.FC = () => {
                 />
               </div>
 
-              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
-                <Label className="text-sm font-semibold text-[var(--proto-text)]">Тема *</Label>
+              <div ref={topicRequiredRef} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-[var(--proto-text)]">Тема</Label>
+                  <span className="text-xs font-semibold text-red-600">обязательно</span>
+                </div>
                 <Select value={topicTag} onValueChange={v => { setTopicTag(v); setTagError(''); }}>
-                  <SelectTrigger className={`mt-2 rounded-xl border-2 bg-[var(--proto-bg)] h-12 text-[var(--proto-text)] ${publishAttempted && !topicTag ? 'border-red-500/60' : 'border-[var(--proto-border)]'}`}><SelectValue placeholder="Выберите тему" /></SelectTrigger>
+                  <SelectTrigger className={`mt-2 rounded-xl border-2 bg-[var(--proto-bg)] h-12 text-[var(--proto-text)] ${(publishAttempted || infoAttempted) && !topicTag ? 'border-red-500/60' : 'border-[var(--proto-border)]'}`}><SelectValue placeholder="Выберите тему" /></SelectTrigger>
                   <SelectContent>{topicTags.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select>
                 {tagError && <p className="text-red-600 text-sm font-medium mt-1">{tagError}</p>}
@@ -1014,7 +1079,16 @@ const CreatePublication: React.FC = () => {
                 </Button>
                 <Button
                   className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
-                  onClick={() => setStep('publish')}
+                  onClick={() => {
+                    setInfoAttempted(true);
+                    if (infoBlockers.length) {
+                      setTagError('Тема обязательна');
+                      setPendingScroll('topic');
+                      toast({ title: 'Заполните обязательные поля', description: infoBlockers[0] });
+                      return;
+                    }
+                    setStep('publish');
+                  }}
                 >
                   Следующий шаг
                 </Button>
@@ -1029,6 +1103,17 @@ const CreatePublication: React.FC = () => {
               >
                 Предпросмотр
               </Button>
+
+              {infoAttempted && infoBlockers.length > 0 && (
+                <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
+                  <p className="text-sm font-semibold text-red-700">Обязательные поля:</p>
+                  <ul className="mt-2 space-y-1 text-sm text-red-700">
+                    {infoBlockers.map((b) => (
+                      <li key={b}>- {b}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
@@ -1056,11 +1141,11 @@ const CreatePublication: React.FC = () => {
                   </SelectContent>
                 </Select>
                 {(access === 'groups' || access === 'people') && (
-                  <div className="mt-3">
+                  <div ref={accessRequiredRef} className="mt-3">
                     <button
                       type="button"
                       onClick={() => setAccessPeopleOpen(true)}
-                      className="w-full flex items-center justify-between rounded-xl bg-white border border-[var(--proto-border)] px-4 py-3 text-left"
+                      className={`w-full flex items-center justify-between rounded-xl bg-white border px-4 py-3 text-left ${publishAttempted && accessPeopleIds.length === 0 ? 'border-red-500/60' : 'border-[var(--proto-border)]'}`}
                     >
                       <div>
                         <p className="text-sm font-semibold text-[var(--proto-text)]">Выбранные люди</p>
@@ -1068,6 +1153,9 @@ const CreatePublication: React.FC = () => {
                       </div>
                       <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
                     </button>
+                    {publishAttempted && accessPeopleIds.length === 0 && (
+                      <p className="mt-2 text-xs font-semibold text-red-700">обязательно: выберите хотя бы одного человека</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1115,6 +1203,17 @@ const CreatePublication: React.FC = () => {
                   onClick={() => {
                     setPublishAttempted(true);
                     if (publishBlockers.length) {
+                      const first = publishBlockers[0];
+                      if (first === 'Выберите тему') {
+                        setStep('info');
+                        setPendingScroll('topic');
+                      } else if (first === 'Выберите людей для доступа') {
+                        setPendingScroll('access');
+                        setAccessPeopleOpen(true);
+                      } else {
+                        setStep('story');
+                        setPendingScroll('story');
+                      }
                       toast({ title: 'Нельзя опубликовать', description: publishBlockers[0] });
                       return;
                     }
@@ -1135,7 +1234,7 @@ const CreatePublication: React.FC = () => {
                   {isPublishing ? 'Публикую…' : 'Опубликовать обновления'}
                 </Button>
               </div>
-              {publishBlockers.length > 0 && publishAttempted && (
+              {publishBlockers.length > 0 && (
                 <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
                   <p className="text-sm font-semibold text-red-700">Почему нельзя опубликовать:</p>
                   <ul className="mt-2 space-y-1 text-sm text-red-700">
