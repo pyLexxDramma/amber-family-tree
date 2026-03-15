@@ -27,6 +27,17 @@ from app.schemas.feed import (
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
+def _infer_media_type_from_key(key: str) -> str | None:
+    try:
+        parts = key.split("/")
+        if len(parts) >= 3 and parts[0] == "uploads":
+            folder = parts[2]
+            if folder in ("photo", "video", "audio", "document"):
+                return folder
+    except Exception:
+        return None
+    return None
+
 def _to_public_media_url(raw: str) -> str:
     if raw.startswith("http://") or raw.startswith("https://"):
         return raw
@@ -197,10 +208,11 @@ async def create_publication(
     db.add(pub)
     await db.flush()
     for key in body.media_keys:
+        inferred = _infer_media_type_from_key(key)
         media_item = MediaItem(
             id=uuid4(),
             publication_id=pub.id,
-            type=body.type if body.type in ("photo", "video", "audio", "document") else "photo",
+            type=inferred or (body.type if body.type in ("photo", "video", "audio", "document") else "photo"),
             url=key,
             name=key.split("/")[-1],
             size=0,

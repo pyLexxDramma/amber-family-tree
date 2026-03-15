@@ -32,7 +32,17 @@ async def presign(
         if body.file_size_bytes > max_bytes:
             raise HTTPException(400, f"File too large (max {max_bytes // 1_000_000} MB for this type)")
     import uuid
-    key = f"uploads/{current_user.id}/{uuid.uuid4()}_{body.filename}"
+    ct = (body.content_type or "").lower()
+    kind = ct.split("/")[0] if "/" in ct else ct
+    folder = "document"
+    if kind == "image":
+        folder = "photo"
+    elif kind == "video":
+        folder = "video"
+    elif kind == "audio":
+        folder = "audio"
+    safe_name = (body.filename or "file").replace("\\", "_").replace("/", "_")
+    key = f"uploads/{current_user.id}/{folder}/{uuid.uuid4()}_{safe_name}"
     try:
         import boto3
         from botocore.config import Config

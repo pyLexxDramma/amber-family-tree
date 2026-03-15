@@ -57,3 +57,4 @@ docs/pilot-plan-*.md
 .cursor/rules/general.mdc
 local/
 reports/
+_ref/

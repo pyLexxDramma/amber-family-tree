@@ -10,12 +10,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera } from 'lucide-react';
+import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, MoreHorizontal, MapPin, ChevronRight, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
 import { usePrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
 import { getMaxBytesForContentType, getMaxBytesForPublicationType } from '@/lib/uploadLimits';
+import type { FamilyMember } from '@/types';
 
 type UploadItem = {
   id: string;
@@ -28,22 +30,65 @@ type UploadItem = {
   uploadMs?: number;
 };
 
+type StoryBlockType =
+  | 'text'
+  | 'photos'
+  | 'video'
+  | 'audio'
+  | 'embed'
+  | 'link_album'
+  | 'attachment'
+  | 'life_lesson';
+
+type StoryBlock =
+  | { id: string; type: 'text'; text: string }
+  | { id: string; type: 'embed'; url: string }
+  | { id: string; type: 'link_album'; url: string }
+  | { id: string; type: 'life_lesson'; text: string }
+  | { id: string; type: 'attachment'; items: UploadItem[] }
+  | { id: string; type: 'photos' | 'video' | 'audio'; items: UploadItem[] };
+
+type TitleEditState =
+  | { mode: 'view' }
+  | { mode: 'edit'; draft: string; original: string };
+
 const CreatePublication: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [type, setType] = useState<string | null>(null);
   const [step, setStep] = useState<'story' | 'info' | 'publish'>('story');
   const [title, setTitle] = useState('');
+  const [titleEdit, setTitleEdit] = useState<TitleEditState>({ mode: 'edit', draft: '', original: '' });
+  const [blocks, setBlocks] = useState<StoryBlock[]>([]);
   const [text, setText] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [approximate, setApproximate] = useState(false);
   const [place, setPlace] = useState('');
   const [topicTag, setTopicTag] = useState('');
-  const [files, setFiles] = useState<UploadItem[]>([]);
+  const [pickMediaFor, setPickMediaFor] = useState<StoryBlockType | null>(null);
   const [tagError, setTagError] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [blockPickerOpen, setBlockPickerOpen] = useState(false);
+  const [textEditorOpen, setTextEditorOpen] = useState(false);
+  const [textEditorBlockId, setTextEditorBlockId] = useState<string | null>(null);
+  const [textEditorValue, setTextEditorValue] = useState('');
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [coAuthorsOpen, setCoAuthorsOpen] = useState(false);
+  const [coAuthorIds, setCoAuthorIds] = useState<string[]>([]);
+  const [dateMode, setDateMode] = useState<'fixed' | 'period'>('fixed');
+  const [dateFrom, setDateFrom] = useState({ year: '', month: '', day: '' });
+  const [dateTo, setDateTo] = useState({ year: '', month: '', day: '' });
+  const [pinOnMap, setPinOnMap] = useState(false);
+  const [addressQuery, setAddressQuery] = useState('');
+  const [storyTags, setStoryTags] = useState<string[]>([]);
+  const [storyTagsDraft, setStoryTagsDraft] = useState('');
+  const [relatedStoriesDraft, setRelatedStoriesDraft] = useState('');
+  const [access, setAccess] = useState<'all' | 'groups' | 'people' | 'private'>('all');
+  const [guestLink, setGuestLink] = useState(false);
+  const [tipClosed, setTipClosed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { visibility, setVisibility } = usePrivacyVisibility();
 
@@ -57,92 +102,143 @@ const CreatePublication: React.FC = () => {
     if (type == null && preselectedType) setType(preselectedType);
   }, [preselectedType, type]);
 
+  useEffect(() => {
+    api.family.listMembers().then(setMembers).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (access === 'private') setVisibility('only_me');
+    else setVisibility('family');
+  }, [access, setVisibility]);
+
+  useEffect(() => {
+    if (!dateFrom.year) return;
+    const y = dateFrom.year.padStart(4, '0');
+    const m = (dateFrom.month || '01').padStart(2, '0');
+    const d = (dateFrom.day || '01').padStart(2, '0');
+    setEventDate(`${y}-${m}-${d}`);
+  }, [dateFrom.day, dateFrom.month, dateFrom.year]);
+
   const accept = useMemo(() => {
-    if (type === 'photo') return 'image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif';
-    if (type === 'video') return 'video/*,.mp4,.mov,.webm';
-    if (type === 'audio') return 'audio/*,.mp3,.m4a,.wav,.ogg';
-    if (type === 'media') return 'image/*,video/*,audio/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.mp3,.m4a,.wav,.ogg';
-    if (type === 'document') return '.pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';
+    if (pickMediaFor === 'photos') return 'image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif';
+    if (pickMediaFor === 'video') return 'video/*,.mp4,.mov,.webm';
+    if (pickMediaFor === 'audio') return 'audio/*,.mp3,.m4a,.wav,.ogg';
+    if (pickMediaFor === 'attachment') return '.pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';
     return '';
-  }, [type]);
+  }, [pickMediaFor]);
 
   const formatHints = useMemo(() => {
-    if (type === 'photo') return { formats: 'JPG, PNG, HEIC, WebP', maxMb: 20 };
-    if (type === 'video') return { formats: 'MP4, MOV, WebM', maxMb: 500 };
-    if (type === 'audio') return { formats: 'MP3, M4A, WAV, OGG', maxMb: 100 };
-    if (type === 'media') return { formats: 'Фото, видео, аудио', maxMb: 500 };
-    if (type === 'document') return { formats: 'PDF, DOC, DOCX, TXT', maxMb: 100 };
+    if (pickMediaFor === 'photos') return { formats: 'JPG, PNG, HEIC, WebP', maxMb: 20 };
+    if (pickMediaFor === 'video') return { formats: 'MP4, MOV, WebM', maxMb: 500 };
+    if (pickMediaFor === 'audio') return { formats: 'MP3, M4A, WAV, OGG', maxMb: 100 };
+    if (pickMediaFor === 'attachment') return { formats: 'PDF, DOC, DOCX, TXT', maxMb: 100 };
     return null;
-  }, [type]);
+  }, [pickMediaFor]);
 
-  const blockTypes = [
-    { id: 'text' as const, label: 'Текст', icon: AlignLeft },
-    { id: 'photo' as const, label: 'Фото', icon: Camera },
-    { id: 'video' as const, label: 'Видео', icon: Video },
-    { id: 'audio' as const, label: 'Аудио', icon: Mic },
-    { id: 'embed' as const, label: 'Вставка', icon: Code },
-    { id: 'link' as const, label: 'Альбом', icon: Link2 },
+  const blockTypes: Array<{ id: StoryBlockType; label: string; icon: React.ComponentType<{ className?: string }>; locked?: boolean }> = [
+    { id: 'text', label: 'Текст', icon: AlignLeft },
+    { id: 'photos', label: 'Фото', icon: Camera },
+    { id: 'video', label: 'Видео', icon: Video, locked: true },
+    { id: 'audio', label: 'Аудио', icon: Mic },
+    { id: 'embed', label: 'Вставка', icon: Code },
+    { id: 'link_album', label: 'Альбом', icon: Link2 },
+    { id: 'attachment', label: 'Вложение', icon: Upload, locked: true },
+    { id: 'life_lesson', label: 'Жизненный урок', icon: Pencil },
   ];
 
-  const addFiles = (list: FileList) => {
-    if (!type) return;
+  const makeUploadItems = (list: FileList, kind: StoryBlockType): UploadItem[] => {
     const now = Date.now();
-    const items: UploadItem[] = Array.from(list).map((file, idx) => {
-      const maxSize = type === 'media' ? getMaxBytesForContentType(file.type || '') : getMaxBytesForPublicationType(type);
+    const pubType = kind === 'photos' ? 'photo' : kind === 'attachment' ? 'document' : kind;
+    return Array.from(list).map((file, idx) => {
+      const maxSize = pubType === 'media' ? getMaxBytesForContentType(file.type || '') : getMaxBytesForPublicationType(pubType);
       const err = file.size > maxSize ? `Слишком большой файл (макс. ${Math.floor(maxSize / 1_000_000)} МБ)` : undefined;
       return { id: `${now}_${idx}_${file.name}`, file, name: file.name, size: file.size, status: err ? 'error' : 'pending', error: err };
     });
-    setFiles(prev => [...items, ...prev]);
   };
 
   const handlePublish = async () => {
-    if (!type && !text.trim()) return;
     if (!topicTag) {
-      setTagError('Topic tag is required');
+      setTagError('Тема обязательна');
       return;
     }
     setIsPublishing(true);
     try {
-      let uploadedKeys: string[] = [];
-      let filesLocal = files.map(f => ({ ...f }));
-      const hasMedia = filesLocal.length > 0;
-      if (hasMedia) {
-        const effectiveType = type ?? 'photo';
-        const needUpload = filesLocal.filter(f => {
-          if (f.status !== 'pending' || f.error) return false;
-          const maxSize = effectiveType === 'media' ? getMaxBytesForContentType(f.file.type || '') : getMaxBytesForPublicationType(effectiveType);
-          return f.size <= maxSize;
+      const uploadedKeys: string[] = [];
+      let blocksLocal: StoryBlock[] = blocks.map((b) => {
+        if (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') {
+          return { ...b, items: b.items.map(i => ({ ...i })) } as StoryBlock;
+        }
+        return { ...b } as StoryBlock;
+      });
+
+      const updateItem = (blockId: string, itemId: string, patch: Partial<UploadItem>) => {
+        setBlocks(prev => prev.map(b => {
+          if (b.id !== blockId) return b;
+          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
+          return { ...b, items: b.items.map(it => it.id === itemId ? { ...it, ...patch } : it) };
+        }));
+        blocksLocal = blocksLocal.map(b => {
+          if (b.id !== blockId) return b;
+          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
+          return { ...b, items: b.items.map(it => it.id === itemId ? { ...it, ...patch } : it) } as StoryBlock;
         });
-        for (const item of needUpload) {
-          setFiles(prev => prev.map(f => (f.id === item.id ? { ...f, status: 'uploading', error: undefined } : f)));
+      };
+
+      for (const block of blocksLocal) {
+        if (block.type !== 'photos' && block.type !== 'video' && block.type !== 'audio' && block.type !== 'attachment') continue;
+        for (const item of block.items) {
+          if (item.status !== 'pending' || item.error) continue;
+          updateItem(block.id, item.id, { status: 'uploading', error: undefined });
           const startedAt = performance.now();
           try {
-            const presign = await api.media.presign({ filename: item.file.name, content_type: item.file.type || 'application/octet-stream', file_size_bytes: item.file.size });
-            const putRes = await fetch(presign.upload_url, { method: 'PUT', headers: { 'Content-Type': item.file.type || 'application/octet-stream' }, body: item.file });
+            const presign = await api.media.presign({
+              filename: item.file.name,
+              content_type: item.file.type || 'application/octet-stream',
+              file_size_bytes: item.file.size,
+            });
+            const putRes = await fetch(presign.upload_url, {
+              method: 'PUT',
+              headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
+              body: item.file,
+            });
             if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
             const uploadMs = Math.round(performance.now() - startedAt);
-            setFiles(prev => prev.map(f => (f.id === item.id ? { ...f, status: 'uploaded', key: presign.key, uploadMs } : f)));
-            filesLocal = filesLocal.map(f => (f.id === item.id ? { ...f, status: 'uploaded', key: presign.key, uploadMs } : f));
+            updateItem(block.id, item.id, { status: 'uploaded', key: presign.key, uploadMs });
           } catch (e) {
             const uploadMs = Math.round(performance.now() - startedAt);
             const err = e instanceof Error ? e.message : 'upload error';
-            setFiles(prev => prev.map(f => (f.id === item.id ? { ...f, status: 'error', error: err, uploadMs } : f)));
-            filesLocal = filesLocal.map(f => (f.id === item.id ? { ...f, status: 'error', error: err, uploadMs } : f));
+            updateItem(block.id, item.id, { status: 'error', error: err, uploadMs });
           }
         }
+      }
 
-        const hasBlocking = filesLocal.some(f => f.status === 'error' || !!f.error);
-        if (hasBlocking) return;
+      const hasBlocking = blocksLocal.some(b => {
+        if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return false;
+        return b.items.some(it => it.status === 'error' || !!it.error);
+      });
+      if (hasBlocking) return;
 
-        uploadedKeys = filesLocal.filter(f => f.status === 'uploaded' && f.key).map(f => f.key as string);
-        if (uploadedKeys.length === 0) return;
+      for (const b of blocksLocal) {
+        if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') continue;
+        for (const it of b.items) {
+          if (it.status === 'uploaded' && it.key) uploadedKeys.push(it.key);
+        }
       }
 
       const today = new Date().toISOString().slice(0, 10);
-      const baseType = type ?? (uploadedKeys.length > 0 ? 'photo' : 'text');
-      const pubType = baseType === 'media'
-        ? (filesLocal[0]?.file.type.startsWith('video/') ? 'video' : filesLocal[0]?.file.type.startsWith('audio/') ? 'audio' : 'photo')
-        : baseType;
+      const textParts = blocksLocal
+        .filter(b => b.type === 'text' || b.type === 'life_lesson')
+        .map(b => (b.type === 'text' ? b.text : b.text).trim())
+        .filter(Boolean);
+      const bodyText = textParts.join('\n\n');
+      const mediaKinds = blocksLocal
+        .filter(b => b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment')
+        .map(b => b.type);
+      const uniqueMediaKinds = Array.from(new Set(mediaKinds));
+      const pubType =
+        uniqueMediaKinds.length === 1 && !bodyText
+          ? (uniqueMediaKinds[0] === 'photos' ? 'photo' : uniqueMediaKinds[0] === 'attachment' ? 'document' : uniqueMediaKinds[0])
+          : 'text';
       let visibleFor: string[] | null = null;
       let excludeFor: string[] | null = null;
       if (visibility === 'only_me') {
@@ -152,13 +248,13 @@ const CreatePublication: React.FC = () => {
       await requestJson('POST', '/feed', {
         type: pubType,
         title: title || null,
-        text,
+        text: bodyText,
         event_date: eventDate || today,
         event_date_approximate: approximate,
         place: place || null,
         topic_tag: topicTag,
-        co_author_ids: [],
-        participant_ids: [],
+        co_author_ids: coAuthorIds,
+        participant_ids: participantIds,
         visible_for: visibleFor,
         exclude_for: excludeFor,
         media_keys: uploadedKeys,
@@ -172,13 +268,50 @@ const CreatePublication: React.FC = () => {
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
-        <TopBar title="Create" onBack={() => navigate(-1)} light />
+        <TopBar
+          title="Создать"
+          onBack={() => navigate(-1)}
+          light
+          right={
+            <button
+              type="button"
+              className="relative h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
+              aria-label="Меню"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="absolute -top-0.5 -right-0.5 h-5 min-w-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">
+                1
+              </span>
+            </button>
+          }
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={accept}
+          className="sr-only"
+          onChange={(e) => {
+            const list = e.currentTarget.files;
+            e.currentTarget.value = '';
+            if (!list?.length) return;
+            if (!pickMediaFor) return;
+            const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+            const items = makeUploadItems(list, pickMediaFor);
+            if (pickMediaFor === 'photos' || pickMediaFor === 'video' || pickMediaFor === 'audio') {
+              setBlocks(prev => [...prev, { id, type: pickMediaFor, items }]);
+            } else if (pickMediaFor === 'attachment') {
+              setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
+            }
+            setPickMediaFor(null);
+          }}
+        />
         <div className="mx-auto max-w-full px-3 pt-2 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <div className="flex gap-2 border-b border-[var(--proto-border)] mb-4">
             {[
-              { id: 'story' as const, label: '1. STORY' },
-              { id: 'info' as const, label: '2. INFO' },
-              { id: 'publish' as const, label: '3. PUBLISH' },
+              { id: 'story' as const, label: '1. ИСТОРИЯ' },
+              { id: 'info' as const, label: '2. ИНФО' },
+              { id: 'publish' as const, label: '3. ПУБЛИКАЦИЯ' },
             ].map(t => (
               <button
                 key={t.id}
@@ -194,113 +327,334 @@ const CreatePublication: React.FC = () => {
         <div className="mx-auto max-w-full px-3 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           {step === 'story' && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <Input
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)]"
-                    placeholder="Story Title"
-                  />
+              {titleEdit.mode === 'edit' ? (
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Input
+                        value={titleEdit.draft}
+                        onChange={e => setTitleEdit(v => v.mode === 'edit' ? { ...v, draft: e.target.value.slice(0, 80) } : v)}
+                        className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)]"
+                        placeholder="Название истории"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (titleEdit.mode !== 'edit') return;
+                        setTitle(titleEdit.draft.trim());
+                        setTitleEdit({ mode: 'view' });
+                      }}
+                      className="h-10 w-10 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
+                      aria-label="Сохранить"
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (titleEdit.mode !== 'edit') return;
+                        setTitleEdit({ mode: 'view' });
+                      }}
+                      className="h-10 w-10 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
+                      aria-label="Отмена"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="mt-1 text-right text-xs text-[var(--proto-text-muted)]">
+                    {titleEdit.draft.length} / 80
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => { setTitle(''); }}
-                  className="h-10 w-10 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
-                  aria-label="Clear"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+              ) : (
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2">
+                    <h2 className="font-serif text-2xl font-semibold text-[var(--proto-text)]">
+                      {title.trim() ? title : 'Без названия'}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setTitleEdit({ mode: 'edit', draft: title, original: title })}
+                      className="h-9 w-9 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
+                      aria-label="Редактировать заголовок"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="button"
                 onClick={() => setBlockPickerOpen(true)}
                 className="mx-auto h-14 w-14 rounded-full bg-[var(--proto-active)] text-white flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
-                aria-label="Add block"
+                aria-label="Добавить блок"
               >
                 <Plus className="h-7 w-7" />
               </button>
 
-              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
-                <Label className="text-sm font-semibold text-[var(--proto-text)]">Текст</Label>
-                <Textarea
-                  value={text}
-                  onChange={e => setText(e.target.value)}
-                  className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] min-h-[96px]"
-                  placeholder="Напишите историю…"
-                />
-              </div>
-
-              {(type && type !== 'text') && (
-                <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
-                  <Label className="text-sm font-semibold text-[var(--proto-text)]">Файлы</Label>
-                  {formatHints && (
-                    <p className="mt-1 text-xs text-[var(--proto-text-muted)]">
-                      {formatHints.formats} · макс. {formatHints.maxMb} МБ
-                    </p>
-                  )}
-                  <div className="mt-2 space-y-2">
-                    {files.map((f, i) => (
-                      <div key={f.id} className={`flex items-center gap-2 rounded-xl p-3 text-sm border-2 ${f.error ? 'border-red-500/50 bg-red-500/5' : 'border-[var(--proto-border)]'}`}>
-                        <div className="flex-1">
-                          <p className="font-semibold text-[var(--proto-text)]">{f.name}</p>
-                          <p className="text-xs text-[var(--proto-text-muted)]">{f.size >= 1_000_000 ? `${(f.size / 1_000_000).toFixed(1)} МБ` : `${(f.size / 1024).toFixed(1)} КБ`}</p>
-                          {f.status === 'uploading' && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Загрузка…</p>}
-                          {f.status === 'uploaded' && <p className="text-xs text-green-700 mt-0.5">Загружено{typeof f.uploadMs === 'number' ? ` (${f.uploadMs} мс)` : ''}</p>}
-                          {f.error && <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5"><AlertTriangle className="h-3 w-3" />{f.error}</p>}
+              <div className="space-y-3">
+                {blocks.map((b) => {
+                  const label =
+                    b.type === 'text' ? 'Текст' :
+                    b.type === 'photos' ? 'Фото' :
+                    b.type === 'video' ? 'Видео' :
+                    b.type === 'audio' ? 'Аудио' :
+                    b.type === 'embed' ? 'Вставка' :
+                    b.type === 'link_album' ? 'Альбом' :
+                    b.type === 'attachment' ? 'Вложение' :
+                    'Жизненный урок';
+                  const preview =
+                    b.type === 'text' ? (b.text || '') :
+                    b.type === 'life_lesson' ? (b.text || '') :
+                    b.type === 'embed' ? (b.url || '') :
+                    b.type === 'link_album' ? (b.url || '') :
+                    `${b.items.length} файл(ов)`;
+                  const canEditText = b.type === 'text' || b.type === 'life_lesson';
+                  return (
+                    <div key={b.id} className="rounded-xl bg-white border border-[var(--proto-border)] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">{label}</p>
+                          <p className="mt-1 text-sm text-[var(--proto-text)] whitespace-pre-wrap break-words line-clamp-3">
+                            {preview || '—'}
+                          </p>
                         </div>
-                        <button disabled={f.status === 'uploading'} onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))} className="rounded-lg p-1 hover:bg-[var(--proto-border)] disabled:opacity-60"><X className="h-4 w-4 text-[var(--proto-text-muted)]" /></button>
-                      </div>
-                    ))}
-                    <div className="relative mt-2 inline-block">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        accept={accept}
-                        className="absolute inset-0 z-10 w-full min-h-[40px] cursor-pointer opacity-0"
-                        onChange={e => {
-                          const list = e.currentTarget.files;
-                          if (list?.length) addFiles(list);
-                          e.currentTarget.value = '';
-                        }}
-                      />
-                      <div className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border-2 border-[var(--proto-active)] px-4 py-2 text-sm font-semibold text-[var(--proto-active)] hover:opacity-90 pointer-events-none">
-                        <Upload className="h-3.5 w-3.5" /> Добавить файл
+                        <div className="flex items-center gap-1 shrink-0">
+                          {canEditText && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTextEditorBlockId(b.id);
+                                setTextEditorValue(b.type === 'text' ? b.text : (b.type === 'life_lesson' ? b.text : ''));
+                                setTextEditorOpen(true);
+                              }}
+                              className="h-9 w-9 rounded-full hover:bg-[var(--proto-border)] transition-colors flex items-center justify-center"
+                              aria-label="Редактировать"
+                            >
+                              <Pencil className="h-4 w-4 text-[var(--proto-text-muted)]" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="h-9 w-9 rounded-full hover:bg-[var(--proto-border)] transition-colors flex items-center justify-center"
+                            aria-label="Действия"
+                          >
+                            <MoreHorizontal className="h-4 w-4 text-[var(--proto-text-muted)]" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  );
+                })}
+              </div>
 
               <Button
                 type="button"
                 className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
                 onClick={() => setStep('info')}
-                disabled={!title.trim() && !text.trim() && files.length === 0}
+                disabled={!title.trim() && blocks.length === 0}
               >
-                Next step
+                Следующий шаг <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
+
+              <div className="pt-3">
+                <p className="text-xs font-semibold text-[var(--proto-active)] tracking-wider text-center">ПРЕДПРОСМОТР ИСТОРИИ</p>
+                <p className="mt-1 text-xs text-center text-[var(--proto-text-muted)]">
+                  Примерное время чтения: {Math.max(1, Math.round((blocks.filter(b => b.type === 'text' || b.type === 'life_lesson').map(b => (b.type === 'text' ? b.text : b.text).split(/\s+/).filter(Boolean).length).reduce((a, n) => a + n, 0)) / 200))} мин
+                </p>
+              </div>
             </div>
           )}
 
           {step === 'info' && (
             <div className="space-y-4">
-              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 flex gap-3 items-end">
-                <div className="flex-1">
-                  <Label className="text-sm font-semibold text-[var(--proto-text)]">Дата события</Label>
-                  <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]" />
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Кто был рядом?</Label>
+                <p className="mt-1 text-xs text-[var(--proto-text-muted)]">Участники истории</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {participantIds.map(pid => {
+                    const m = members.find(mm => mm.id === pid);
+                    const name = m ? (m.nickname || `${m.firstName} ${m.lastName}`.trim()) : 'Участник';
+                    return (
+                      <button
+                        key={pid}
+                        type="button"
+                        onClick={() => setParticipantIds(v => v.filter(x => x !== pid))}
+                        className="px-3 py-1.5 rounded-full bg-white border border-[var(--proto-border)] text-xs font-semibold text-[var(--proto-text)]"
+                      >
+                        {name} <span className="ml-1 text-[var(--proto-text-muted)]">×</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setParticipantsOpen(true)}
+                    className="px-3 py-1.5 rounded-full bg-[var(--proto-active)]/10 border border-[var(--proto-border)] text-xs font-semibold text-[var(--proto-text)]"
+                  >
+                    + Добавить
+                  </button>
                 </div>
-                <div className="flex items-center gap-2 pb-0.5">
+              </div>
+
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Когда это было?</Label>
+                <div className="mt-3 flex gap-4 text-sm">
+                  <label className="inline-flex items-center gap-2">
+                    <input type="radio" checked={dateMode === 'fixed'} onChange={() => setDateMode('fixed')} />
+                    <span className="text-[var(--proto-text)]">Точная дата</span>
+                  </label>
+                  <label className="inline-flex items-center gap-2">
+                    <input type="radio" checked={dateMode === 'period'} onChange={() => setDateMode('period')} />
+                    <span className="text-[var(--proto-text)]">Период</span>
+                  </label>
+                </div>
+
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <Input
+                    value={dateFrom.year}
+                    onChange={(e) => setDateFrom(v => ({ ...v, year: e.target.value.replace(/[^\d]/g, '').slice(0, 4) }))}
+                    placeholder="Год*"
+                    className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                  />
+                  <Input
+                    value={dateFrom.month}
+                    onChange={(e) => setDateFrom(v => ({ ...v, month: e.target.value.replace(/[^\d]/g, '').slice(0, 2) }))}
+                    placeholder="Мес"
+                    className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                  />
+                  <Input
+                    value={dateFrom.day}
+                    onChange={(e) => setDateFrom(v => ({ ...v, day: e.target.value.replace(/[^\d]/g, '').slice(0, 2) }))}
+                    placeholder="День"
+                    className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                  />
+                </div>
+
+                {dateMode === 'period' && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <Input
+                      value={dateTo.year}
+                      onChange={(e) => setDateTo(v => ({ ...v, year: e.target.value.replace(/[^\d]/g, '').slice(0, 4) }))}
+                      placeholder="До: год"
+                      className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                    />
+                    <Input
+                      value={dateTo.month}
+                      onChange={(e) => setDateTo(v => ({ ...v, month: e.target.value.replace(/[^\d]/g, '').slice(0, 2) }))}
+                      placeholder="До: мес"
+                      className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                    />
+                    <Input
+                      value={dateTo.day}
+                      onChange={(e) => setDateTo(v => ({ ...v, day: e.target.value.replace(/[^\d]/g, '').slice(0, 2) }))}
+                      placeholder="До: день"
+                      className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                    />
+                  </div>
+                )}
+
+                <div className="mt-3 flex items-center gap-2">
                   <Switch checked={approximate} onCheckedChange={setApproximate} />
                   <span className="text-xs font-medium text-[var(--proto-text-muted)]">приблизительно</span>
                 </div>
               </div>
 
               <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
-                <Label className="text-sm font-semibold text-[var(--proto-text)]">Место</Label>
-                <Input value={place} onChange={e => setPlace(e.target.value)} className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]" placeholder="Где это было?" />
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Где это было?</Label>
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-white border border-[var(--proto-border)] px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm text-[var(--proto-text)]">
+                    <MapPin className="h-4 w-4 text-[var(--proto-active)]" />
+                    Отметить на карте
+                  </div>
+                  <Switch checked={pinOnMap} onCheckedChange={setPinOnMap} />
+                </div>
+                <Input
+                  value={addressQuery}
+                  onChange={(e) => setAddressQuery(e.target.value)}
+                  placeholder="Поиск адреса или передвиньте пин"
+                  className="mt-3 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                />
+                <Input
+                  value={place}
+                  onChange={e => setPlace(e.target.value)}
+                  placeholder="Место (текстом)"
+                  className="mt-3 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                />
+              </div>
+
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Теги истории</Label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {storyTags.map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setStoryTags(v => v.filter(x => x !== t))}
+                      className="px-3 py-1.5 rounded-full bg-white border border-[var(--proto-border)] text-xs font-semibold text-[var(--proto-text)]"
+                    >
+                      #{t} <span className="ml-1 text-[var(--proto-text-muted)]">×</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    value={storyTagsDraft}
+                    onChange={(e) => setStoryTagsDraft(e.target.value)}
+                    placeholder="Добавить тег..."
+                    className="flex-1 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-2xl border-2 border-[var(--proto-border)]"
+                    onClick={() => {
+                      const v = storyTagsDraft.trim().replace(/^#/, '');
+                      if (!v) return;
+                      setStoryTags(prev => prev.includes(v) ? prev : [...prev, v]);
+                      setStoryTagsDraft('');
+                    }}
+                  >
+                    Добавить
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Соавторы</Label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {coAuthorIds.map(cid => {
+                    const m = members.find(mm => mm.id === cid);
+                    const name = m ? (m.nickname || `${m.firstName} ${m.lastName}`.trim()) : 'Соавтор';
+                    return (
+                      <button
+                        key={cid}
+                        type="button"
+                        onClick={() => setCoAuthorIds(v => v.filter(x => x !== cid))}
+                        className="px-3 py-1.5 rounded-full bg-white border border-[var(--proto-border)] text-xs font-semibold text-[var(--proto-text)]"
+                      >
+                        {name} <span className="ml-1 text-[var(--proto-text-muted)]">×</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setCoAuthorsOpen(true)}
+                    className="px-3 py-1.5 rounded-full bg-[var(--proto-active)]/10 border border-[var(--proto-border)] text-xs font-semibold text-[var(--proto-text)]"
+                  >
+                    + Добавить
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <Label className="text-sm font-semibold text-[var(--proto-text)]">Связанные истории</Label>
+                <Input
+                  value={relatedStoriesDraft}
+                  onChange={(e) => setRelatedStoriesDraft(e.target.value)}
+                  placeholder="Введите название истории..."
+                  className="mt-3 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
+                />
               </div>
 
               <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
@@ -360,89 +714,274 @@ const CreatePublication: React.FC = () => {
           {step === 'publish' && (
             <div className="space-y-4">
               <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
-                <p className="text-sm font-semibold text-[var(--proto-text)]">Preview</p>
-                <p className="mt-2 text-sm text-[var(--proto-text-muted)]">{title || 'Untitled'}</p>
-                {text.trim() && <p className="mt-2 text-sm text-[var(--proto-text)] whitespace-pre-wrap">{text}</p>}
-                {files.length > 0 && <p className="mt-2 text-sm text-[var(--proto-text-muted)]">{files.length} files</p>}
+                <p className="text-sm font-semibold text-[var(--proto-text)]">Кто может видеть эту историю?</p>
+                <p className="mt-1 text-xs text-[var(--proto-text-muted)]">Назначенный доступ</p>
+                <Select
+                  value={access}
+                  onValueChange={(v) => setAccess(v as any)}
+                >
+                  <SelectTrigger className="mt-2 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] h-12 text-[var(--proto-text)]">
+                    <SelectValue placeholder="Выберите доступ" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все участники</SelectItem>
+                    <SelectItem value="groups">Группы</SelectItem>
+                    <SelectItem value="people">Отдельные люди</SelectItem>
+                    <SelectItem value="private">Только я</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">Поделиться вне приложения?</p>
+                {!tipClosed && (
+                  <div className="mt-3 rounded-xl bg-sky-50 border border-sky-200 p-4 relative">
+                    <button
+                      type="button"
+                      onClick={() => setTipClosed(true)}
+                      className="absolute right-3 top-3 text-sky-700/70 hover:text-sky-700"
+                      aria-label="Закрыть подсказку"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <p className="text-xs font-semibold text-sky-700">ПОДСКАЗКА</p>
+                    <p className="mt-1 text-xs text-sky-700/80">
+                      Включите гостевую ссылку, чтобы любой мог открыть историю по ссылке.
+                    </p>
+                  </div>
+                )}
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-white border border-[var(--proto-border)] px-3 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--proto-text)]">Гостевая ссылка</p>
+                    <p className="text-xs text-[var(--proto-text-muted)]">Любой с ссылкой сможет посмотреть</p>
+                  </div>
+                  <Switch checked={guestLink} onCheckedChange={setGuestLink} />
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+                <p className="text-sm font-semibold text-[var(--proto-text)]">Предпросмотр</p>
+                <p className="mt-2 text-sm text-[var(--proto-text-muted)]">{title || 'Без названия'}</p>
               </div>
               <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => setStep('info')}>Back</Button>
+                <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => setStep('info')}>Назад</Button>
                 <Button
                   className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
                   onClick={handlePublish}
-                  disabled={isPublishing || files.some(f => !!f.error || f.status === 'error' || f.status === 'uploading') || (!topicTag) || ((files.length === 0) && !text.trim())}
+                  disabled={
+                    isPublishing ||
+                    blocks.some(b => (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') && b.items.some(it => !!it.error || it.status === 'error' || it.status === 'uploading')) ||
+                    (!topicTag) ||
+                    (blocks.length === 0 && !title.trim())
+                  }
                 >
-                  {isPublishing ? 'Publishing…' : 'Publish'}
+                  {isPublishing ? 'Публикую…' : 'Опубликовать обновления'}
                 </Button>
+              </div>
+              <div className="pt-2 text-center text-sm">
+                <button type="button" className="text-red-600 font-semibold" disabled>
+                  Снять с публикации
+                </button>
+                <span className="mx-3 text-[var(--proto-text-muted)]">ИЛИ</span>
+                <button type="button" className="text-red-600 font-semibold" disabled>
+                  Удалить историю
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        <Sheet open={blockPickerOpen} onOpenChange={setBlockPickerOpen}>
-          <SheetContent side="bottom" className="h-[100dvh] max-h-[100dvh] rounded-none p-0 border-0">
-            <div className="h-full flex flex-col bg-[var(--proto-bg)]">
-              <div className="px-6 pt-7 pb-5 border-b border-[var(--proto-border)]">
-                <SheetHeader className="text-center sm:text-center">
-                  <SheetTitle className="font-serif text-2xl">Добавить блок</SheetTitle>
-                </SheetHeader>
-              </div>
-
-              <div className="flex-1 overflow-auto px-6 pt-6 pb-10">
-                <p className="text-xs font-semibold text-[var(--proto-text-muted)] tracking-wider uppercase text-center mb-6">
-                  Выберите тип блока
-                </p>
-                <div className="mx-auto max-w-sm">
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  {blockTypes.map(bt => (
+        <Dialog open={blockPickerOpen} onOpenChange={setBlockPickerOpen}>
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Добавить блок истории</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2">
+              <p className="text-xs font-semibold text-[var(--proto-text-muted)] tracking-wider uppercase text-center mb-4">
+                Выберите тип блока
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {blockTypes.map((bt) => {
+                  const Icon = bt.icon;
+                  const locked = !!bt.locked;
+                  return (
                     <button
                       key={bt.id}
                       type="button"
+                      disabled={locked}
                       onClick={() => {
                         setBlockPickerOpen(false);
+                        const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
                         if (bt.id === 'text') {
-                          setType('text');
+                          setTextEditorBlockId(null);
+                          setTextEditorValue('');
+                          setTextEditorOpen(true);
                           return;
                         }
-                        if (bt.id === 'photo') {
-                          setType('photo');
+                        if (bt.id === 'photos') {
+                          setPickMediaFor('photos');
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
                         if (bt.id === 'video') {
-                          setType('video');
+                          setPickMediaFor('video');
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
                         if (bt.id === 'audio') {
-                          setType('audio');
+                          setPickMediaFor('audio');
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
                         if (bt.id === 'embed') {
-                          setType('text');
+                          setBlocks(prev => [...prev, { id, type: 'embed', url: '' }]);
                           return;
                         }
-                        if (bt.id === 'link') {
-                          setType('photo');
+                        if (bt.id === 'link_album') {
+                          setBlocks(prev => [...prev, { id, type: 'link_album', url: '' }]);
+                          return;
+                        }
+                        if (bt.id === 'attachment') {
+                          setPickMediaFor('attachment');
                           setTimeout(() => fileInputRef.current?.click(), 0);
                           return;
                         }
+                        if (bt.id === 'life_lesson') {
+                          setBlocks(prev => [...prev, { id, type: 'life_lesson', text: '' }]);
+                          return;
+                        }
                       }}
-                      className="aspect-square rounded-2xl border bg-white border-[var(--proto-border)] shadow-sm hover:shadow-md hover:border-[var(--proto-active)]/40 transition-all flex flex-col items-center justify-center gap-3"
+                      className={`rounded-2xl border px-4 py-6 text-center transition-colors flex flex-col items-center justify-center gap-3 ${locked ? 'bg-white/60 border-[var(--proto-border)] opacity-60 cursor-not-allowed' : 'bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 shadow-sm'}`}
                     >
-                      <bt.icon className="h-8 w-8 text-[var(--proto-active)]" />
-                      <span className="text-sm font-semibold text-[var(--proto-text)] text-center">
-                        {bt.label}
-                      </span>
+                      <Icon className="h-7 w-7 text-[var(--proto-active)]" />
+                      <span className="text-sm font-semibold text-[var(--proto-text)]">{bt.label}</span>
+                      {locked && (
+                        <span className="text-[10px] font-medium text-[var(--proto-text-muted)]">
+                          Недоступно
+                        </span>
+                      )}
                     </button>
-                  ))}
-                  </div>
-                </div>
+                  );
+                })}
               </div>
+              {blockTypes.some(b => b.locked) && (
+                <div className="mt-4 text-center text-xs text-[var(--proto-text-muted)]">
+                  Улучшите тариф, чтобы разблокировать блоки
+                </div>
+              )}
             </div>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={textEditorOpen} onOpenChange={setTextEditorOpen}>
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Добавить текст</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2">
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--proto-border)] bg-white px-3 py-2 text-[var(--proto-text-muted)]">
+                <span className="text-xs font-semibold">Обычный</span>
+                <span className="ml-auto text-xs font-semibold">B</span>
+                <span className="text-xs italic">I</span>
+                <span className="text-xs underline">U</span>
+              </div>
+              <Textarea
+                value={textEditorValue}
+                onChange={(e) => setTextEditorValue(e.target.value)}
+                className="mt-3 rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] min-h-[160px]"
+                placeholder="Добавьте текст..."
+              />
+              <Button
+                type="button"
+                className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
+                disabled={!textEditorValue.trim()}
+                onClick={() => {
+                  const v = textEditorValue.trim();
+                  if (!v) return;
+                  if (textEditorBlockId) {
+                    setBlocks(prev => prev.map(b => (b.id === textEditorBlockId && b.type === 'text') ? { ...b, text: v } : (b.id === textEditorBlockId && b.type === 'life_lesson') ? { ...b, text: v } : b));
+                  } else {
+                    const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+                    setBlocks(prev => [...prev, { id, type: 'text', text: v }]);
+                  }
+                  setTextEditorValue('');
+                  setTextEditorBlockId(null);
+                  setTextEditorOpen(false);
+                }}
+              >
+                Добавить в историю
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={participantsOpen} onOpenChange={setParticipantsOpen}>
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Участники истории</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2 space-y-2 max-h-[60vh] overflow-auto">
+              {members.map(m => {
+                const checked = participantIds.includes(m.id);
+                const name = m.nickname || `${m.firstName} ${m.lastName}`.trim();
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setParticipantIds(prev => checked ? prev.filter(x => x !== m.id) : [...prev, m.id])}
+                    className="w-full flex items-center gap-3 rounded-xl bg-white border border-[var(--proto-border)] px-4 py-3 text-left"
+                  >
+                    <span className={`h-5 w-5 rounded border flex items-center justify-center ${checked ? 'bg-[var(--proto-active)] border-[var(--proto-active)] text-white' : 'border-[var(--proto-border)] text-transparent'}`}>
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--proto-text)]">{name || 'Участник'}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              type="button"
+              className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+              onClick={() => setParticipantsOpen(false)}
+            >
+              Готово
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={coAuthorsOpen} onOpenChange={setCoAuthorsOpen}>
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+            <DialogHeader className="text-center sm:text-center">
+              <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Соавторы</DialogTitle>
+            </DialogHeader>
+            <div className="mt-2 space-y-2 max-h-[60vh] overflow-auto">
+              {members.map(m => {
+                const checked = coAuthorIds.includes(m.id);
+                const name = m.nickname || `${m.firstName} ${m.lastName}`.trim();
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setCoAuthorIds(prev => checked ? prev.filter(x => x !== m.id) : [...prev, m.id])}
+                    className="w-full flex items-center gap-3 rounded-xl bg-white border border-[var(--proto-border)] px-4 py-3 text-left"
+                  >
+                    <span className={`h-5 w-5 rounded border flex items-center justify-center ${checked ? 'bg-[var(--proto-active)] border-[var(--proto-active)] text-white' : 'border-[var(--proto-border)] text-transparent'}`}>
+                      <Check className="h-4 w-4" />
+                    </span>
+                    <span className="text-sm font-semibold text-[var(--proto-text)]">{name || 'Соавтор'}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              type="button"
+              className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+              onClick={() => setCoAuthorsOpen(false)}
+            >
+              Готово
+            </Button>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
