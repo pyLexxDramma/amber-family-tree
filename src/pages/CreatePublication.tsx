@@ -17,6 +17,7 @@ import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
 import { usePrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
 import { getMaxBytesForContentType, getMaxBytesForPublicationType } from '@/lib/uploadLimits';
+import { toast } from '@/hooks/use-toast';
 import type { FamilyMember } from '@/types';
 
 type UploadItem = {
