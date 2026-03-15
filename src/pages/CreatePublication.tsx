@@ -122,7 +122,51 @@ const CreatePublication: React.FC = () => {
     return '.pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';
   };
 
-  const openFilePicker = (target: PickMediaTarget) => {
+  const makeUploadItemsFromFiles = (files: File[], kind: StoryBlockType): UploadItem[] => {
+    const now = Date.now();
+    const pubType = kind === 'photos' ? 'photo' : kind === 'attachment' ? 'document' : kind;
+    return files.map((file, idx) => {
+      const maxSize = pubType === 'media' ? getMaxBytesForContentType(file.type || '') : getMaxBytesForPublicationType(pubType);
+      const err = file.size > maxSize ? `Слишком большой файл (макс. ${Math.floor(maxSize / 1_000_000)} МБ)` : undefined;
+      return { id: `${now}_${idx}_${file.name}`, file, name: file.name, size: file.size, status: err ? 'error' : 'pending', error: err };
+    });
+  };
+
+  const handlePickedFiles = (files: File[], target: PickMediaTarget) => {
+    const kind = target.kind;
+    const items = makeUploadItemsFromFiles(files, kind);
+    setPickDebug(`selected:${kind}:${items.length}`);
+    toast({
+      title: `Выбрано файлов: ${items.length}`,
+      description: items[0]?.name ? `Первый файл: ${items[0].name}` : undefined,
+    });
+    const addToExisting = target.blockId;
+    if (addToExisting) {
+      setBlocks(prev => prev.map(b => {
+        if (b.id !== addToExisting) return b;
+        if (b.type === 'photos' || b.type === 'video' || b.type === 'audio') {
+          if (b.type !== kind) return b;
+          return { ...b, items: [...b.items, ...items] };
+        }
+        if (b.type === 'attachment' && kind === 'attachment') {
+          return { ...b, items: [...b.items, ...items] };
+        }
+        return b;
+      }));
+    } else {
+      const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      if (kind === 'photos' || kind === 'video' || kind === 'audio') {
+        setBlocks(prev => [...prev, { id, type: kind, items }]);
+      } else if (kind === 'attachment') {
+        setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
+      }
+    }
+    setPickMediaFor(null);
+    setPickMediaTarget(null);
+    filePickRef.current = null;
+  };
+
+  const openFilePicker = async (target: PickMediaTarget) => {
     if (!target) return;
     filePickRef.current = target;
     setPickMediaFor(target.kind);
@@ -130,6 +174,23 @@ const CreatePublication: React.FC = () => {
     if (!fileInputRef.current) return;
     fileInputRef.current.accept = acceptForKind(target.kind);
     setPickDebug(`open:${target.kind}${target.blockId ? `:${target.blockId}` : ''}`);
+    try {
+      const picker = (window as any).showOpenFilePicker as undefined | ((opts: any) => Promise<any[]>);
+      if (picker) {
+        const types =
+          target.kind === 'photos' ? [{ description: 'Фото', accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.heic', '.heif'] } }] :
+          target.kind === 'video' ? [{ description: 'Видео', accept: { 'video/*': ['.mp4', '.mov', '.webm'] } }] :
+          target.kind === 'audio' ? [{ description: 'Аудио', accept: { 'audio/*': ['.mp3', '.m4a', '.wav', '.ogg'] } }] :
+          [{ description: 'Файлы', accept: { 'application/pdf': ['.pdf'], 'text/plain': ['.txt'], 'application/msword': ['.doc'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] } }];
+        const handles = await picker({ multiple: true, types });
+        const files = (await Promise.all(handles.map((h: any) => h.getFile?.()))).filter(Boolean) as File[];
+        if (files.length) {
+          handlePickedFiles(files, target);
+          return;
+        }
+      }
+    } catch {
+    }
     fileInputRef.current.click();
   };
 
@@ -385,41 +446,11 @@ const CreatePublication: React.FC = () => {
             e.currentTarget.value = '';
             if (!list?.length) return;
             const target = filePickRef.current ?? pickMediaTarget ?? (pickMediaFor ? { kind: pickMediaFor as any } : null);
-            const kind = target?.kind as PickMediaTarget['kind'] | undefined;
-            if (!kind) {
+            if (!target) {
               toast({ title: 'Не удалось определить тип файла' });
               return;
             }
-            const items = makeUploadItems(list, kind);
-            setPickDebug(`selected:${kind}:${items.length}`);
-            toast({
-              title: `Выбрано файлов: ${items.length}`,
-              description: items[0]?.name ? `Первый файл: ${items[0].name}` : undefined,
-            });
-            const addToExisting = target?.blockId;
-            if (addToExisting) {
-              setBlocks(prev => prev.map(b => {
-                if (b.id !== addToExisting) return b;
-                if (b.type === 'photos' || b.type === 'video' || b.type === 'audio') {
-                  if (b.type !== kind) return b;
-                  return { ...b, items: [...b.items, ...items] };
-                }
-                if (b.type === 'attachment' && kind === 'attachment') {
-                  return { ...b, items: [...b.items, ...items] };
-                }
-                return b;
-              }));
-            } else {
-              const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-              if (kind === 'photos' || kind === 'video' || kind === 'audio') {
-                setBlocks(prev => [...prev, { id, type: kind, items }]);
-              } else if (kind === 'attachment') {
-                setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
-              }
-            }
-            setPickMediaFor(null);
-            setPickMediaTarget(null);
-            filePickRef.current = null;
+            handlePickedFiles(Array.from(list), target);
           }}
         />
         <div className="mx-auto max-w-full px-3 pt-2 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
