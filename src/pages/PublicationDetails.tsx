@@ -15,6 +15,7 @@ import { usePlatform } from '@/platform/PlatformContext';
 import { Heart, MoreVertical } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { ApiError } from '@/integrations/request';
 
 const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
@@ -33,6 +34,17 @@ const PublicationDetails: React.FC = () => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement | null>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
+
+  const ensureMyMemberId = async () => {
+    if (myMemberId) return myMemberId;
+    try {
+      const me = await api.profile.getMyProfile();
+      setMyMemberId(me.id);
+      return me.id;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (!id) {
@@ -92,18 +104,25 @@ const PublicationDetails: React.FC = () => {
       setPub(prev => prev ? { ...prev, comments: [...(prev.comments ?? []), created] } : prev);
       setCommentText('');
       platform.hapticFeedback('light');
-    } catch {
-      toast({ title: 'Не удалось отправить комментарий' });
+    } catch (e) {
+      let desc: string | undefined;
+      if (e instanceof ApiError) desc = `HTTP ${e.status}: ${e.bodyText.slice(0, 160)}`;
+      toast({ title: 'Не удалось отправить комментарий', description: desc });
     } finally {
       setIsSubmittingComment(false);
     }
   };
 
   const toggleLike = async () => {
-    if (!pub || !myMemberId) return;
+    if (!pub) return;
     if (isTogglingLike) return;
     setIsTogglingLike(true);
     try {
+      const mid = await ensureMyMemberId();
+      if (!mid) {
+        toast({ title: 'Нужно войти, чтобы поставить лайк' });
+        return;
+      }
       const updated = isLiked ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
       setPub(updated);
       platform.hapticFeedback('light');
@@ -220,7 +239,7 @@ const PublicationDetails: React.FC = () => {
             <button
               type="button"
               onClick={toggleLike}
-              disabled={!myMemberId || isTogglingLike}
+              disabled={isTogglingLike}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] text-sm text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               aria-label="Лайк"
             >

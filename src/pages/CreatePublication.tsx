@@ -987,9 +987,30 @@ const CreatePublication: React.FC = () => {
               </Sheet>
 
               <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => setStep('story')}>Back</Button>
-                <Button className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold" onClick={() => setStep('publish')}>Next step</Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold"
+                  onClick={() => setStep('story')}
+                >
+                  Назад
+                </Button>
+                <Button
+                  className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+                  onClick={() => setStep('publish')}
+                >
+                  Следующий шаг
+                </Button>
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-2xl h-12 border-2 bg-white"
+                onClick={() => setPreviewOpen(true)}
+                disabled={!title.trim() && blocks.length === 0}
+              >
+                Предпросмотр
+              </Button>
             </div>
           )}
 
@@ -1060,10 +1081,15 @@ const CreatePublication: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="w-full rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 text-left hover:border-[var(--proto-active)]/40 transition-colors"
+              >
                 <p className="text-sm font-semibold text-[var(--proto-text)]">Предпросмотр</p>
                 <p className="mt-2 text-sm text-[var(--proto-text-muted)]">{title || 'Без названия'}</p>
-              </div>
+                <p className="mt-1 text-xs text-[var(--proto-text-muted)]">Нажмите, чтобы посмотреть</p>
+              </button>
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold" onClick={() => setStep('info')}>Назад</Button>
                 <Button
