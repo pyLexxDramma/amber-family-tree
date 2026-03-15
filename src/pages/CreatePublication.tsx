@@ -101,6 +101,8 @@ const CreatePublication: React.FC = () => {
   const [tipClosed, setTipClosed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const objectUrlRef = useRef<Map<string, string>>(new Map());
+  const filePickRef = useRef<PickMediaTarget>(null);
+  const startedUploadsRef = useRef<Set<string>>(new Set());
   const { visibility, setVisibility } = usePrivacyVisibility();
 
   useEffect(() => {
@@ -109,6 +111,25 @@ const CreatePublication: React.FC = () => {
       objectUrlRef.current.clear();
     };
   }, []);
+
+  const acceptForKind = (k: PickMediaTarget['kind']) => {
+    if (k === 'photos') return 'image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.gif';
+    if (k === 'video') return 'video/*,.mp4,.mov,.webm';
+    if (k === 'audio') return 'audio/*,.mp3,.m4a,.wav,.ogg';
+    return '.pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';
+  };
+
+  const openFilePicker = (target: PickMediaTarget) => {
+    if (!target) return;
+    filePickRef.current = target;
+    setPickMediaFor(target.kind);
+    setPickMediaTarget(target);
+    requestAnimationFrame(() => {
+      if (!fileInputRef.current) return;
+      fileInputRef.current.accept = acceptForKind(target.kind);
+      fileInputRef.current.click();
+    });
+  };
 
   const objectUrlFor = (item: UploadItem) => {
     const existing = objectUrlRef.current.get(item.id);
@@ -183,71 +204,84 @@ const CreatePublication: React.FC = () => {
     });
   };
 
-  const uploadItemsNow = async (blockId: string, items: UploadItem[]) => {
-    for (const item of items) {
-      if (item.status !== 'pending' || item.error) continue;
-      setBlocks(prev => prev.map(b => {
-        if (b.id !== blockId) return b;
-        if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
-        return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'uploading', error: undefined } : it) };
-      }));
-      const startedAt = performance.now();
-      try {
-        const presign = await api.media.presign({
-          filename: item.file.name,
-          content_type: item.file.type || 'application/octet-stream',
-          file_size_bytes: item.file.size,
-        });
-        if (typeof window !== 'undefined') {
-          try {
-            const u = new URL(presign.upload_url);
-            if (u.protocol !== 'https:' && window.location.protocol === 'https:') {
-              throw new Error('presign returned non-https upload url');
-            }
-          } catch {}
-        }
-        const putRes = await fetch(presign.upload_url, {
-          method: 'PUT',
-          headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
-          body: item.file,
-        });
-        if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
-        const uploadMs = Math.round(performance.now() - startedAt);
-        setBlocks(prev => prev.map(b => {
-          if (b.id !== blockId) return b;
-          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
-          return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'uploaded', key: presign.key, uploadMs } : it) };
-        }));
-      } catch (e) {
-        const uploadMs = Math.round(performance.now() - startedAt);
-        const raw = e instanceof Error ? e.message : 'upload error';
-        const err =
-          raw.toLowerCase().includes('failed to fetch') || raw.toLowerCase().includes('networkerror')
-            ? 'Сетевая ошибка. На сервере обычно не настроен CORS для загрузки файлов (PUT/OPTIONS) или неверный HTTPS.'
-            : raw === 'presign returned non-https upload url'
-              ? 'Ссылка на загрузку пришла по HTTP. Нужен HTTPS (иначе браузер блокирует).'
-              : raw;
-        setBlocks(prev => prev.map(b => {
-          if (b.id !== blockId) return b;
-          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
-          return { ...b, items: b.items.map(it => it.id === item.id ? { ...it, status: 'error', error: err, uploadMs } : it) };
-        }));
-        toast({ title: 'Не удалось загрузить файл', description: err });
+  const setUploadItem = (blockId: string, itemId: string, patch: Partial<UploadItem>) => {
+    setBlocks(prev => prev.map(b => {
+      if (b.id !== blockId) return b;
+      if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
+      return { ...b, items: b.items.map(it => it.id === itemId ? { ...it, ...patch } : it) };
+    }));
+  };
+
+  const uploadOne = async (blockId: string, item: UploadItem) => {
+    setUploadItem(blockId, item.id, { status: 'uploading', error: undefined });
+    const startedAt = performance.now();
+    try {
+      const presign = await api.media.presign({
+        filename: item.file.name,
+        content_type: item.file.type || 'application/octet-stream',
+        file_size_bytes: item.file.size,
+      });
+      if (typeof window !== 'undefined') {
+        try {
+          const u = new URL(presign.upload_url);
+          if (u.protocol !== 'https:' && window.location.protocol === 'https:') {
+            throw new Error('presign returned non-https upload url');
+          }
+        } catch {}
       }
+      const putRes = await fetch(presign.upload_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
+        body: item.file,
+      });
+      if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
+      const uploadMs = Math.round(performance.now() - startedAt);
+      setUploadItem(blockId, item.id, { status: 'uploaded', key: presign.key, uploadMs });
+    } catch (e) {
+      const uploadMs = Math.round(performance.now() - startedAt);
+      const raw = e instanceof Error ? e.message : 'upload error';
+      const err =
+        raw.toLowerCase().includes('failed to fetch') || raw.toLowerCase().includes('networkerror')
+          ? 'Сетевая ошибка. На сервере обычно не настроен CORS для загрузки файлов (PUT/OPTIONS) или неверный HTTPS.'
+          : raw === 'presign returned non-https upload url'
+            ? 'Ссылка на загрузку пришла по HTTP. Нужен HTTPS (иначе браузер блокирует).'
+            : raw;
+      setUploadItem(blockId, item.id, { status: 'error', error: err, uploadMs });
+      toast({ title: 'Не удалось загрузить файл', description: err });
     }
   };
+
+  useEffect(() => {
+    for (const b of blocks) {
+      if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') continue;
+      for (const it of b.items) {
+        if (it.status !== 'pending' || it.error) continue;
+        if (startedUploadsRef.current.has(it.id)) continue;
+        startedUploadsRef.current.add(it.id);
+        void uploadOne(b.id, it);
+      }
+    }
+  }, [blocks]);
 
   const handlePublish = async () => {
     if (!topicTag) {
       setTagError('Тема обязательна');
       return;
     }
-    const hasUploading = blocks.some(b => {
+    const hasUploadingOrPending = blocks.some(b => {
       if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return false;
-      return b.items.some(it => it.status === 'uploading');
+      return b.items.some(it => it.status === 'uploading' || it.status === 'pending');
     });
-    if (hasUploading) {
+    if (hasUploadingOrPending) {
       toast({ title: 'Дождитесь окончания загрузки файлов' });
+      return;
+    }
+    const hasErrors = blocks.some(b => {
+      if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return false;
+      return b.items.some(it => it.status === 'error' || !!it.error);
+    });
+    if (hasErrors) {
+      toast({ title: 'Есть ошибки загрузки файлов', description: 'Удалите проблемные файлы или нажмите «Повторить».' });
       return;
     }
     setIsPublishing(true);
@@ -259,53 +293,6 @@ const CreatePublication: React.FC = () => {
         }
         return { ...b } as StoryBlock;
       });
-
-      const updateItem = (blockId: string, itemId: string, patch: Partial<UploadItem>) => {
-        setBlocks(prev => prev.map(b => {
-          if (b.id !== blockId) return b;
-          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
-          return { ...b, items: b.items.map(it => it.id === itemId ? { ...it, ...patch } : it) };
-        }));
-        blocksLocal = blocksLocal.map(b => {
-          if (b.id !== blockId) return b;
-          if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return b;
-          return { ...b, items: b.items.map(it => it.id === itemId ? { ...it, ...patch } : it) } as StoryBlock;
-        });
-      };
-
-      for (const block of blocksLocal) {
-        if (block.type !== 'photos' && block.type !== 'video' && block.type !== 'audio' && block.type !== 'attachment') continue;
-        for (const item of block.items) {
-          if (item.status !== 'pending' || item.error) continue;
-          updateItem(block.id, item.id, { status: 'uploading', error: undefined });
-          const startedAt = performance.now();
-          try {
-            const presign = await api.media.presign({
-              filename: item.file.name,
-              content_type: item.file.type || 'application/octet-stream',
-              file_size_bytes: item.file.size,
-            });
-            const putRes = await fetch(presign.upload_url, {
-              method: 'PUT',
-              headers: { 'Content-Type': item.file.type || 'application/octet-stream' },
-              body: item.file,
-            });
-            if (!putRes.ok) throw new Error(`upload failed: ${putRes.status}`);
-            const uploadMs = Math.round(performance.now() - startedAt);
-            updateItem(block.id, item.id, { status: 'uploaded', key: presign.key, uploadMs });
-          } catch (e) {
-            const uploadMs = Math.round(performance.now() - startedAt);
-            const err = e instanceof Error ? e.message : 'upload error';
-            updateItem(block.id, item.id, { status: 'error', error: err, uploadMs });
-          }
-        }
-      }
-
-      const hasBlocking = blocksLocal.some(b => {
-        if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') return false;
-        return b.items.some(it => it.status === 'error' || !!it.error);
-      });
-      if (hasBlocking) return;
 
       for (const b of blocksLocal) {
         if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') continue;
@@ -388,10 +375,14 @@ const CreatePublication: React.FC = () => {
             const list = e.currentTarget.files;
             e.currentTarget.value = '';
             if (!list?.length) return;
-            const kind = pickMediaTarget?.kind ?? pickMediaFor;
-            if (!kind) return;
+            const target = filePickRef.current ?? pickMediaTarget ?? (pickMediaFor ? { kind: pickMediaFor as any } : null);
+            const kind = target?.kind as PickMediaTarget['kind'] | undefined;
+            if (!kind) {
+              toast({ title: 'Не удалось определить тип файла' });
+              return;
+            }
             const items = makeUploadItems(list, kind);
-            const addToExisting = pickMediaTarget?.blockId;
+            const addToExisting = target?.blockId;
             if (addToExisting) {
               setBlocks(prev => prev.map(b => {
                 if (b.id !== addToExisting) return b;
@@ -404,7 +395,6 @@ const CreatePublication: React.FC = () => {
                 }
                 return b;
               }));
-              setTimeout(() => { void uploadItemsNow(addToExisting, items); }, 0);
             } else {
               const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
               if (kind === 'photos' || kind === 'video' || kind === 'audio') {
@@ -412,10 +402,10 @@ const CreatePublication: React.FC = () => {
               } else if (kind === 'attachment') {
                 setBlocks(prev => [...prev, { id, type: 'attachment', items }]);
               }
-              setTimeout(() => { void uploadItemsNow(id, items); }, 0);
             }
             setPickMediaFor(null);
             setPickMediaTarget(null);
+            filePickRef.current = null;
           }}
         />
         <div className="mx-auto max-w-full px-3 pt-2 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
@@ -587,7 +577,7 @@ const CreatePublication: React.FC = () => {
                                             if (bb.type !== 'photos' && bb.type !== 'video' && bb.type !== 'audio' && bb.type !== 'attachment') return bb;
                                             return { ...bb, items: bb.items.map(x => x.id === it.id ? { ...x, status: 'pending', error: undefined } : x) };
                                           }));
-                                          setTimeout(() => { void uploadItemsNow(b.id, [{ ...it, status: 'pending', error: undefined }]); }, 0);
+                                          startedUploadsRef.current.delete(it.id);
                                         }}
                                         className="rounded-lg px-2 py-1 text-xs font-semibold border border-[var(--proto-border)] bg-white hover:border-[var(--proto-active)]/40 transition-colors"
                                       >
@@ -616,9 +606,7 @@ const CreatePublication: React.FC = () => {
                                 type="button"
                                 onClick={() => {
                                   const kind = b.type === 'photos' ? 'photos' : b.type === 'video' ? 'video' : b.type === 'audio' ? 'audio' : 'attachment';
-                                  setPickMediaFor(kind);
-                                  setPickMediaTarget({ kind: kind as any, blockId: b.id });
-                                  setTimeout(() => fileInputRef.current?.click(), 0);
+                                  openFilePicker({ kind: kind as any, blockId: b.id });
                                 }}
                                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--proto-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--proto-text)] hover:border-[var(--proto-active)]/40 transition-colors"
                               >
@@ -1083,21 +1071,15 @@ const CreatePublication: React.FC = () => {
                           return;
                         }
                         if (bt.id === 'photos') {
-                          setPickMediaFor('photos');
-                          setPickMediaTarget({ kind: 'photos' });
-                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          openFilePicker({ kind: 'photos' });
                           return;
                         }
                         if (bt.id === 'video') {
-                          setPickMediaFor('video');
-                          setPickMediaTarget({ kind: 'video' });
-                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          openFilePicker({ kind: 'video' });
                           return;
                         }
                         if (bt.id === 'audio') {
-                          setPickMediaFor('audio');
-                          setPickMediaTarget({ kind: 'audio' });
-                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          openFilePicker({ kind: 'audio' });
                           return;
                         }
                         if (bt.id === 'embed') {
@@ -1109,9 +1091,7 @@ const CreatePublication: React.FC = () => {
                           return;
                         }
                         if (bt.id === 'attachment') {
-                          setPickMediaFor('attachment');
-                          setPickMediaTarget({ kind: 'attachment' });
-                          setTimeout(() => fileInputRef.current?.click(), 0);
+                          openFilePicker({ kind: 'attachment' });
                           return;
                         }
                         if (bt.id === 'life_lesson') {
