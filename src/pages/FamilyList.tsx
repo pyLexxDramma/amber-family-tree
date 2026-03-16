@@ -4,11 +4,12 @@ import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { mockMembers, currentUserId } from '@/data/mock-members';
-import { getPrototypeAvatarForMember, getPrototypeAvatar } from '@/lib/prototype-assets';
+import { getPrototypeAvatarForMember } from '@/lib/prototype-assets';
 import { getFamilyRole } from '@/lib/family-role';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 function getRelationshipLabel(member: FamilyMember, currentId: string): string {
   try {
@@ -36,6 +37,7 @@ const FamilyList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [members, setMembers] = useState<FamilyMember[]>(mockMembers);
   const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     api.family.listMembers().then(setMembers);
@@ -43,9 +45,6 @@ const FamilyList: React.FC = () => {
   }, []);
 
   const myId = myProfile?.id ?? currentUserId;
-  const myAvatarSrc = myProfile && (myProfile as { avatar?: string }).avatar
-    ? (myProfile as { avatar: string }).avatar
-    : getPrototypeAvatar(myId, myId).src;
 
   const filtered = members
     .filter(m => filterTab === 'all' || (filterTab === 'active' ? (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true) : !(m.isActive ?? (m as { is_active?: boolean }).is_active ?? true)))
@@ -67,9 +66,9 @@ const FamilyList: React.FC = () => {
           onBack={() => navigate(-1)}
           light
           right={
-            <button type="button" className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Фильтры">
-              <SlidersHorizontal className="h-4 w-4" />
-            </button>
+            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[var(--proto-card)] border border-[var(--proto-border)] overflow-hidden">
+              <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="" className="h-7 w-7 object-contain" />
+            </div>
           }
         />
         <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
@@ -85,7 +84,12 @@ const FamilyList: React.FC = () => {
                   className="w-full h-10 pl-9 pr-3 rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] text-sm text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]/30 focus:border-[var(--proto-active)]"
                 />
               </div>
-              <button type="button" className="h-10 w-10 rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors shrink-0" aria-label="Фильтры">
+              <button
+                type="button"
+                onClick={() => setFilterOpen(true)}
+                className="h-10 w-10 rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors shrink-0"
+                aria-label="Фильтры"
+              >
                 <SlidersHorizontal className="h-4 w-4" />
               </button>
             </div>
@@ -218,6 +222,30 @@ const FamilyList: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+          <DialogContent className="max-w-[420px] rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>Фильтр</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-3 gap-2">
+              {(['all', 'active', 'inactive'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => { setFilterTab(t); setFilterOpen(false); }}
+                  className={`h-11 rounded-xl text-sm font-semibold border-2 transition-colors ${
+                    filterTab === t
+                      ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]'
+                      : 'bg-[var(--proto-card)] text-[var(--proto-text)] border-[var(--proto-border)] hover:border-[var(--proto-active)]/40'
+                  }`}
+                >
+                  {{ all: 'Все', active: 'Активные', inactive: 'Неактивные' }[t]}
+                </button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
