@@ -1557,23 +1557,27 @@ const CreatePublication: React.FC = () => {
                             <div className="mt-3 space-y-2">
                               {b.items.map(it => (
                                 <div key={it.id} className="rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-3 py-2">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                    <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{it.name}</p>
-                                    <p className="text-xs text-[var(--proto-text-muted)]">
-                                      {it.status === 'uploading' ? 'Загрузка…' : it.status === 'uploaded' ? 'Загружено' : it.status === 'error' ? 'Ошибка' : 'Готово'}
-                                    </p>
-                                  </div>
-                                  {it.status === 'error' && <span className="text-xs font-semibold text-red-600">!</span>}
-                                </div>
+                                  {b.type !== 'video' && (
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{it.name}</p>
+                                        <p className="text-xs text-[var(--proto-text-muted)]">
+                                          {it.status === 'uploading' ? 'Загрузка…' : it.status === 'uploaded' ? 'Загружено' : it.status === 'error' ? 'Ошибка' : 'Готово'}
+                                        </p>
+                                      </div>
+                                      {it.status === 'error' && <span className="text-xs font-semibold text-red-600">!</span>}
+                                    </div>
+                                  )}
                                   {b.type === 'video' && it.file.type.startsWith('video/') && !it.error ? (
                                     <video
                                       controls
                                       playsInline
                                       preload="metadata"
-                                      className="mt-2 w-full rounded-lg border border-[var(--proto-border)] bg-black"
+                                      className="w-full rounded-lg border border-[var(--proto-border)] bg-black"
                                       src={objectUrlFor(it)}
                                     />
+                                  ) : b.type === 'video' && it.error ? (
+                                    <p className="text-xs text-red-600 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />{it.error}</p>
                                   ) : b.type === 'audio' && it.file.type.startsWith('audio/') && !it.error ? (
                                     <audio controls preload="metadata" className="mt-2 w-full" src={objectUrlFor(it)} />
                                   ) : null}
