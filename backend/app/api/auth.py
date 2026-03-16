@@ -86,7 +86,10 @@ async def verify(
         await db.commit()
         await db.refresh(user)
         if seed:
-            await seed_reference_user(db, user, member)
+            try:
+                await seed_reference_user(db, user, member)
+            except Exception:
+                pass
     else:
         await db.commit()
         await db.refresh(user)
@@ -102,8 +105,11 @@ async def verify(
                 await db.commit()
                 await db.refresh(member)
             if member and body.identifier.strip().lower() == REFERENCE_EMAIL:
-                await seed_reference_user(db, user, member)
-                await db.refresh(member)
+                try:
+                    await seed_reference_user(db, user, member)
+                    await db.refresh(member)
+                except Exception:
+                    pass
 
     if not member:
         raise HTTPException(

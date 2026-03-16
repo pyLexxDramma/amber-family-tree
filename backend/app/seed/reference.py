@@ -44,7 +44,7 @@ FAMILY_MEMBERS = FAMILY_MEMBERS_BASE + [
 ]
 TOPICS = ["Праздники", "День рождения", "Будни", "Путешествия", "Рецепты", "Истории", "Свадьба"]
 PUBLICATIONS = [
-    {**PUBLICATIONS_BASE[i % 5], "photo_seed": idx + 1, "topic_tag": TOPICS[idx % len(TOPICS)], "event_date": f"{2010 + (idx % 15)}-{(idx % 12) + 1:02d}-{(idx % 28) + 1:02d}"}
+    {**PUBLICATIONS_BASE[idx % 5], "photo_seed": idx + 1, "topic_tag": TOPICS[idx % len(TOPICS)], "event_date": f"{2010 + (idx % 15)}-{(idx % 12) + 1:02d}-{(idx % 28) + 1:02d}"}
     for idx in range(len(PUBLICATIONS_BASE) * MULTIPLIER)
 ]
 

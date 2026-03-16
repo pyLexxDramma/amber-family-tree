@@ -4,6 +4,7 @@ import { ROUTES } from '@/constants/routes';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
+import { ApiError } from '@/integrations/request';
 import { setDemoMode } from '@/lib/demoMode';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
@@ -33,8 +34,11 @@ const ConfirmCode: React.FC = () => {
       setDemoMode(false);
       if (mode === 'register') navigate('/onboarding');
       else navigate(ROUTES.classic.feed);
-    } catch {
-      setError('Неверный код или ошибка сервера');
+    } catch (e) {
+      const msg = e instanceof ApiError
+        ? (e.status === 404 || e.status === 502 ? 'Сервер недоступен. Проверьте бэкенд и nginx.' : e.status >= 500 ? f'Ошибка сервера {e.status}. Проверьте логи бэкенда.' : `Ошибка ${e.status}`)
+        : 'Неверный код или ошибка сервера';
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
