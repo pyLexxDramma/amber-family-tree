@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
-import { mockMembers, currentUserId } from '@/data/mock-members';
+import { currentUserId, mockMembers } from '@/data/mock-members';
 import { getPrototypeAvatarForMember } from '@/lib/prototype-assets';
 import { getFamilyRole } from '@/lib/family-role';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { isDemoMode } from '@/lib/demoMode';
+import { toast } from '@/hooks/use-toast';
 
 function getRelationshipLabel(member: FamilyMember, currentId: string): string {
   try {
@@ -35,12 +37,22 @@ const FamilyList: React.FC = () => {
   const [subTab, setSubTab] = useState<'profiles' | 'groups'>('profiles');
   const [filterTab, setFilterTab] = useState<'all' | 'active' | 'inactive'>('all');
   const [search, setSearch] = useState('');
-  const [members, setMembers] = useState<FamilyMember[]>(mockMembers);
+  const [members, setMembers] = useState<FamilyMember[]>(isDemoMode() ? mockMembers : []);
   const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(!isDemoMode());
 
   useEffect(() => {
-    api.family.listMembers().then(setMembers);
+    api.family.listMembers()
+      .then(setMembers)
+      .catch(() => {
+        if (isDemoMode()) setMembers(mockMembers);
+        else {
+          setMembers([]);
+          toast({ title: 'Не удалось загрузить семью' });
+        }
+      })
+      .finally(() => setIsLoadingMembers(false));
     api.profile.getMyProfile().then(setMyProfile).catch(() => {});
   }, []);
 
@@ -143,6 +155,11 @@ const FamilyList: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
+                  {!isDemoMode() && isLoadingMembers && (
+                    <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 text-sm text-[var(--proto-text-muted)]">
+                      Загрузка…
+                    </div>
+                  )}
                   {filtered.map((m) => {
                     const mn = norm(m);
                     const isCurrent = m.id === myId;
@@ -208,6 +225,7 @@ const FamilyList: React.FC = () => {
                       .map(norm)
                       .find(x => x.id !== myId && (x.isActive ?? true));
                     if (target) navigate(ROUTES.classic.messages(target.id));
+                    else toast({ title: 'Нет активных участников' });
                   }}
                   className="h-12 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
                 >
