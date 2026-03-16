@@ -42,7 +42,9 @@ const PublicationDetails: React.FC = () => {
   const [pub, setPub] = useState<Publication | null | undefined>(undefined);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
-  const [likedFallback, setLikedFallback] = useState(false);
+  const [likedUi, setLikedUi] = useState(false);
+  const [likesCountUi, setLikesCountUi] = useState(0);
+  const likePendingRef = useRef(false);
   const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -73,8 +75,10 @@ const PublicationDetails: React.FC = () => {
 
   useEffect(() => {
     if (!pub) return;
+    if (likePendingRef.current) return;
+    setLikesCountUi((pub.likes ?? []).length);
     if (!myMemberId) return;
-    setLikedFallback((pub.likes ?? []).includes(myMemberId));
+    setLikedUi((pub.likes ?? []).includes(myMemberId));
   }, [myMemberId, pub]);
 
   useEffect(() => {
@@ -118,7 +122,7 @@ const PublicationDetails: React.FC = () => {
   const publishDateFormatted = format(new Date(pub.publishDate), 'dd MMM, yyyy', { locale: ru });
   const comments = [...(pub.comments ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
-  const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : likedFallback;
+  const isLiked = likedUi;
   const isAuthor = !!effectiveMemberId && effectiveMemberId === aid;
   const demoEmotionsByTopic: Record<string, string[]> = {
     'День рождения': ['Радость', 'Счастье', 'Восторг'],
@@ -157,31 +161,21 @@ const PublicationDetails: React.FC = () => {
     if (!pub) return;
     if (isTogglingLike) return;
     setIsTogglingLike(true);
+    likePendingRef.current = true;
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       if (!token) {
         toast({ title: 'Нужно войти, чтобы поставить лайк' });
         return;
       }
+      const nextLiked = !likedUi;
+      setLikedUi(nextLiked);
+      setLikesCountUi((c) => Math.max(0, c + (nextLiked ? 1 : -1)));
 
-      const canOptimistic = !!effectiveMemberId;
-      const likedNow = canOptimistic ? (pub.likes ?? []).includes(effectiveMemberId as string) : likedFallback;
-
-      if (canOptimistic) {
-        const mid = effectiveMemberId as string;
-        setPub(prev => {
-          if (!prev) return prev;
-          const likes = prev.likes ?? [];
-          const next = likedNow ? likes.filter(x => x !== mid) : (likes.includes(mid) ? likes : [...likes, mid]);
-          return { ...prev, likes: next };
-        });
-        setLikedFallback(!likedNow);
-      } else {
-        setLikedFallback(!likedNow);
-      }
-
-      const updated = likedNow ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
+      const updated = nextLiked ? await api.feed.addLike(pub.id) : await api.feed.removeLike(pub.id);
       setPub(updated);
+      setLikesCountUi((updated.likes ?? []).length);
+      if (effectiveMemberId) setLikedUi((updated.likes ?? []).includes(effectiveMemberId));
       platform.hapticFeedback('light');
     } catch {
       try {
@@ -190,6 +184,7 @@ const PublicationDetails: React.FC = () => {
       } catch {}
       toast({ title: 'Не удалось поставить лайк' });
     } finally {
+      likePendingRef.current = false;
       setIsTogglingLike(false);
     }
   };
@@ -398,7 +393,7 @@ const PublicationDetails: React.FC = () => {
               aria-label="Лайк"
             >
               <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
-              {(pub.likes ?? []).length}
+              {likesCountUi}
             </button>
             <button
               type="button"
