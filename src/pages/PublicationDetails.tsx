@@ -42,6 +42,7 @@ const PublicationDetails: React.FC = () => {
   const [pub, setPub] = useState<Publication | null | undefined>(undefined);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
+  const [likedFallback, setLikedFallback] = useState(false);
   const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -69,6 +70,12 @@ const PublicationDetails: React.FC = () => {
   useEffect(() => {
     myMemberIdRef.current = myMemberId;
   }, [myMemberId]);
+
+  useEffect(() => {
+    if (!pub) return;
+    if (!myMemberId) return;
+    setLikedFallback((pub.likes ?? []).includes(myMemberId));
+  }, [myMemberId, pub]);
 
   useEffect(() => {
     if (!pub || pub === undefined || pub === null) return;
@@ -111,7 +118,7 @@ const PublicationDetails: React.FC = () => {
   const publishDateFormatted = format(new Date(pub.publishDate), 'dd MMM, yyyy', { locale: ru });
   const comments = [...(pub.comments ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
-  const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : false;
+  const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : likedFallback;
   const isAuthor = !!effectiveMemberId && effectiveMemberId === aid;
   const demoEmotionsByTopic: Record<string, string[]> = {
     'День рождения': ['Радость', 'Счастье', 'Восторг'],
@@ -158,7 +165,7 @@ const PublicationDetails: React.FC = () => {
       }
 
       const canOptimistic = !!effectiveMemberId;
-      const likedNow = canOptimistic ? (pub.likes ?? []).includes(effectiveMemberId as string) : false;
+      const likedNow = canOptimistic ? (pub.likes ?? []).includes(effectiveMemberId as string) : likedFallback;
 
       if (canOptimistic) {
         const mid = effectiveMemberId as string;
@@ -168,6 +175,9 @@ const PublicationDetails: React.FC = () => {
           const next = likedNow ? likes.filter(x => x !== mid) : (likes.includes(mid) ? likes : [...likes, mid]);
           return { ...prev, likes: next };
         });
+        setLikedFallback(!likedNow);
+      } else {
+        setLikedFallback(!likedNow);
       }
 
       const updated = likedNow ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);

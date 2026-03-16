@@ -5,11 +5,32 @@ import { currentSubscription, plans } from '@/data/mock-subscriptions';
 import { Check, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { isDemoMode } from '@/lib/demoMode';
 
 const StorePage: React.FC = () => {
   const navigate = useNavigate();
   const [paymentState, setPaymentState] = useState<null | 'processing' | 'success' | 'error'>(null);
   const currentPlan = plans.find(p => p.id === currentSubscription.planId)!;
+
+  if (!isDemoMode()) {
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+          <TopBar title="Подписка" onBack={() => navigate(-1)} light />
+          <div className="mx-auto max-w-full px-4 pt-10 sm:max-w-md md:max-w-2xl lg:max-w-4xl text-center">
+            <p className="text-sm font-medium text-[var(--proto-text)]">Раздел подписки будет доступен позже.</p>
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.classic.feed)}
+              className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] px-5 text-sm font-semibold text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+            >
+              На главную
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   const handleUpgrade = () => {
     setPaymentState('processing');

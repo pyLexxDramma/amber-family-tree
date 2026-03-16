@@ -9,6 +9,7 @@ import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { toast } from '@/hooks/use-toast';
+import { isDemoMode } from '@/lib/demoMode';
 
 type Rel = { type: string; memberId: string };
 
@@ -86,7 +87,9 @@ const ContactProfile: React.FC = () => {
   const parents = parentIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
   const children = childIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
   const displayName = member.nickname || `${member.firstName} ${member.lastName}`.trim();
-  const heroSrc = (member as { avatar?: string }).avatar || getPrototypeAvatarUrl(member.id);
+  const demo = isDemoMode();
+  const heroSrc = (member as { avatar?: string }).avatar || (demo ? getPrototypeAvatarUrl(member.id) : '');
+  const initials = displayName ? displayName.trim().slice(0, 2).toUpperCase() : 'U';
 
   const formatDate = (d: string) => {
     try {
@@ -108,7 +111,15 @@ const ContactProfile: React.FC = () => {
         <TopBar title={displayName} onBack={() => navigate(-1)} light />
         <div className="mx-auto max-w-full w-full flex-1 px-3 sm:px-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <div className="relative w-full" style={{ minHeight: '50vh' }}>
-            <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            {heroSrc ? (
+              <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC] flex items-center justify-center">
+                <div className="h-24 w-24 rounded-full bg-black/10 flex items-center justify-center text-[#6B6560] text-3xl font-semibold">
+                  {initials}
+                </div>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
               <p className="text-white/80 text-sm">

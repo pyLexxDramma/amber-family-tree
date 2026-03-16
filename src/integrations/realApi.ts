@@ -1,6 +1,14 @@
 import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse } from './api.types';
 import type { AppUser, Comment, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getJson, requestJson } from './request';
+import {
+  normalizeAppUser,
+  normalizeComment,
+  normalizeFamilyMember,
+  normalizeMediaItem,
+  normalizeMessage,
+  normalizePublication,
+} from './normalize';
 
 export const realApi: AngeloApi = {
   feed: {
@@ -11,28 +19,37 @@ export const realApi: AngeloApi = {
       if (params?.authorId) q.set('author_id', params.authorId);
       if (params?.topicTag) q.set('topic_tag', params.topicTag);
       const suffix = q.toString() ? `?${q}` : '';
-      return getJson<Publication[]>(`/feed${suffix}`);
+      const res = await getJson<unknown>(`/feed${suffix}`);
+      return (Array.isArray(res) ? res : []).map(normalizePublication);
     },
     async getById(id: string) {
-      return getJson<Publication | null>(`/feed/${id}`);
+      const res = await getJson<unknown>(`/feed/${id}`);
+      if (!res) return null;
+      return normalizePublication(res);
     },
     async addComment(publicationId: string, text: string) {
-      return requestJson<Comment>('POST', `/feed/${publicationId}/comments`, { text });
+      const res = await requestJson<unknown>('POST', `/feed/${publicationId}/comments`, { text });
+      return normalizeComment(res);
     },
     async addLike(publicationId: string) {
-      return requestJson<Publication>('POST', `/feed/${publicationId}/like`);
+      const res = await requestJson<unknown>('POST', `/feed/${publicationId}/like`);
+      return normalizePublication(res);
     },
     async removeLike(publicationId: string) {
-      return requestJson<Publication>('DELETE', `/feed/${publicationId}/like`);
+      const res = await requestJson<unknown>('DELETE', `/feed/${publicationId}/like`);
+      return normalizePublication(res);
     },
     async addCommentLike(publicationId: string, commentId: string) {
-      return requestJson<Comment>('POST', `/feed/${publicationId}/comments/${commentId}/like`);
+      const res = await requestJson<unknown>('POST', `/feed/${publicationId}/comments/${commentId}/like`);
+      return normalizeComment(res);
     },
     async removeCommentLike(publicationId: string, commentId: string) {
-      return requestJson<Comment>('DELETE', `/feed/${publicationId}/comments/${commentId}/like`);
+      const res = await requestJson<unknown>('DELETE', `/feed/${publicationId}/comments/${commentId}/like`);
+      return normalizeComment(res);
     },
     async updatePublication(publicationId: string, patch: { title?: string | null; text?: string | null }) {
-      return requestJson<Publication>('PATCH', `/feed/${publicationId}`, patch);
+      const res = await requestJson<unknown>('PATCH', `/feed/${publicationId}`, patch);
+      return normalizePublication(res);
     },
     async deletePublication(publicationId: string) {
       await requestJson<null>('DELETE', `/feed/${publicationId}`);
@@ -41,10 +58,13 @@ export const realApi: AngeloApi = {
   },
   family: {
     async listMembers() {
-      return getJson<FamilyMember[]>('/family/members');
+      const res = await getJson<unknown>('/family/members');
+      return (Array.isArray(res) ? res : []).map(normalizeFamilyMember);
     },
     async getMember(id: string) {
-      return getJson<FamilyMember | null>(`/family/members/${id}`);
+      const res = await getJson<unknown>(`/family/members/${id}`);
+      if (!res) return null;
+      return normalizeFamilyMember(res);
     },
   },
   auth: {
@@ -52,15 +72,23 @@ export const realApi: AngeloApi = {
       return requestJson<{ sent: boolean }>('POST', '/auth/send-code', { identifier });
     },
     async verify(identifier: string, code: string) {
-      return requestJson<{ access_token: string; token_type: string; user: AppUser }>('POST', '/auth/verify', { identifier, code });
+      const res = await requestJson<any>('POST', '/auth/verify', { identifier, code });
+      return {
+        access_token: String(res?.access_token ?? ''),
+        token_type: String(res?.token_type ?? 'bearer'),
+        user: normalizeAppUser(res?.user),
+      };
     },
     async me() {
-      return getJson<AppUser | null>('/auth/me');
+      const res = await getJson<any>('/auth/me');
+      if (!res) return null;
+      return normalizeAppUser(res);
     },
   },
   profile: {
     async getMyProfile() {
-      return getJson<FamilyMember>('/profile/me');
+      const res = await getJson<unknown>('/profile/me');
+      return normalizeFamilyMember(res);
     },
     async updateMyProfile(patch: Partial<FamilyMember>) {
       const payload: Record<string, unknown> = {};
@@ -69,10 +97,12 @@ export const realApi: AngeloApi = {
         const snake = key.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
         payload[snake] = value;
       }
-      return requestJson<FamilyMember>('PATCH', '/profile/me', payload);
+      const res = await requestJson<unknown>('PATCH', '/profile/me', payload);
+      return normalizeFamilyMember(res);
     },
     async listMyMedia() {
-      return getJson<MediaItem[]>('/profile/me/media');
+      const res = await getJson<unknown>('/profile/me/media');
+      return (Array.isArray(res) ? res : []).map(normalizeMediaItem);
     },
   },
   media: {
@@ -82,10 +112,12 @@ export const realApi: AngeloApi = {
   },
   messages: {
     async listWith(memberId: string) {
-      return getJson<Message[]>(`/messages/with/${memberId}`);
+      const res = await getJson<unknown>(`/messages/with/${memberId}`);
+      return (Array.isArray(res) ? res : []).map(normalizeMessage);
     },
     async sendTo(memberId: string, text: string) {
-      return requestJson<Message>('POST', `/messages/with/${memberId}`, { text });
+      const res = await requestJson<unknown>('POST', `/messages/with/${memberId}`, { text });
+      return normalizeMessage(res);
     },
   },
 };

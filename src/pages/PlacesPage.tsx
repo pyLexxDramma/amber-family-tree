@@ -8,6 +8,7 @@ import { mockMembers, currentUserId } from '@/data/mock-members';
 import { ArrowLeft, Send, UserMinus } from 'lucide-react';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import { Button } from '@/components/ui/button';
+import { isDemoMode } from '@/lib/demoMode';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,26 @@ const PlacesPage: React.FC = () => {
   const maxPlaces = currentPlan.maxPlaces;
   const occupyingMembers = mockMembers.slice(0, usedPlaces);
   const [freeSlotId, setFreeSlotId] = useState<string | null>(null);
+
+  if (!isDemoMode()) {
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+          <TopBar title="Места" onBack={() => navigate(-1)} light />
+          <div className="mx-auto max-w-full px-4 pt-10 sm:max-w-md md:max-w-2xl lg:max-w-4xl text-center">
+            <p className="text-sm font-medium text-[var(--proto-text)]">Управление местами будет доступно позже.</p>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] px-5 text-sm font-semibold text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+            >
+              Назад
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
