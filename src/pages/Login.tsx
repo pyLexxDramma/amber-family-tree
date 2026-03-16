@@ -22,9 +22,8 @@ const Login: React.FC = () => {
       await api.auth.sendCode(value.trim());
     } catch {
       setError('Не удалось отправить код');
-      return;
     }
-    navigate('/confirm-code', { state: { contact: value, mode: 'login' } });
+    navigate('/confirm-code', { state: { contact: value.trim(), mode: 'login' } });
   };
 
   return (
