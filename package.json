@@ -11,8 +11,10 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:stress": "vite --mode stress",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:demo": "vite build --mode stress",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
