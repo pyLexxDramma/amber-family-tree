@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { setDemoMode } from '@/lib/demoMode';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const DemoLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +17,10 @@ const DemoLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-center px-4 overflow-x-hidden">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-center px-4 overflow-x-hidden relative">
+      <div className="absolute top-4 right-4">
+        <BrandLogoCircle className="h-11 w-11 border-[#E5E1DC] bg-[#F0EDE8]" />
+      </div>
       <div className="w-full max-w-[360px]">
         <p className="text-center tracking-[0.35em] text-[#A39B8A] font-semibold text-2xl mb-2">ANGELO</p>
         <p className="text-center text-sm text-[#6B6560] mb-8">Войдите в семейный альбом</p>

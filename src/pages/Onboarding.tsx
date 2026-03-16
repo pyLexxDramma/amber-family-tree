@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Camera } from 'lucide-react';
 import { api } from '@/integrations/api';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
@@ -96,7 +97,10 @@ const Onboarding: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-background px-4 sm:px-6 pt-8 pb-8 overflow-x-hidden">
+    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-background px-4 sm:px-6 pt-8 pb-8 overflow-x-hidden relative">
+      <div className="absolute top-4 right-4">
+        <BrandLogoCircle className="h-11 w-11" />
+      </div>
       <div className="flex items-center gap-3 mb-6">
         <div className="flex rounded-full bg-foreground/15 p-1">
           <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">1 шаг</span>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronLeft, Send, User } from 'lucide-react';
+import { ChevronLeft, User } from 'lucide-react';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 export interface TopBarProps {
   title: string;
@@ -15,7 +16,6 @@ export interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({ title, subtitle, onBack, right, transparent, light, avatarUrl, sticky = true }) => {
   const headerClass = transparent ? 'bg-transparent' : light ? 'bg-card border-b border-border text-foreground' : 'app-header';
   const backClass = light ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-white/10 text-current hover:bg-white/20';
-  const rightClass = light ? 'text-muted-foreground hover:bg-muted' : 'text-current/70 hover:bg-white/10';
 
   return (
     <header
@@ -46,15 +46,8 @@ export const TopBar: React.FC<TopBarProps> = ({ title, subtitle, onBack, right, 
       </div>
 
       <div className="flex items-center gap-1 shrink-0">
-        {right ?? (
-          <button
-            type="button"
-            className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${rightClass}`}
-            aria-label="Поделиться"
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        )}
+        {right}
+        <BrandLogoCircle className={light ? 'bg-muted border-border' : 'bg-white/10 border-white/20'} />
       </div>
     </header>
   );

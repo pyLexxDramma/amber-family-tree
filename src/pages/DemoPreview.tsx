@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 type Slide = {
   title: string;
@@ -66,9 +67,12 @@ const DemoPreview: React.FC = () => {
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col overflow-x-hidden">
       <div className="px-4 pt-6 flex items-center justify-end">
-        <button type="button" onClick={() => navigate(ROUTES.demoLogin)} className="text-sm text-[#6B6560] font-medium">
-          Пропустить
-        </button>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => navigate(ROUTES.demoLogin)} className="text-sm text-[#6B6560] font-medium">
+            Пропустить
+          </button>
+          <BrandLogoCircle className="h-11 w-11 border-[#E5E1DC] bg-[#F0EDE8]" />
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">

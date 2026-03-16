@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +30,10 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-background px-4 sm:px-6 pt-6 overflow-x-hidden">
+    <div className="flex min-h-screen min-h-[100dvh] flex-col bg-background px-4 sm:px-6 pt-6 overflow-x-hidden relative">
+      <div className="absolute top-4 right-4">
+        <BrandLogoCircle className="h-11 w-11" />
+      </div>
       <button onClick={() => navigate(-1)} className="touch-target mb-10 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
         <ArrowLeft className="h-5 w-5" />
       </button>

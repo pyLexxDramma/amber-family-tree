@@ -65,11 +65,6 @@ const FamilyList: React.FC = () => {
           title="Семья"
           onBack={() => navigate(-1)}
           light
-          right={
-            <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[var(--proto-card)] border border-[var(--proto-border)] overflow-hidden">
-              <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="" className="h-7 w-7 object-contain" />
-            </div>
-          }
         />
         <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl">
           <div className="space-y-4">

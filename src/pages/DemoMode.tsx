@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { isDemoMode, setDemoMode } from '@/lib/demoMode';
 import { mockPublications } from '@/data/mock-publications';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const DEMO_VIDEO_ASSETS = import.meta.glob('../../_ref/Демо/**/*.{webm,mp4}', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const demoVideoUrl =
@@ -14,7 +15,10 @@ const DemoMode: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] overflow-x-hidden">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] overflow-x-hidden relative">
+      <div className="absolute top-4 right-4 z-10">
+        <BrandLogoCircle className="h-11 w-11 border-[#E5E1DC] bg-[#F0EDE8]" />
+      </div>
       <div className="mx-auto w-full max-w-3xl px-4 py-6">
         <div className="rounded-2xl bg-[#F0EDE8] border border-[#E5E1DC] p-5">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">

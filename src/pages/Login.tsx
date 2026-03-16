@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +28,10 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col px-4 pt-4 pb-8 overflow-x-hidden">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col px-4 pt-4 pb-8 overflow-x-hidden relative">
+      <div className="absolute top-4 right-4">
+        <BrandLogoCircle className="h-11 w-11 border-[#E5E1DC] bg-[#F0EDE8]" />
+      </div>
       <button
         onClick={() => navigate(-1)}
         className="flex items-center justify-center h-10 w-10 rounded-full text-[#333333] hover:bg-[#E5E1DC] transition-colors mb-8"

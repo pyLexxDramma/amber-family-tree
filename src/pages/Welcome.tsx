@@ -2,12 +2,16 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { setDemoMode } from '@/lib/demoMode';
+import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-center p-4 overflow-x-hidden">
+    <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-center p-4 overflow-x-hidden relative">
+      <div className="absolute top-4 right-4">
+        <BrandLogoCircle className="h-11 w-11 border-[#E5E1DC] bg-[#F0EDE8]" />
+      </div>
       <div className="w-full max-w-[320px] flex flex-col items-center gap-8">
         <div className="rounded-2xl bg-[#F0EDE8] border border-[#E5E1DC] px-8 py-6 text-center shadow-sm">
           <p className="font-brand text-4xl sm:text-5xl font-bold text-[#333333]">Angelo</p>
