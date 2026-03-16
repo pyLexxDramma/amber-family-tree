@@ -63,9 +63,19 @@ const Feed: React.FC = () => {
     try {
       const cur = items.find(p => p.id === pubId);
       const liked = cur ? (cur.likes ?? []).includes(myMemberId) : false;
+      setItems(prev => prev.map(p => {
+        if (p.id !== pubId) return p;
+        const likes = p.likes ?? [];
+        const nextLikes = liked ? likes.filter(x => x !== myMemberId) : (likes.includes(myMemberId) ? likes : [...likes, myMemberId]);
+        return { ...p, likes: nextLikes };
+      }));
       const updated = liked ? await api.feed.removeLike(pubId) : await api.feed.addLike(pubId);
       setItems(prev => prev.map(p => p.id === pubId ? updated : p));
     } catch {
+      try {
+        const fresh = await api.feed.getById(pubId);
+        if (fresh) setItems(prev => prev.map(p => p.id === pubId ? fresh : p));
+      } catch {}
       toast({ title: 'Не удалось поставить лайк' });
     } finally {
       setLikingIds(v => ({ ...v, [pubId]: false }));
