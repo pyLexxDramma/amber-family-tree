@@ -151,6 +151,7 @@ const Feed: React.FC = () => {
                       const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                         || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
                         || (isDemoMode() ? getPrototypeFeedPostPhotoByTopic(pub.topicTag).src : '');
+                      const photosCount = pub.media.filter(m => m.type === 'photo').length;
                       const aid = authorIdOf(pub);
                       const author = aid ? (memberMap.get(aid) ?? null) : null;
                       return (
@@ -160,11 +161,16 @@ const Feed: React.FC = () => {
                           onClick={() => navigate(ROUTES.classic.publication(pub.id))}
                           className="w-full rounded-3xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors"
                         >
-                          <div className="aspect-[4/3] bg-[var(--proto-border)]">
+                          <div className="relative aspect-[4/3] bg-[var(--proto-border)]">
                             {coverSrc ? (
                               <img src={coverSrc} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
+                            )}
+                            {photosCount > 1 && (
+                              <div className="absolute top-2 right-2 rounded-full bg-black/55 text-white text-xs font-semibold px-2.5 py-1">
+                                1/{photosCount}
+                              </div>
                             )}
                           </div>
                           <div className="p-4">

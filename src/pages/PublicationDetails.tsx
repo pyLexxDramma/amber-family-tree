@@ -12,7 +12,7 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { Heart, MoreVertical, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, MoreVertical, Star } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { isDemoMode } from '@/lib/demoMode';
@@ -35,6 +35,16 @@ const initialsOf = (name: string) => {
   return (a + b).toUpperCase() || '?';
 };
 
+const compareMedia = (a: { name?: string; url?: string; thumbnail?: string }, b: { name?: string; url?: string; thumbnail?: string }) => {
+  const an = (a.name || '').toLowerCase();
+  const bn = (b.name || '').toLowerCase();
+  const byName = an.localeCompare(bn);
+  if (byName) return byName;
+  const au = (a.url || a.thumbnail || '').toLowerCase();
+  const bu = (b.url || b.thumbnail || '').toLowerCase();
+  return au.localeCompare(bu);
+};
+
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -45,6 +55,9 @@ const PublicationDetails: React.FC = () => {
   const [likedUi, setLikedUi] = useState(false);
   const [likesCountUi, setLikesCountUi] = useState(0);
   const likePendingRef = useRef(false);
+  const photoScrollerRef = useRef<HTMLDivElement | null>(null);
+  const rafScrollRef = useRef<number | null>(null);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -67,6 +80,12 @@ const PublicationDetails: React.FC = () => {
     api.feed.getById(id).then(setPub);
     api.family.listMembers().then(setMembers);
     api.profile.getMyProfile().then(me => setMyMemberId(me.id)).catch(() => {});
+  }, [id]);
+
+  useEffect(() => {
+    setPhotoIdx(0);
+    const el = photoScrollerRef.current;
+    if (el) el.scrollTo({ left: 0 });
   }, [id]);
 
   useEffect(() => {
@@ -106,6 +125,7 @@ const PublicationDetails: React.FC = () => {
   const author = memberMap.get(aid) ?? getMember(aid);
   const photos = pub.media.filter(m => m.type === 'photo');
   const otherMedia = pub.media.filter(m => m.type !== 'photo');
+  const photoItems = [...photos].sort(compareMedia);
   const demo = isDemoMode();
   const authorName = memberDisplayName(author ?? null);
   const authorAvatarSrc = author && (author as { avatar?: string }).avatar
@@ -249,6 +269,13 @@ const PublicationDetails: React.FC = () => {
     }
   };
 
+  const scrollToPhoto = (idx: number) => {
+    const el = photoScrollerRef.current;
+    if (!el) return;
+    const w = el.clientWidth || 1;
+    el.scrollTo({ left: idx * w, behavior: 'smooth' });
+  };
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
@@ -291,31 +318,74 @@ const PublicationDetails: React.FC = () => {
             </div>
           </button>
 
-          <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-            {mainPhoto.src ? (
-              <img
-                src={mainPhoto.src}
-                alt=""
-                className="w-full h-full object-cover"
-                style={{ objectPosition: mainPhoto.objectPosition }}
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
-            )}
-          </div>
-
-          {photos.length > 1 && (
-            <div>
-              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Фото:</p>
-              <div className="grid grid-cols-3 gap-2">
-                {photos.slice(1, 10).map((m) => (
-                  <div key={m.id} className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-square">
-                    <img src={m.thumbnail || m.url} alt="" className="w-full h-full object-cover" />
+          {photoItems.length > 1 ? (
+            <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+              <div
+                ref={photoScrollerRef}
+                className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                onScroll={() => {
+                  const el = photoScrollerRef.current;
+                  if (!el) return;
+                  if (rafScrollRef.current != null) cancelAnimationFrame(rafScrollRef.current);
+                  rafScrollRef.current = requestAnimationFrame(() => {
+                    const w = el.clientWidth || 1;
+                    const next = Math.max(0, Math.min(photoItems.length - 1, Math.round(el.scrollLeft / w)));
+                    setPhotoIdx(next);
+                  });
+                }}
+              >
+                {photoItems.map((m) => (
+                  <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
+                    <img src={m.url} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
-              {photos.length > 10 && (
-                <p className="mt-2 text-xs text-[var(--proto-text-muted)]">Ещё {photos.length - 10} фото</p>
+
+              <div className="absolute top-2 right-2 rounded-full bg-black/55 text-white text-xs font-semibold px-2.5 py-1">
+                {photoIdx + 1}/{photoItems.length}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => scrollToPhoto(Math.max(0, photoIdx - 1))}
+                className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors"
+                aria-label="Предыдущее фото"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToPhoto(Math.min(photoItems.length - 1, photoIdx + 1))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors"
+                aria-label="Следующее фото"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 px-3">
+                {photoItems.map((m, i) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => scrollToPhoto(i)}
+                    className={`h-1.5 rounded-full transition-all ${i === photoIdx ? 'w-6 bg-white/90' : 'w-2.5 bg-white/45 hover:bg-white/70'}`}
+                    aria-label={`Фото ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+              {mainPhoto.src ? (
+                <img
+                  src={mainPhoto.src}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: mainPhoto.objectPosition }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
               )}
             </div>
           )}
