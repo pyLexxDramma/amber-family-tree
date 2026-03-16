@@ -21,7 +21,7 @@ const REF_ASSETS = import.meta.glob(
 const publicDemoUrl = (file: string) => `${import.meta.env.BASE_URL}demo/media/${encodeURIComponent(file)}`;
 const refUrl = (file: string) => REF_ASSETS[`${REF_DIR}/${file}`] ?? publicDemoUrl(file);
 
-export const myMediaDemoItems: MyMediaItem[] = [
+const baseMediaItems: MyMediaItem[] = [
   { id: 'mm1', type: 'photo', src: refUrl('Фото 1.jpg'), title: 'Лизе 1 год!', eventDate: '2011-08-17', year: '2011', category: 'Семья', publicationId: 'p1' },
   { id: 'mm2', type: 'photo', src: refUrl('Фото 2.png'), title: 'Первые шаги Лизы', eventDate: '2011-07-04', year: '2011', category: 'Семья', publicationId: 'p2' },
   { id: 'mm3', type: 'photo', src: refUrl('Фото 3.png'), title: 'Новый 2014-й: первые праздники на новой месте', eventDate: '2013-12-31', year: '2013', category: 'Праздник', publicationId: 'p3' },
@@ -32,3 +32,29 @@ export const myMediaDemoItems: MyMediaItem[] = [
   { id: 'mm7', type: 'photo', src: refUrl('Фото7.png'), title: 'Наша гордость', eventDate: '2024-05-19', year: '2024', category: 'Семья', publicationId: 'p7' },
   { id: 'mm8', type: 'video', src: refUrl('Фото 1.jpg'), title: 'Лиза поздравляет бабушку с 8 Марта)', eventDate: '2017-03-07', year: '2017', category: 'Праздник', publicationId: 'p9' },
 ];
+
+const STRESS = String(import.meta.env.VITE_USE_MOCK_API ?? '').toLowerCase() === 'true';
+const STRESS_PHOTOS = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
+const STRESS_CATEGORIES = ['Семья', 'Праздник', 'Путешествие'];
+const STRESS_COUNT = 200;
+
+const stressItems: MyMediaItem[] = STRESS
+  ? Array.from({ length: STRESS_COUNT }, (_, i) => {
+      const base = baseMediaItems[i % baseMediaItems.length];
+      const year = `${2011 + (i % 14)}`;
+      return {
+        ...base,
+        id: `mm-stress-${i}`,
+        type: 'photo' as const,
+        src: refUrl(STRESS_PHOTOS[i % STRESS_PHOTOS.length]),
+        thumbnail: refUrl(STRESS_PHOTOS[i % STRESS_PHOTOS.length]),
+        title: `Фото ${i + 1}`,
+        eventDate: `${year}-${String((i % 12) + 1).padStart(2, '0')}-15`,
+        year,
+        category: STRESS_CATEGORIES[i % STRESS_CATEGORIES.length],
+        publicationId: `stress-${i}`,
+      };
+    })
+  : [];
+
+export const myMediaDemoItems: MyMediaItem[] = [...baseMediaItems, ...stressItems];
