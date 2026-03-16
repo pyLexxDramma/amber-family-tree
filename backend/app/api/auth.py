@@ -1,3 +1,4 @@
+import logging
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -21,6 +22,7 @@ from app.schemas.auth import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 REFERENCE_EMAIL = "alina.fadeeva@angelo-demo.ru"
 REFERENCE_PROFILE = {
@@ -89,8 +91,8 @@ async def verify(
         if seed:
             try:
                 await seed_reference_user(db, user, member)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.exception("seed_reference_user failed for new user: %s", e)
     else:
         await db.commit()
         await db.refresh(user)
@@ -105,8 +107,8 @@ async def verify(
                 try:
                     await seed_reference_user(db, user, member)
                     await db.refresh(member)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.exception("seed_reference_user failed for existing user: %s", e)
 
     if not member:
         raise HTTPException(
