@@ -9,7 +9,7 @@ import { isDemoMode } from '@/lib/demoMode';
 import {
   getPrototypeFeedPostPhotoByTopic,
 } from '@/lib/prototype-assets';
-import { Search, Heart, MessageCircle, LineChart } from 'lucide-react';
+import { Search, MessageCircle, LineChart } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 
 const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
@@ -171,10 +171,6 @@ const Feed: React.FC = () => {
                             <p className="text-sm font-semibold text-[var(--proto-text)]">{memberDisplayName(author)}</p>
                             <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">{eventDateOf(pub)}</p>
                             <div className="flex items-center gap-4 text-sm text-[var(--proto-text-muted)] mt-3">
-                              <span className="inline-flex items-center gap-1">
-                                <Heart className="h-4 w-4" />
-                                {(pub.likes ?? []).length}
-                              </span>
                               <span className="inline-flex items-center gap-1">
                                 <MessageCircle className="h-4 w-4" />
                                 {(pub.comments ?? []).length}
