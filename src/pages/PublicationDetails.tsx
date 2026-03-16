@@ -49,18 +49,6 @@ const PublicationDetails: React.FC = () => {
   const [milestone, setMilestone] = useState(false);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
-  const ensureMyMemberId = async () => {
-    if (myMemberId) return myMemberId;
-    try {
-      const me = await api.profile.getMyProfile();
-      setMyMemberId(me.id);
-      myMemberIdRef.current = me.id;
-      return me.id;
-    } catch {
-      return null;
-    }
-  };
-
   useEffect(() => {
     if (!id) {
       setPub(null);
@@ -155,18 +143,25 @@ const PublicationDetails: React.FC = () => {
     if (isTogglingLike) return;
     setIsTogglingLike(true);
     try {
-      const mid = await ensureMyMemberId();
-      if (!mid) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) {
         toast({ title: 'Нужно войти, чтобы поставить лайк' });
         return;
       }
-      const likedNow = (pub.likes ?? []).includes(mid);
-      setPub(prev => {
-        if (!prev) return prev;
-        const likes = prev.likes ?? [];
-        const next = likedNow ? likes.filter(x => x !== mid) : (likes.includes(mid) ? likes : [...likes, mid]);
-        return { ...prev, likes: next };
-      });
+
+      const canOptimistic = !!effectiveMemberId;
+      const likedNow = canOptimistic ? (pub.likes ?? []).includes(effectiveMemberId as string) : false;
+
+      if (canOptimistic) {
+        const mid = effectiveMemberId as string;
+        setPub(prev => {
+          if (!prev) return prev;
+          const likes = prev.likes ?? [];
+          const next = likedNow ? likes.filter(x => x !== mid) : (likes.includes(mid) ? likes : [...likes, mid]);
+          return { ...prev, likes: next };
+        });
+      }
+
       const updated = likedNow ? await api.feed.removeLike(pub.id) : await api.feed.addLike(pub.id);
       setPub(updated);
       platform.hapticFeedback('light');
