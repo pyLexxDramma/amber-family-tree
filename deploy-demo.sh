@@ -12,9 +12,11 @@ cd "$PROJECT_DIR"
 echo ">>> git pull"
 git pull
 
-echo ">>> frontend: npm run build:demo"
+echo ">>> frontend: build demo (mocks + stress)"
 npm ci --silent 2>/dev/null || npm install
-npm run build:demo
+export VITE_STRESS_MOCK=true
+export VITE_USE_MOCK_API=true
+npm run build
 
 echo ">>> copy dist to $WEB_ROOT"
 sudo mkdir -p "$WEB_ROOT"
