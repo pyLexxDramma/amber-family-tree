@@ -36,7 +36,7 @@ const ConfirmCode: React.FC = () => {
       else navigate(ROUTES.classic.feed);
     } catch (e) {
       const msg = e instanceof ApiError
-        ? (e.status === 404 || e.status === 502 ? 'Сервер недоступен. Проверьте бэкенд и nginx.' : e.status >= 500 ? f'Ошибка сервера {e.status}. Проверьте логи бэкенда.' : `Ошибка ${e.status}`)
+        ? (e.status === 404 || e.status === 502 ? 'Сервер недоступен. Проверьте бэкенд и nginx.' : e.status >= 500 ? `Ошибка сервера ${e.status}. Проверьте логи бэкенда.` : `Ошибка ${e.status}`)
         : 'Неверный код или ошибка сервера';
       setError(msg);
     } finally {
