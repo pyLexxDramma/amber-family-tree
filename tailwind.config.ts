@@ -15,8 +15,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Gatchina'", "'Inter'", "system-ui", "sans-serif"],
-        serif: ["'Playfair Display'", "Georgia", "serif"],
+        sans: ["'Nunito Sans'", "'Rubik'", "system-ui", "sans-serif"],
+        serif: ["'Nunito Sans'", "'Rubik'", "system-ui", "sans-serif"],
+        brand: ["'Nunito Sans'", "'Pacifico'", "'Rubik'", "system-ui", "sans-serif"],
       },
       fontSize: {
         "xs": ["0.8125rem", { lineHeight: "1.4" }],
