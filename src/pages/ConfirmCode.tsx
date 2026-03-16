@@ -32,7 +32,7 @@ const ConfirmCode: React.FC = () => {
       localStorage.setItem('token', res.access_token);
       setDemoMode(false);
       if (mode === 'register') navigate('/onboarding');
-      else navigate(ROUTES.classic.tree);
+      else navigate(ROUTES.classic.feed);
     } catch {
       setError('Неверный код или ошибка сервера');
     } finally {
