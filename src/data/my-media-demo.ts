@@ -36,7 +36,7 @@ const baseMediaItems: MyMediaItem[] = [
 const STRESS = String(import.meta.env.VITE_USE_MOCK_API ?? '').toLowerCase() === 'true';
 const STRESS_PHOTOS = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
 const STRESS_CATEGORIES = ['Семья', 'Праздник', 'Путешествие'];
-const STRESS_COUNT = 200;
+const STRESS_COUNT = 250;
 
 const stressItems: MyMediaItem[] = STRESS
   ? Array.from({ length: STRESS_COUNT }, (_, i) => {

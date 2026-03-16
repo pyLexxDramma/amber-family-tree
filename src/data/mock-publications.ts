@@ -198,25 +198,30 @@ const basePublications: Publication[] = [
 
 const STRESS = String(import.meta.env.VITE_USE_MOCK_API ?? '').toLowerCase() === 'true';
 const STRESS_PHOTO_FILES = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
-const STRESS_AUTHOR_IDS = ['m1', 'm2', 'm3', 'm4', 'm5'];
+const REF_PROFILE_ID = 'm4';
 const STRESS_TOPICS = ['Праздники', 'День рождения', 'Будни', 'Путешествия', 'Рецепты', 'Истории'];
-const STRESS_COUNT = 200;
+const STRESS_COUNT = 250;
 
 const stressPublications: Publication[] = STRESS
   ? Array.from({ length: STRESS_COUNT }, (_, i) => {
       const base = basePublications[i % basePublications.length];
       const phFile = STRESS_PHOTO_FILES[i % STRESS_PHOTO_FILES.length];
+      const participants = [REF_PROFILE_ID, 'm3', 'm5', 'm1', 'm2'].slice(0, (i % 4) + 2);
+      const hasComments = i % 7 === 0;
+      const comments = hasComments
+        ? [{ id: `c-stress-${i}`, authorId: 'm3', text: 'Отличное фото!', createdAt: `${2025}-01-${String((i % 28) + 1).padStart(2, '0')}T12:00:00Z`, likes: [] }]
+        : [];
       return {
         ...base,
         id: `stress-${i}`,
-        authorId: STRESS_AUTHOR_IDS[i % STRESS_AUTHOR_IDS.length],
+        authorId: REF_PROFILE_ID,
         publishDate: `${2024 - Math.floor(i / 24)}-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
         eventDate: `${2020 + (i % 5)}-${String((i % 12) + 1).padStart(2, '0')}-15`,
         media: [photo(1000 + i, phFile, `Фото ${i + 1}`)],
-        participantIds: STRESS_AUTHOR_IDS.slice(0, (i % 3) + 2),
+        participantIds: participants,
         topicTag: STRESS_TOPICS[i % STRESS_TOPICS.length],
-        likes: [],
-        comments: [],
+        likes: i % 5 === 0 ? ['m3', 'm2'] : [],
+        comments,
       };
     })
   : [];
