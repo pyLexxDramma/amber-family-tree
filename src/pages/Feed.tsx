@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { currentUserId } from '@/data/mock-members';
 import { api } from '@/integrations/api';
+import { isDemoMode } from '@/lib/demoMode';
 import {
   getPrototypeFeedPostPhotoByTopic,
 } from '@/lib/prototype-assets';
@@ -149,7 +150,7 @@ const Feed: React.FC = () => {
                     {sectionItems.map((pub) => {
                       const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                         || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
-                        || getPrototypeFeedPostPhotoByTopic(pub.topicTag).src;
+                        || (isDemoMode() ? getPrototypeFeedPostPhotoByTopic(pub.topicTag).src : '');
                       const aid = authorIdOf(pub);
                       const author = aid ? (memberMap.get(aid) ?? null) : null;
                       return (
@@ -160,7 +161,11 @@ const Feed: React.FC = () => {
                           className="w-full rounded-3xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors"
                         >
                           <div className="aspect-[4/3] bg-[var(--proto-border)]">
-                            <img src={coverSrc} alt="" className="w-full h-full object-cover" />
+                            {coverSrc ? (
+                              <img src={coverSrc} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
+                            )}
                           </div>
                           <div className="p-4">
                             <p className="text-sm font-semibold text-[var(--proto-text)]">{memberDisplayName(author)}</p>

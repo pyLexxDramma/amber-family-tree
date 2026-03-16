@@ -28,6 +28,7 @@ const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: st
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
 
 function buildEvents(pubs: Publication[]) {
+  const demo = isDemoMode();
   return pubs.map(p => ({
     id: p.id,
     date: eventDateOf(p),
@@ -41,7 +42,7 @@ function buildEvents(pubs: Publication[]) {
     thumb: p.media.find(m => m.type === 'photo')?.thumbnail
       || p.media.find(m => m.type === 'photo')?.url
       || p.media.find(m => m.thumbnail)?.thumbnail
-      || getPrototypePublicationPhotoByTopic(p.topicTag).src,
+      || (demo ? getPrototypePublicationPhotoByTopic(p.topicTag).src : ''),
   }));
 }
 

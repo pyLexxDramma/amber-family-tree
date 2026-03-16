@@ -28,6 +28,13 @@ const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; 
 const memberDisplayName = (m: { firstName?: string; first_name?: string; lastName?: string; last_name?: string; nickname?: string } | null) =>
   m ? ((m as { nickname?: string }).nickname || `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name}`.trim() || 'Автор') : 'Автор';
 
+const initialsOf = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const a = parts[0]?.[0] ?? '';
+  const b = parts[1]?.[0] ?? '';
+  return (a + b).toUpperCase() || '?';
+};
+
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -88,13 +95,15 @@ const PublicationDetails: React.FC = () => {
   const author = memberMap.get(aid) ?? getMember(aid);
   const photos = pub.media.filter(m => m.type === 'photo');
   const otherMedia = pub.media.filter(m => m.type !== 'photo');
+  const demo = isDemoMode();
+  const authorName = memberDisplayName(author ?? null);
   const authorAvatarSrc = author && (author as { avatar?: string }).avatar
     ? (author as { avatar: string }).avatar
-    : getPrototypeAvatar(aid, currentUserId).src;
+    : (demo ? getPrototypeAvatar(aid, currentUserId).src : '');
   const coverSrc = photos[0]?.url || otherMedia.find(m => m.thumbnail)?.thumbnail;
   const mainPhoto = coverSrc
     ? { src: coverSrc, objectPosition: 'center center' as const }
-    : getPrototypePublicationPhotoByTopic(pub.topicTag);
+    : (demo ? getPrototypePublicationPhotoByTopic(pub.topicTag) : { src: '', objectPosition: 'center center' as const });
   const pids = participantIdsOf(pub).slice(0, 6);
   const participants = pids.map(pid => memberMap.get(pid) ?? getMember(pid)).filter(Boolean);
   const tags = [pub.topicTag].filter(Boolean);
@@ -104,7 +113,6 @@ const PublicationDetails: React.FC = () => {
   const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
   const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : false;
   const isAuthor = !!effectiveMemberId && effectiveMemberId === aid;
-  const demo = isDemoMode();
   const demoEmotionsByTopic: Record<string, string[]> = {
     'День рождения': ['Радость', 'Счастье', 'Восторг'],
     'Праздники': ['Радость', 'Тепло', 'Любовь'],
@@ -257,14 +265,20 @@ const PublicationDetails: React.FC = () => {
             className="flex items-center gap-3 w-full text-left"
           >
             <div className="h-10 w-10 rounded-full overflow-hidden bg-[var(--proto-card)] shrink-0">
-              <img
-                src={authorAvatarSrc}
-                alt=""
-                className="h-full w-full object-cover"
-              />
+              {authorAvatarSrc ? (
+                <img
+                  src={authorAvatarSrc}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-[#E5E1DC] text-[#6B6560] font-semibold text-sm">
+                  {initialsOf(authorName)}
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[var(--proto-text)] text-sm">{memberDisplayName(author ?? null)}</p>
+              <p className="font-semibold text-[var(--proto-text)] text-sm">{authorName}</p>
               <p className="text-xs text-[var(--proto-text-muted)] flex items-center gap-1">
                 <span>{publishDateFormatted}</span>
                 {pub.place && <><span>·</span><span>{pub.place}</span></>}
@@ -273,12 +287,16 @@ const PublicationDetails: React.FC = () => {
           </button>
 
           <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-            <img
-              src={mainPhoto.src}
-              alt=""
-              className="w-full h-full object-cover"
-              style={{ objectPosition: mainPhoto.objectPosition }}
-            />
+            {mainPhoto.src ? (
+              <img
+                src={mainPhoto.src}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{ objectPosition: mainPhoto.objectPosition }}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
+            )}
           </div>
 
           {photos.length > 1 && (
@@ -405,7 +423,8 @@ const PublicationDetails: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 {participants.map((p) => {
                   const pid = p!.id;
-                  const avSrc = (p as { avatar?: string }).avatar ?? getPrototypeAvatar(pid, currentUserId).src;
+                  const avSrc = (p as { avatar?: string }).avatar ?? (demo ? getPrototypeAvatar(pid, currentUserId).src : '');
+                  const nm = memberDisplayName(p);
                   return (
                   <button
                     key={pid}
@@ -414,13 +433,19 @@ const PublicationDetails: React.FC = () => {
                     className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--proto-card)] text-[var(--proto-text-muted)] text-xs font-medium border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
                   >
                     <span className="h-6 w-6 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
-                      <img
-                        src={avSrc}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
+                      {avSrc ? (
+                        <img
+                          src={avSrc}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span className="h-full w-full flex items-center justify-center bg-[#E5E1DC] text-[#6B6560] font-semibold text-[10px]">
+                          {initialsOf(nm)}
+                        </span>
+                      )}
                     </span>
-                    {memberDisplayName(p)}
+                    {nm}
                   </button>
                   );
                 })}
@@ -441,7 +466,7 @@ const PublicationDetails: React.FC = () => {
                     const timeAgo = createdAt ? formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: ru }) : null;
                     const avatarSrc = authorId && (memberMap.get(authorId) as { avatar?: string } | undefined)?.avatar
                       ? (memberMap.get(authorId) as { avatar: string }).avatar
-                      : (authorId ? getPrototypeAvatar(authorId, currentUserId).src : '');
+                      : (authorId ? (demo ? getPrototypeAvatar(authorId, currentUserId).src : '') : '');
                     const commentLikes = c.likes ?? [];
                     const isCommentLiked = myMemberId ? commentLikes.includes(myMemberId) : false;
                     return (
@@ -451,11 +476,17 @@ const PublicationDetails: React.FC = () => {
                           onClick={() => authorId && navigate(ROUTES.classic.profile(authorId))}
                           className="h-9 w-9 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
                         >
-                          <img
-                            src={avatarSrc}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="h-full w-full flex items-center justify-center bg-[#E5E1DC] text-[#6B6560] font-semibold text-xs">
+                              {initialsOf(memberDisplayName(author))}
+                            </span>
+                          )}
                         </button>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[var(--proto-text)]">

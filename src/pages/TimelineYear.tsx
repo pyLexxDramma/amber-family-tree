@@ -7,6 +7,7 @@ import { api } from '@/integrations/api';
 import type { Publication } from '@/types';
 import { getPrototypeFeedPostPhotoByTopic } from '@/lib/prototype-assets';
 import { getMilestoneIds } from '@/lib/milestones';
+import { isDemoMode } from '@/lib/demoMode';
 
 const publishDateOf = (p: Publication) => (p as { publishDate?: string; publish_date?: string }).publishDate ?? (p as { publish_date?: string }).publish_date ?? '';
 const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?: string }).eventDate ?? (p as { event_date?: string }).event_date ?? (publishDateOf(p) ? publishDateOf(p).slice(0, 10) : '');
@@ -51,7 +52,7 @@ const TimelineYear: React.FC = () => {
             {list.map((pub) => {
               const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                 || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
-                || getPrototypeFeedPostPhotoByTopic(pub.topicTag).src;
+                || (isDemoMode() ? getPrototypeFeedPostPhotoByTopic(pub.topicTag).src : '');
               return (
                 <button
                   key={pub.id}
@@ -60,7 +61,11 @@ const TimelineYear: React.FC = () => {
                   className="w-full rounded-3xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors"
                 >
                   <div className="aspect-[4/3] bg-[var(--proto-border)]">
-                    <img src={coverSrc} alt="" className="w-full h-full object-cover" />
+                    {coverSrc ? (
+                      <img src={coverSrc} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
+                    )}
                   </div>
                   <div className="p-4">
                     <p className="text-xs text-[var(--proto-text-muted)]">{eventDateOf(pub)}</p>

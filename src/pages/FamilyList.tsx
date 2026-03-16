@@ -24,6 +24,13 @@ function getRelationshipLabel(member: FamilyMember, currentId: string): string {
 const memberName = (m: FamilyMember & { first_name?: string; last_name?: string }) =>
   `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name ?? ''} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name ?? ''}`.trim();
 
+const initials = (full: string) => {
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  const a = parts[0]?.[0] ?? '';
+  const b = parts[1]?.[0] ?? '';
+  return (a + b).toUpperCase() || '?';
+};
+
 const norm = (m: FamilyMember & { first_name?: string; last_name?: string; avatar?: string; is_active?: boolean; relations?: { memberId?: string; member_id?: string; type: string }[] }) => ({
   ...m,
   firstName: (m as { firstName?: string }).firstName ?? m.first_name ?? '',
@@ -164,8 +171,9 @@ const FamilyList: React.FC = () => {
                     const mn = norm(m);
                     const isCurrent = m.id === myId;
                     const relationLabel = getRelationshipLabel(mn, myId);
-                    const avatarSrc = (m as { avatar?: string }).avatar ?? getPrototypeAvatarForMember(mn, myId).src;
+                    const avatarSrc = (m as { avatar?: string }).avatar ?? (isDemoMode() ? getPrototypeAvatarForMember(mn, myId).src : '');
                     const isActive = m.isActive ?? (m as { is_active?: boolean }).is_active ?? true;
+                    const full = memberName(m) || 'Участник';
 
                     return (
                       <button
@@ -177,14 +185,20 @@ const FamilyList: React.FC = () => {
                         }`}
                       >
                         <div className="h-12 w-12 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
-                          <img
-                            src={avatarSrc}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-[#E5E1DC] text-[#6B6560] font-semibold">
+                              {initials(full)}
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-[var(--proto-text)] truncate">{memberName(m) || 'Участник'}</p>
+                          <p className="font-semibold text-[var(--proto-text)] truncate">{full}</p>
                           <p className="text-sm text-[var(--proto-text-muted)] truncate">{relationLabel}</p>
                         </div>
                       </button>
