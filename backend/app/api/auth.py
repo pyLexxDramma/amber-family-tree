@@ -31,6 +31,7 @@ REFERENCE_PROFILE = {
     "birth_date": "1985-09-20",
     "city": "Москва",
     "about": "Мама Елизаветы. Любит сохранять семейные истории и тёплые моменты.",
+    "avatar": "https://i.pravatar.cc/300?u=alina",
     "role": "admin",
     "generation": 2,
 }
@@ -95,11 +96,7 @@ async def verify(
         await db.refresh(user)
         if user.member_id:
             member = await db.get(FamilyMember, user.member_id)
-            if (
-                member
-                and body.identifier.strip().lower() == REFERENCE_EMAIL
-                and not member.about
-            ):
+            if member and body.identifier.strip().lower() == REFERENCE_EMAIL:
                 for k, v in REFERENCE_PROFILE.items():
                     setattr(member, k, v)
                 await db.commit()
