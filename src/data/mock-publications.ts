@@ -6,7 +6,8 @@ const REF_ASSETS = import.meta.glob(
   { eager: true, import: 'default', query: '?url' },
 ) as Record<string, string>;
 
-const refUrl = (file: string) => REF_ASSETS[`${REF_DIR}/${file}`] ?? '';
+const publicDemoUrl = (file: string) => `${import.meta.env.BASE_URL}demo/media/${encodeURIComponent(file)}`;
+const refUrl = (file: string) => REF_ASSETS[`${REF_DIR}/${file}`] ?? publicDemoUrl(file);
 
 const photo = (id: number, file: string, name: string): MediaItem => ({
   id: `ph${id}`,

@@ -7,7 +7,8 @@ import { mockPublications } from '@/data/mock-publications';
 const DEMO_VIDEO_ASSETS = import.meta.glob('../../_ref/Демо/**/*.{webm,mp4}', { eager: true, import: 'default', query: '?url' }) as Record<string, string>;
 const demoVideoUrl =
   DEMO_VIDEO_ASSETS['../../_ref/Демо/Медиа для демо аккаунта + описание/Медиа для демо аккаунта + описание/Демо от маркетологов ZDES.mp4']
-  ?? DEMO_VIDEO_ASSETS['../../_ref/Демо/Демо от маркетологов ZDES.webm'];
+  ?? DEMO_VIDEO_ASSETS['../../_ref/Демо/Демо от маркетологов ZDES.webm']
+  ?? `${import.meta.env.BASE_URL}demo/media/${encodeURIComponent('Демо от маркетологов ZDES.mp4')}`;
 
 const DemoMode: React.FC = () => {
   const navigate = useNavigate();
