@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { ROUTES } from '@/constants/routes';
-import { Video } from 'lucide-react';
+import { Mic, Video } from 'lucide-react';
 import type { MediaItem, MediaType } from '@/types';
 import { api } from '@/integrations/api';
 import { requestJson } from '@/integrations/request';
 import { getMaxBytesForContentType } from '@/lib/uploadLimits';
 
-type FilterType = 'all' | 'photo' | 'video';
+type FilterType = 'all' | 'photo' | 'video' | 'audio';
 type CategoryFilter = 'popular' | 'collection' | 'family';
 
 const categoryFilters: { id: CategoryFilter; label: string }[] = [
@@ -48,6 +48,7 @@ const MyMedia: React.FC = () => {
     let list = items;
     if (filter === 'photo') list = list.filter(m => m.type === 'photo');
     if (filter === 'video') list = list.filter(m => m.type === 'video');
+    if (filter === 'audio') list = list.filter(m => m.type === 'audio');
     if (categoryFilter === 'family') list = list.filter(m => m.category === 'Семья');
     if (categoryFilter === 'collection') list = list.filter(m => m.category === 'Путешествие' || m.category === 'Праздник');
     return list;
@@ -153,7 +154,7 @@ const MyMedia: React.FC = () => {
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,video/*"
+          accept="image/*,video/*,audio/*"
           className="hidden"
           onChange={e => {
             const files = e.currentTarget.files;
@@ -199,7 +200,7 @@ const MyMedia: React.FC = () => {
           </div>
 
           <div className="flex gap-6 border-b border-[var(--proto-border)] mb-4">
-            {(['all', 'photo', 'video'] as const).map(t => (
+            {(['all', 'photo', 'video', 'audio'] as const).map(t => (
               <button
                 key={t}
                 type="button"
@@ -208,7 +209,7 @@ const MyMedia: React.FC = () => {
                   filter === t ? 'text-[var(--proto-text)] border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-transparent'
                 }`}
               >
-                {t === 'all' ? 'Все' : t === 'photo' ? 'Фото' : 'Видео'}
+                {t === 'all' ? 'Все' : t === 'photo' ? 'Фото' : t === 'video' ? 'Видео' : 'Аудио'}
               </button>
             ))}
           </div>
@@ -222,14 +223,30 @@ const MyMedia: React.FC = () => {
                 className={`break-inside-avoid w-full rounded-xl overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors text-left block ${aspectClasses[index % aspectClasses.length]}`}
               >
                 <div className="relative w-full h-full min-h-[140px]">
-                  <img
-                    src={item.url}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  {item.type !== 'audio' ? (
+                    <img
+                      src={item.thumbnail || item.url}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="absolute inset-0 w-full h-full"
+                      style={{
+                        backgroundImage: item.thumbnail ? `url(${item.thumbnail})` : undefined,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                  )}
                   {item.type === 'video' && (
                     <span className="absolute inset-0 flex items-center justify-center bg-black/30">
                       <Video className="h-8 w-8 text-white" strokeWidth={2} />
+                    </span>
+                  )}
+                  {item.type === 'audio' && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/35">
+                      <Mic className="h-8 w-8 text-white" strokeWidth={2} />
                     </span>
                   )}
                   <div className="absolute top-2 left-2 flex flex-col gap-1.5">
@@ -255,7 +272,7 @@ const MyMedia: React.FC = () => {
 
           {filtered.length === 0 && (
             <p className="text-center text-[var(--proto-text-muted)] text-sm py-12">
-              {filter === 'photo' ? 'Нет фотографий' : filter === 'video' ? 'Нет видео' : 'Нет медиа'}
+              {filter === 'photo' ? 'Нет фотографий' : filter === 'video' ? 'Нет видео' : filter === 'audio' ? 'Нет аудио' : 'Нет медиа'}
             </p>
           )}
         </div>

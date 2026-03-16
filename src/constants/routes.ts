@@ -4,6 +4,9 @@ export const CLASSIC_BASE = '/classic';
 export const ROUTES = {
   /** Главная страница сайта — приветствие/вход */
   home: '/',
+  demo: '/demo',
+  demoPreview: '/demo-preview',
+  demoLogin: '/demo-login',
   /** Голосовой помощник (AiShell) */
   app: '/app',
   classic: {
@@ -11,6 +14,8 @@ export const ROUTES = {
     timeline: `${CLASSIC_BASE}/timeline`,
     feed: `${CLASSIC_BASE}/feed`,
     create: `${CLASSIC_BASE}/create`,
+    albums: `${CLASSIC_BASE}/albums`,
+    album: (id: string) => `${CLASSIC_BASE}/albums/${id}`,
     family: `${CLASSIC_BASE}/family`,
     myProfile: `${CLASSIC_BASE}/my-profile`,
     editMyProfile: `${CLASSIC_BASE}/my-profile/edit`,

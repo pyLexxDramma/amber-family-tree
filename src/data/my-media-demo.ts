@@ -1,9 +1,10 @@
-export type MyMediaType = 'photo' | 'video';
+export type MyMediaType = 'photo' | 'video' | 'audio';
 
 export interface MyMediaItem {
   id: string;
   type: MyMediaType;
   src: string;
+  thumbnail?: string;
   title: string;
   eventDate: string;
   year: string;
@@ -11,18 +12,22 @@ export interface MyMediaItem {
   publicationId?: string;
 }
 
-const BASE = '/prototype';
+const REF_DIR = '../../_ref/Демо/Медиа для демо аккаунта + описание/Медиа для демо аккаунта + описание';
+const REF_ASSETS = import.meta.glob(
+  '../../_ref/Демо/Медиа для демо аккаунта + описание/Медиа для демо аккаунта + описание/*.{jpg,png,mp3,mp4}',
+  { eager: true, import: 'default', query: '?url' },
+) as Record<string, string>;
+
+const refUrl = (file: string) => REF_ASSETS[`${REF_DIR}/${file}`] ?? '';
 
 export const myMediaDemoItems: MyMediaItem[] = [
-  { id: 'mm1', type: 'photo', src: `${BASE}/pub-family-old.png`, title: 'Семейный праздник', eventDate: '2025-12-01', year: '2025', category: 'Праздник', publicationId: 'p1' },
-  { id: 'mm2', type: 'photo', src: `${BASE}/pub-birthday.png`, title: 'День рождения', eventDate: '1997-09-12', year: '1997', category: 'Праздник', publicationId: 'p2' },
-  { id: 'mm3', type: 'photo', src: `${BASE}/pub-village.png`, title: 'Лето в деревне', eventDate: '1985-07-15', year: '1985', category: 'Путешествие', publicationId: 'p1' },
-  { id: 'mm4', type: 'video', src: `${BASE}/pub-birthday.png`, title: 'Рецепт бабушкиных блинов', eventDate: '2025-10-20', year: '2025', category: 'Семья', publicationId: 'p3' },
-  { id: 'mm5', type: 'photo', src: `${BASE}/pub-family-old.png`, title: 'Москва: новые места', eventDate: '2025-08-15', year: '2025', category: 'Путешествие', publicationId: 'p8' },
-  { id: 'mm7', type: 'photo', src: `${BASE}/pub-village.png`, title: 'Путешествия', eventDate: '2025-08-20', year: '2025', category: 'Путешествие', publicationId: 'p8' },
-  { id: 'mm8', type: 'video', src: `${BASE}/pub-family-old.png`, title: 'Новогодняя ночь 2025', eventDate: '2025-01-01', year: '2025', category: 'Праздник', publicationId: 'p12' },
-  { id: 'mm9', type: 'photo', src: `${BASE}/my-media/photo-family.jpg`, title: 'Семейный обед', eventDate: '2025-11-03', year: '2025', category: 'Семья', publicationId: 'p7' },
-  { id: 'mm10', type: 'photo', src: `${BASE}/my-media/photo-travel.jpg`, title: 'Отдых на природе', eventDate: '2025-09-28', year: '2025', category: 'Путешествие', publicationId: 'p8' },
-  { id: 'mm11', type: 'photo', src: `${BASE}/my-media/photo-childhood.jpg`, title: 'Детство', eventDate: '1997-09-12', year: '1997', category: 'Семья', publicationId: 'p2' },
-  { id: 'mm12', type: 'photo', src: `${BASE}/pub-birthday.png`, title: 'Праздник', eventDate: '2025-05-12', year: '2025', category: 'Праздник', publicationId: 'p15' },
+  { id: 'mm1', type: 'photo', src: refUrl('Фото 1.jpg'), title: 'Лизе 1 год!', eventDate: '2011-08-17', year: '2011', category: 'Семья', publicationId: 'p1' },
+  { id: 'mm2', type: 'photo', src: refUrl('Фото 2.png'), title: 'Первые шаги Лизы', eventDate: '2011-07-04', year: '2011', category: 'Семья', publicationId: 'p2' },
+  { id: 'mm3', type: 'photo', src: refUrl('Фото 3.png'), title: 'Новый 2014-й: первые праздники на новой месте', eventDate: '2013-12-31', year: '2013', category: 'Праздник', publicationId: 'p3' },
+  { id: 'mm4', type: 'photo', src: refUrl('Фото 4.png'), title: 'Дикарями на Волге. Июль 2018', eventDate: '2018-07-01', year: '2018', category: 'Путешествие', publicationId: 'p4' },
+  { id: 'mm5', type: 'photo', src: refUrl('Фото 5.png'), title: 'Майский Сочи: когда обманули календарь', eventDate: '2019-05-02', year: '2019', category: 'Путешествие', publicationId: 'p5' },
+  { id: 'mm6', type: 'photo', src: refUrl('Фото 6.png'), title: 'Бабушкины рецепты — лучшие', eventDate: '2020-08-14', year: '2020', category: 'Семья', publicationId: 'p6' },
+  { id: 'mm6a', type: 'audio', src: refUrl('Аудио 1.mp3'), thumbnail: refUrl('Фото 6.png'), title: 'Рецепт идеальной шарлотки', eventDate: '2020-08-28', year: '2020', category: 'Семья', publicationId: 'p8' },
+  { id: 'mm7', type: 'photo', src: refUrl('Фото7.png'), title: 'Наша гордость', eventDate: '2024-05-19', year: '2024', category: 'Семья', publicationId: 'p7' },
+  { id: 'mm8', type: 'video', src: refUrl('Фото 1.jpg'), title: 'Лиза поздравляет бабушку с 8 Марта)', eventDate: '2017-03-07', year: '2017', category: 'Праздник', publicationId: 'p9' },
 ];

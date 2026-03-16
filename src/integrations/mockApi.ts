@@ -120,6 +120,7 @@ export const mockApi: AngeloApi = {
           id: item.id,
           type: item.type,
           url: item.src,
+          thumbnail: item.thumbnail,
           name: item.title,
           size: 0,
           eventDate: item.eventDate,

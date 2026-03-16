@@ -14,7 +14,7 @@ import FamilyTree from "./pages/FamilyTree";
 import TimelinePage from "./pages/TimelinePage";
 import Feed from "./pages/Feed";
 import PublicationDetails from "./pages/PublicationDetails";
-import CreatePublication from "./pages/CreatePublication";
+import CreatePublicationEntry from "./pages/CreatePublicationEntry";
 import FamilyList from "./pages/FamilyList";
 import MyProfile from "./pages/MyProfile";
 import MyMedia from "./pages/MyMedia";
@@ -28,10 +28,15 @@ import Settings from "./pages/Settings";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import Help from "./pages/Help";
+import Albums from "./pages/Albums";
+import AlbumDetails from "./pages/AlbumDetails";
 import AIDemoPage from "./pages/AIDemoPage";
 import { AiShell } from "./ai/AiShell";
 import NotFound from "./pages/NotFound";
 import DesignShowcasePage from "./pages/DesignShowcasePage";
+import DemoMode from "./pages/DemoMode";
+import DemoPreview from "./pages/DemoPreview";
+import DemoLogin from "./pages/DemoLogin";
 import { CLASSIC_BASE } from "./constants/routes";
 import { UIVariantProvider, UIVariantSync } from "./contexts/UIVariantContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
@@ -53,6 +58,9 @@ const App = () => (
           <UIVariantSync />
           <Routes>
             <Route path="/" element={<Welcome />} />
+            <Route path="/demo" element={<DemoMode />} />
+            <Route path="/demo-preview" element={<DemoPreview />} />
+            <Route path="/demo-login" element={<DemoLogin />} />
             <Route path="/app" element={<AiShell />} />
             <Route path="/ai-demo" element={<Navigate to="/app" replace />} />
             <Route path="/welcome" element={<Navigate to="/" replace />} />
@@ -64,8 +72,10 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/tree`} element={<FamilyTree />} />
             <Route path={`${CLASSIC_BASE}/timeline`} element={<TimelinePage />} />
             <Route path={`${CLASSIC_BASE}/feed`} element={<Feed />} />
+            <Route path={`${CLASSIC_BASE}/albums`} element={<Albums />} />
+            <Route path={`${CLASSIC_BASE}/albums/:id`} element={<AlbumDetails />} />
             <Route path={`${CLASSIC_BASE}/publication/:id`} element={<PublicationDetails />} />
-            <Route path={`${CLASSIC_BASE}/create`} element={<CreatePublication />} />
+            <Route path={`${CLASSIC_BASE}/create`} element={<CreatePublicationEntry />} />
             <Route path={`${CLASSIC_BASE}/family`} element={<FamilyList />} />
             <Route path={`${CLASSIC_BASE}/my-profile`} element={<MyProfile />} />
             <Route path={`${CLASSIC_BASE}/my-profile/edit`} element={<EditMyProfile />} />

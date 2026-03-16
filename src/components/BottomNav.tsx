@@ -1,9 +1,10 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TreeDeciduous, Image as ImageIcon, Plus, Users, Home } from 'lucide-react';
+import { TreeDeciduous, Image as ImageIcon, Plus, Users, Home, User } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { isDemoMode } from '@/lib/demoMode';
 
-const navItems = [
+const classicNavItems = [
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
   { path: ROUTES.classic.feed, label: 'Лента', icon: ImageIcon },
   { path: ROUTES.classic.create, label: 'Создать', icon: Plus },
@@ -11,12 +12,32 @@ const navItems = [
   { path: ROUTES.classic.store, label: 'Магазин', icon: Home },
 ];
 
-const prototypePaths = [ROUTES.classic.feed, ROUTES.classic.family, ROUTES.classic.store, ROUTES.classic.tree, ROUTES.classic.timeline, ROUTES.classic.create, ROUTES.classic.myMedia, '/classic/publication'];
+const demoNavItems = [
+  { path: ROUTES.classic.feed, label: 'Главная', icon: Home },
+  { path: ROUTES.classic.albums, label: 'Альбомы', icon: ImageIcon },
+  { path: ROUTES.classic.create, label: 'Добавить', icon: Plus },
+  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
+  { path: ROUTES.classic.myProfile, label: 'Профиль', icon: User },
+];
+
+const prototypePaths = [
+  ROUTES.classic.feed,
+  ROUTES.classic.family,
+  ROUTES.classic.store,
+  ROUTES.classic.tree,
+  ROUTES.classic.timeline,
+  ROUTES.classic.create,
+  ROUTES.classic.myMedia,
+  ROUTES.classic.albums,
+  '/classic/publication',
+  '/classic/albums',
+];
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPrototype = prototypePaths.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
+  const navItems = isDemoMode() ? demoNavItems : classicNavItems;
 
   return (
     <nav className={`app-bottom-nav fixed bottom-0 left-0 right-0 z-50 border-t safe-area-pb ${isPrototype ? 'app-bottom-nav--prototype bg-[var(--proto-card)] border-[var(--proto-border)]' : 'bg-card border-border'}`}

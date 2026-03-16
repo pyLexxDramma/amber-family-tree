@@ -31,7 +31,7 @@ const Welcome: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => { setDemoMode(true); navigate(ROUTES.classic.feed); }}
+          onClick={() => { setDemoMode(false); navigate(ROUTES.demoPreview); }}
           className="w-full max-w-[180px] py-2 rounded-xl border border-[#A39B8A]/50 text-[#A39B8A] font-semibold text-sm hover:bg-[#A39B8A]/10 transition-colors"
         >
           Демо

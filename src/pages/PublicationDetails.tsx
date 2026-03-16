@@ -15,6 +15,7 @@ import { usePlatform } from '@/platform/PlatformContext';
 import { Heart, MoreVertical } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { isDemoMode } from '@/lib/demoMode';
 import { ApiError } from '@/integrations/request';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -95,8 +96,9 @@ const PublicationDetails: React.FC = () => {
   const authorAvatarSrc = author && (author as { avatar?: string }).avatar
     ? (author as { avatar: string }).avatar
     : getPrototypeAvatar(aid, currentUserId).src;
-  const mainPhoto = photos[0]?.url
-    ? { src: photos[0].url, objectPosition: 'center center' as const }
+  const coverSrc = photos[0]?.url || otherMedia.find(m => m.thumbnail)?.thumbnail;
+  const mainPhoto = coverSrc
+    ? { src: coverSrc, objectPosition: 'center center' as const }
     : getPrototypePublicationPhotoByTopic(pub.topicTag);
   const pids = participantIdsOf(pub).slice(0, 6);
   const participants = pids.map(pid => memberMap.get(pid) ?? getMember(pid)).filter(Boolean);
@@ -107,6 +109,20 @@ const PublicationDetails: React.FC = () => {
   const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
   const isLiked = effectiveMemberId ? (pub.likes ?? []).includes(effectiveMemberId) : false;
   const isAuthor = !!effectiveMemberId && effectiveMemberId === aid;
+  const demo = isDemoMode();
+  const demoEmotionsByTopic: Record<string, string[]> = {
+    'День рождения': ['Радость', 'Счастье', 'Восторг'],
+    'Праздники': ['Радость', 'Тепло', 'Любовь'],
+    'Путешествия': ['Восторг', 'Счастье', 'Радость'],
+    'Будни': ['Покой', 'Спокойствие', 'Уют'],
+    'Истории': ['Гордость', 'Благодарность', 'Тепло'],
+  };
+  const emotions = demo ? (demoEmotionsByTopic[pub.topicTag] ?? ['Тепло', 'Уют']) : [];
+  const aiTags = demo ? ([
+    pub.place ? `PLACE: ${pub.place}` : null,
+    emotions[0] ? `EMOTION: ${emotions[0]}` : null,
+    pub.topicTag ? `TOPIC: ${pub.topicTag}` : null,
+  ].filter(Boolean) as string[]) : tags;
 
   const submitComment = async () => {
     const text = commentText.trim();
@@ -222,7 +238,7 @@ const PublicationDetails: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
         <TopBar
-          title="Публикация"
+          title={demo && pub.type === 'photo' ? 'Фотография' : 'Публикация'}
           onBack={() => navigate(-1)}
           light
           right={
@@ -284,19 +300,31 @@ const PublicationDetails: React.FC = () => {
               <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Файлы:</p>
               <div className="space-y-2">
                 {otherMedia.slice(0, 10).map((m) => (
-                  <a
-                    key={m.id}
-                    href={m.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between gap-3 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3 hover:border-[var(--proto-active)]/30 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
-                      <p className="text-xs text-[var(--proto-text-muted)]">{m.type}</p>
-                    </div>
-                    <span className="text-xs text-[var(--proto-text-muted)]">Открыть</span>
-                  </a>
+                  <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
+                    <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
+                    <p className="text-xs text-[var(--proto-text-muted)] mb-2">{m.type}</p>
+                    {m.type === 'video' ? (
+                      <video
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="w-full rounded-lg border border-[var(--proto-border)] bg-black"
+                        poster={m.thumbnail || undefined}
+                        src={m.url}
+                      />
+                    ) : m.type === 'audio' ? (
+                      <audio controls preload="metadata" className="w-full" src={m.url} />
+                    ) : (
+                      <a
+                        href={m.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+                      >
+                        Открыть
+                      </a>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -306,6 +334,19 @@ const PublicationDetails: React.FC = () => {
           {publicationDescription ? (
             <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
           ) : null}
+
+          {demo && emotions.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Эмоции</p>
+              <div className="flex flex-wrap gap-2">
+                {emotions.map((e) => (
+                  <span key={e} className="px-3 py-1.5 rounded-full bg-[#DDE7DB] text-[#2E3A2F] text-xs font-medium border border-[#D1DBCF]">
+                    {e}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isAuthor && (
             <div className="flex gap-2">
@@ -335,10 +376,10 @@ const PublicationDetails: React.FC = () => {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Теги:</p>
+            <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">{demo ? 'AI‑теги' : 'Теги:'}</p>
             <div className="flex flex-wrap gap-2">
-              {tags.map(tag => (
-                <span key={tag} className="px-3 py-1.5 rounded-full bg-[var(--proto-card)] text-[var(--proto-text-muted)] text-xs font-medium border border-[var(--proto-border)]">
+              {aiTags.map(tag => (
+                <span key={tag} className={`px-3 py-1.5 rounded-full text-xs font-medium border ${demo ? 'bg-[#E5D2B8] text-[#5D4B34] border-[#DCC7AA]' : 'bg-[var(--proto-card)] text-[var(--proto-text-muted)] border-[var(--proto-border)]'}`}>
                   {tag}
                 </span>
               ))}
@@ -347,7 +388,7 @@ const PublicationDetails: React.FC = () => {
 
           {participants.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Участники:</p>
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">{demo ? 'На фото' : 'Участники:'}</p>
               <div className="flex flex-wrap gap-2">
                 {participants.map((p) => {
                   const pid = p!.id;

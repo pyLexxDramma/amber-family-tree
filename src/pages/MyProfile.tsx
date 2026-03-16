@@ -9,14 +9,23 @@ import { Newspaper, Image, Settings, HelpCircle, CreditCard, ChevronRight, Penci
 import { ROUTES } from '@/constants/routes';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
+import { isDemoMode, setDemoMode } from '@/lib/demoMode';
+import { toast } from '@/hooks/use-toast';
 
 const MyProfile: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<FamilyMember | null>(null);
   const plan = plans.find(p => p.id === currentSubscription.planId);
+  const [demoCounts, setDemoCounts] = useState<{ members: number; photos: number }>({ members: 0, photos: 0 });
 
   useEffect(() => {
     api.profile.getMyProfile().then(setUser);
+    if (isDemoMode()) {
+      Promise.all([api.family.listMembers(), api.feed.list()]).then(([ms, pubs]) => {
+        const photos = pubs.flatMap(p => p.media).filter(m => m.type === 'photo').length;
+        setDemoCounts({ members: ms.length, photos });
+      }).catch(() => {});
+    }
   }, []);
 
   if (!user) {
@@ -37,6 +46,93 @@ const MyProfile: React.FC = () => {
     { label: 'Настройки', icon: Settings, path: ROUTES.classic.settings },
     { label: 'Помощь и поддержка', icon: HelpCircle, path: ROUTES.classic.help },
   ];
+
+  if (isDemoMode()) {
+    if (!user) {
+      return (
+        <AppLayout>
+          <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex items-center justify-center text-[var(--proto-text-muted)]">
+            Загрузка профиля...
+          </div>
+        </AppLayout>
+      );
+    }
+
+    const role = user.nickname || 'Профиль';
+    const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Профиль';
+    const familyName = `${user.lastName || 'Семья'} семьи`;
+
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+          <div className="mx-auto max-w-full px-4 pt-8 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+            <h1 className="text-2xl font-semibold text-[var(--proto-text)] mb-6">Профиль</h1>
+
+            <div className="rounded-2xl bg-white border border-[var(--proto-border)] p-4 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl overflow-hidden bg-[var(--proto-border)]">
+                  <img src={(user as { avatar?: string }).avatar ?? getPrototypeAvatarUrl(user.id, currentUserId)} alt="" className="h-full w-full object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{fullName}</p>
+                  <p className="text-xs font-semibold text-[#A39B8A]">{role}</p>
+                  <p className="text-xs text-[var(--proto-text-muted)]">{`${(user.firstName || 'user').toLowerCase()}@demo.ru`}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white border border-[var(--proto-border)] p-4 mb-3">
+              <p className="text-sm font-semibold text-[var(--proto-text)] mb-3">{familyName}</p>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-lg font-semibold text-[#A39B8A]">{demoCounts.members || 0}</p>
+                  <p className="text-xs text-[var(--proto-text-muted)]">участников</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-[#A39B8A]">{demoCounts.photos || 0}</p>
+                  <p className="text-xs text-[var(--proto-text-muted)]">фото</p>
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-[#A39B8A]">Базовый</p>
+                  <p className="text-xs text-[var(--proto-text-muted)]">тариф</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-white border border-[var(--proto-border)] overflow-hidden">
+              <button type="button" onClick={() => navigate(ROUTES.classic.family)} className="w-full px-4 py-4 flex items-center justify-between hover:bg-[var(--proto-bg)] transition-colors">
+                <span className="text-sm font-medium text-[var(--proto-text)]">Члены семьи</span>
+                <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
+              </button>
+              <div className="h-px bg-[var(--proto-border)]" />
+              <button type="button" onClick={() => navigate(ROUTES.classic.store)} className="w-full px-4 py-4 flex items-center justify-between hover:bg-[var(--proto-bg)] transition-colors">
+                <span className="text-sm font-medium text-[var(--proto-text)]">Тариф</span>
+                <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
+              </button>
+              <div className="h-px bg-[var(--proto-border)]" />
+              <button type="button" onClick={() => toast({ title: 'В демо уведомления недоступны' })} className="w-full px-4 py-4 flex items-center justify-between hover:bg-[var(--proto-bg)] transition-colors">
+                <span className="text-sm font-medium text-[var(--proto-text)]">Уведомления</span>
+                <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
+              </button>
+              <div className="h-px bg-[var(--proto-border)]" />
+              <button type="button" onClick={() => navigate(ROUTES.classic.settings)} className="w-full px-4 py-4 flex items-center justify-between hover:bg-[var(--proto-bg)] transition-colors">
+                <span className="text-sm font-medium text-[var(--proto-text)]">Настройки</span>
+                <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { setDemoMode(false); navigate(ROUTES.home, { replace: true }); }}
+              className="mt-4 w-full h-12 rounded-2xl bg-[#F4D6D6] text-[#C13A3A] font-semibold hover:opacity-90 transition-opacity"
+            >
+              Выйти из аккаунта
+            </button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

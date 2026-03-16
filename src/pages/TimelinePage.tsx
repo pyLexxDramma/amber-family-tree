@@ -6,9 +6,10 @@ import { ROUTES } from '@/constants/routes';
 import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
 import { topicTags } from '@/data/mock-publications';
 import { currentUserId, getMember } from '@/data/mock-members';
-import { Users, MapPin, Tag, Send, FileImage, FileVideo, FileAudio, FileText } from 'lucide-react';
+import { Users, MapPin, Tag, Send, FileImage, FileVideo, FileAudio, FileText, Sparkles, Heart, Cake, Trophy } from 'lucide-react';
 import type { Publication } from '@/types';
 import { api } from '@/integrations/api';
+import { isDemoMode } from '@/lib/demoMode';
 
 type Scale = 'decades' | 'years' | 'months';
 type PubType = Publication['type'];
@@ -25,12 +26,16 @@ function buildEvents(pubs: Publication[]) {
     id: p.id,
     date: p.eventDate,
     title: p.title || 'Событие',
+    subtitle: p.text || '',
     topic: p.topicTag,
     place: p.place,
     type: p.type,
     authorId: p.authorId,
     participantIds: p.participantIds,
-    thumb: getPrototypePublicationPhotoByTopic(p.topicTag).src,
+    thumb: p.media.find(m => m.type === 'photo')?.thumbnail
+      || p.media.find(m => m.type === 'photo')?.url
+      || p.media.find(m => m.thumbnail)?.thumbnail
+      || getPrototypePublicationPhotoByTopic(p.topicTag).src,
   }));
 }
 
@@ -111,6 +116,59 @@ const TimelinePage: React.FC = () => {
   const filterPlacesLabel = filterPlace || 'Места';
   const filterTagsLabel = filterTag || 'Теги';
   const filterTypesLabel = filterType ? typeLabels[filterType] : 'Типы';
+
+  if (isDemoMode()) {
+    const events = [...baseEvents].sort((a, b) => b.date.localeCompare(a.date));
+    const iconFor = (topic: string) => {
+      if (topic === 'Праздники' || topic === 'День рождения') return Cake;
+      if (topic === 'Истории') return Trophy;
+      if (topic === 'Путешествия') return Sparkles;
+      return Heart;
+    };
+
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+          <TopBar title="Семейная хроника" onBack={() => navigate(-1)} light right={null} />
+          <div className="mx-auto max-w-full px-4 pt-4 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+            <div className="relative pl-10">
+              <div className="absolute left-4 top-2 bottom-2 w-px bg-[#D8D2CA]" />
+              <div className="space-y-4">
+                {events.map((ev) => {
+                  const Icon = iconFor(ev.topic);
+                  return (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      onClick={() => navigate(ROUTES.classic.publication(ev.id))}
+                      className="w-full text-left flex items-start gap-4"
+                    >
+                      <span className="relative z-10 mt-3 h-8 w-8 rounded-2xl bg-[#A39B8A] text-white flex items-center justify-center">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="flex-1 rounded-2xl bg-white border border-[var(--proto-border)] p-4 hover:border-[var(--proto-active)]/40 transition-colors">
+                        <span className="block text-xs font-semibold text-[#A39B8A]">{formatDateByScale(ev.date, 'years')}</span>
+                        <span className="block text-sm font-semibold text-[var(--proto-text)] mt-1">{ev.title}</span>
+                        {ev.subtitle ? (
+                          <span className="block text-xs text-[var(--proto-text-muted)] mt-1 line-clamp-2">{ev.subtitle}</span>
+                        ) : null}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {events.length === 0 && (
+                <p className="text-sm text-[var(--proto-text-muted)] py-12 text-center">
+                  Нет событий
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

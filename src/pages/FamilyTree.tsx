@@ -284,6 +284,76 @@ const FamilyTree: React.FC = () => {
     { id: 'partners' as BranchFilter, label: 'Партнёры' },
   ];
 
+  if (isDemoMode()) {
+    const byGen = new Map<number, FamilyMember[]>();
+    for (const m of members) {
+      if (!byGen.has(m.generation)) byGen.set(m.generation, []);
+      byGen.get(m.generation)!.push(m);
+    }
+    const gen1 = (byGen.get(1) ?? []).sort((a, b) => a.firstName.localeCompare(b.firstName));
+    const gen2 = (byGen.get(2) ?? []).sort((a, b) => a.firstName.localeCompare(b.firstName));
+    const gen3 = (byGen.get(3) ?? []).sort((a, b) => a.firstName.localeCompare(b.firstName));
+
+    const card = (m: FamilyMember) => (
+      <button
+        key={m.id}
+        type="button"
+        onClick={() => openProfile(m.id)}
+        className="w-full rounded-2xl bg-white border border-[var(--proto-border)] p-4 text-center hover:border-[var(--proto-active)]/40 transition-colors"
+      >
+        <div className="mx-auto h-14 w-14 rounded-2xl bg-[var(--proto-border)] overflow-hidden flex items-center justify-center">
+          {avatarSrcFor(m, currentUserId) ? (
+            <img src={avatarSrcFor(m, currentUserId)} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-sm font-semibold text-[var(--proto-text)]">{initialsFor(m)}</span>
+          )}
+        </div>
+        <p className="mt-3 text-sm font-semibold text-[var(--proto-text)] leading-tight">
+          {m.firstName} {m.lastName}
+        </p>
+        <p className="text-xs font-semibold text-[#A39B8A]">{m.nickname || 'Член семьи'}</p>
+        {m.birthDate ? <p className="text-xs text-[var(--proto-text-muted)] mt-1">{m.birthDate}</p> : null}
+      </button>
+    );
+
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+          <div className="mx-auto max-w-full px-4 pt-8 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+            <h1 className="text-2xl font-semibold text-[var(--proto-text)] mb-6">Семейное древо</h1>
+
+            {loadError ? (
+              <p className="text-sm text-red-600">Ошибка: {loadError}</p>
+            ) : null}
+
+            <div className="space-y-6">
+              <div>
+                <p className="text-sm font-semibold text-[var(--proto-text-muted)] text-center mb-3">Бабушка и дедушка</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {gen1.map(card)}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-[var(--proto-text-muted)] text-center mb-3">Родители</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {gen2.map(card)}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold text-[var(--proto-text-muted)] text-center mb-3">Дети</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {gen3.length ? gen3.map(card) : <p className="col-span-2 text-sm text-[var(--proto-text-muted)] text-center py-8">Нет данных</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
