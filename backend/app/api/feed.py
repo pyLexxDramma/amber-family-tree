@@ -100,6 +100,7 @@ def _publication_to_response(
         is_read=p.is_read,
         visible_for=p.visible_for,
         exclude_for=p.exclude_for,
+        content_blocks=getattr(p, "content_blocks", None),
     ).model_dump(by_alias=False)
 
 async def _load_publication_for_response(
@@ -206,6 +207,7 @@ async def create_publication(
         visible_for=body.visible_for,
         exclude_for=body.exclude_for,
         is_read=False,
+        content_blocks=body.content_blocks,
     )
     db.add(pub)
     await db.flush()

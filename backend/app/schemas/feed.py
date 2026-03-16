@@ -48,6 +48,7 @@ class PublicationResponse(BaseModel):
     isRead: bool = Field(False, alias="is_read")
     visibleFor: list[str] | None = Field(None, alias="visible_for")
     excludeFor: list[str] | None = Field(None, alias="exclude_for")
+    contentBlocks: list[dict] | None = Field(None, alias="content_blocks")
 
     model_config = {"populate_by_name": True}
 
@@ -72,6 +73,7 @@ class PublicationCreate(BaseModel):
     visible_for: list[str] | None = None
     exclude_for: list[str] | None = None
     media_keys: list[str] = Field(default_factory=list, description="S3 keys from presign")
+    content_blocks: list[dict] | None = None
 
 
 class PublicationUpdate(BaseModel):

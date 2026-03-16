@@ -99,6 +99,10 @@ export function normalizePublication(input: unknown): Publication {
     isRead: bool(p.isRead ?? p.is_read ?? true, true),
     visibleFor: arr<string>(p.visibleFor ?? p.visible_for, []),
     excludeFor: arr<string>(p.excludeFor ?? p.exclude_for, []),
+    contentBlocks: (() => {
+      const raw = p.contentBlocks ?? p.content_blocks;
+      return Array.isArray(raw) && raw.length > 0 ? raw : undefined;
+    })(),
   };
 }
 

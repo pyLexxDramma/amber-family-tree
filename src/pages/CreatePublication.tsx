@@ -417,10 +417,25 @@ const CreatePublication: React.FC = () => {
         return { ...b } as StoryBlock;
       });
 
+      const contentBlocks: Array<{ type: string; text?: string; n?: number; url?: string }> = [];
       for (const b of blocksLocal) {
-        if (b.type !== 'photos' && b.type !== 'video' && b.type !== 'audio' && b.type !== 'attachment') continue;
-        for (const it of b.items) {
-          if (it.status === 'uploaded' && it.key) uploadedKeys.push(it.key);
+        if (b.type === 'text') {
+          contentBlocks.push({ type: 'text', text: b.text });
+        } else if (b.type === 'life_lesson') {
+          contentBlocks.push({ type: 'life_lesson', text: b.text });
+        } else if (b.type === 'embed') {
+          contentBlocks.push({ type: 'embed', url: b.url || '' });
+        } else if (b.type === 'link_album') {
+          contentBlocks.push({ type: 'link_album', url: b.url || '' });
+        } else if (b.type === 'photos' || b.type === 'video' || b.type === 'audio' || b.type === 'attachment') {
+          let n = 0;
+          for (const it of b.items) {
+            if (it.status === 'uploaded' && it.key) {
+              uploadedKeys.push(it.key);
+              n++;
+            }
+          }
+          contentBlocks.push({ type: b.type, n });
         }
       }
 
@@ -461,6 +476,7 @@ const CreatePublication: React.FC = () => {
         visible_for: visibleFor,
         exclude_for: excludeFor,
         media_keys: uploadedKeys,
+        content_blocks: contentBlocks.length > 0 ? contentBlocks : null,
       });
       navigate(ROUTES.classic.publication(created.id));
     } finally {

@@ -32,6 +32,7 @@ class Publication(Base):
     visible_for: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     exclude_for: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    content_blocks: Mapped[list | None] = mapped_column(JSONB, nullable=True)
 
     family: Mapped["Family"] = relationship("Family", back_populates="publications")
     author: Mapped["FamilyMember"] = relationship(

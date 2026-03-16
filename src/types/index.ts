@@ -72,6 +72,7 @@ export interface Publication {
   isRead: boolean;
   visibleFor?: string[];
   excludeFor?: string[];
+  contentBlocks?: Array<{ type: string; text?: string; n?: number; url?: string }>;
 }
 
 export interface Invitation {
