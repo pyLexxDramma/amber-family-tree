@@ -38,7 +38,7 @@ const video = (id: number, file: string, name: string, thumbnailFile: string): M
   duration: 28,
 });
 
-export const mockPublications: Publication[] = [
+const basePublications: Publication[] = [
   {
     id: 'p1',
     type: 'photo',
@@ -195,6 +195,33 @@ export const mockPublications: Publication[] = [
     isRead: true,
   },
 ];
+
+const STRESS = String(import.meta.env.VITE_USE_MOCK_API ?? '').toLowerCase() === 'true';
+const STRESS_PHOTO_FILES = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
+const STRESS_AUTHOR_IDS = ['m1', 'm2', 'm3', 'm4', 'm5'];
+const STRESS_TOPICS = ['Праздники', 'День рождения', 'Будни', 'Путешествия', 'Рецепты', 'Истории'];
+const STRESS_COUNT = 200;
+
+const stressPublications: Publication[] = STRESS
+  ? Array.from({ length: STRESS_COUNT }, (_, i) => {
+      const base = basePublications[i % basePublications.length];
+      const phFile = STRESS_PHOTO_FILES[i % STRESS_PHOTO_FILES.length];
+      return {
+        ...base,
+        id: `stress-${i}`,
+        authorId: STRESS_AUTHOR_IDS[i % STRESS_AUTHOR_IDS.length],
+        publishDate: `${2024 - Math.floor(i / 24)}-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
+        eventDate: `${2020 + (i % 5)}-${String((i % 12) + 1).padStart(2, '0')}-15`,
+        media: [photo(1000 + i, phFile, `Фото ${i + 1}`)],
+        participantIds: STRESS_AUTHOR_IDS.slice(0, (i % 3) + 2),
+        topicTag: STRESS_TOPICS[i % STRESS_TOPICS.length],
+        likes: [],
+        comments: [],
+      };
+    })
+  : [];
+
+export const mockPublications: Publication[] = [...basePublications, ...stressPublications];
 
 export const allMediaItems: MediaItem[] = Array.from(
   new Map(mockPublications.flatMap(p => p.media).map(m => [m.id, m])).values(),
