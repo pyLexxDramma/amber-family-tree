@@ -10,7 +10,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { isDemoMode } from '@/lib/demoMode';
+import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { toast } from '@/hooks/use-toast';
 
 function getRelationshipLabel(member: FamilyMember, currentId: string): string {
@@ -171,7 +171,7 @@ const FamilyList: React.FC = () => {
                     const mn = norm(m);
                     const isCurrent = m.id === myId;
                     const relationLabel = getRelationshipLabel(mn, myId);
-                    const avatarSrc = (m as { avatar?: string }).avatar ?? (isDemoMode() ? getPrototypeAvatarForMember(mn, myId).src : '');
+                    const avatarSrc = (m as { avatar?: string }).avatar ?? (useAvatarFallback() ? getPrototypeAvatarForMember(mn, myId).src : '');
                     const isActive = m.isActive ?? (m as { is_active?: boolean }).is_active ?? true;
                     const full = memberName(m) || 'Участник';
 

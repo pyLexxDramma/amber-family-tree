@@ -1,4 +1,4 @@
-const BASE = '/prototype';
+const BASE = `${import.meta.env.BASE_URL || '/'}prototype`.replace(/\/+/g, '/');
 
 export const prototypeScreens = {
   family: `${BASE}/family.jpeg`,

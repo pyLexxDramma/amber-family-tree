@@ -7,7 +7,7 @@ import { TopBar } from '@/components/TopBar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
-import { isDemoMode } from '@/lib/demoMode';
+import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 
 type TreeTab = 'stories' | 'timeline' | 'media' | 'connections';
@@ -37,7 +37,7 @@ function initialsFor(m: FamilyMember): string {
 
 function avatarSrcFor(member: FamilyMember, currentUserId: string): string | undefined {
   if (member.avatar) return member.avatar;
-  if (!isDemoMode()) return undefined;
+  if (!useAvatarFallback()) return undefined;
   return getPrototypeAvatarUrl(member.id, currentUserId);
 }
 

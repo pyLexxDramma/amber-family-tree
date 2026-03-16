@@ -9,7 +9,7 @@ import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { toast } from '@/hooks/use-toast';
-import { isDemoMode } from '@/lib/demoMode';
+import { useAvatarFallback } from '@/lib/demoMode';
 
 type Rel = { type: string; memberId: string };
 
@@ -88,7 +88,7 @@ const ContactProfile: React.FC = () => {
   const children = childIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
   const displayName = member.nickname || `${member.firstName} ${member.lastName}`.trim();
   const demo = isDemoMode();
-  const heroSrc = (member as { avatar?: string }).avatar || (demo ? getPrototypeAvatarUrl(member.id) : '');
+  const heroSrc = (member as { avatar?: string }).avatar || (useFallback ? getPrototypeAvatarUrl(member.id) : '');
   const initials = displayName ? displayName.trim().slice(0, 2).toUpperCase() : 'U';
 
   const formatDate = (d: string) => {

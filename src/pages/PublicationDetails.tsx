@@ -15,7 +15,7 @@ import { usePlatform } from '@/platform/PlatformContext';
 import { ChevronLeft, ChevronRight, Heart, MoreVertical, Star } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { isDemoMode } from '@/lib/demoMode';
+import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { isMilestone, toggleMilestone } from '@/lib/milestones';
 import { ApiError } from '@/integrations/request';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -130,7 +130,7 @@ const PublicationDetails: React.FC = () => {
   const authorName = memberDisplayName(author ?? null);
   const authorAvatarSrc = author && (author as { avatar?: string }).avatar
     ? (author as { avatar: string }).avatar
-    : (demo ? getPrototypeAvatar(aid, currentUserId).src : '');
+    : (useAvatarFallback() ? getPrototypeAvatar(aid, currentUserId).src : '');
   const coverSrc = photos[0]?.url || otherMedia.find(m => m.thumbnail)?.thumbnail;
   const mainPhoto = coverSrc
     ? { src: coverSrc, objectPosition: 'center center' as const }
@@ -515,7 +515,7 @@ const PublicationDetails: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 {participants.map((p) => {
                   const pid = p!.id;
-                  const avSrc = (p as { avatar?: string }).avatar ?? (demo ? getPrototypeAvatar(pid, currentUserId).src : '');
+                  const avSrc = (p as { avatar?: string }).avatar ?? (useAvatarFallback() ? getPrototypeAvatar(pid, currentUserId).src : '');
                   const nm = memberDisplayName(p);
                   return (
                   <button
@@ -558,7 +558,7 @@ const PublicationDetails: React.FC = () => {
                     const timeAgo = createdAt ? formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: ru }) : null;
                     const avatarSrc = authorId && (memberMap.get(authorId) as { avatar?: string } | undefined)?.avatar
                       ? (memberMap.get(authorId) as { avatar: string }).avatar
-                      : (authorId ? (demo ? getPrototypeAvatar(authorId, currentUserId).src : '') : '');
+                      : (authorId ? (useAvatarFallback() ? getPrototypeAvatar(authorId, currentUserId).src : '') : '');
                     const commentLikes = c.likes ?? [];
                     const isCommentLiked = myMemberId ? commentLikes.includes(myMemberId) : false;
                     return (

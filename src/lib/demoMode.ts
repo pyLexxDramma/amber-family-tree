@@ -10,3 +10,8 @@ export function setDemoMode(enabled: boolean): void {
   localStorage.setItem(KEY, enabled ? '1' : '0');
 }
 
+export function useAvatarFallback(): boolean {
+  if (isDemoMode()) return true;
+  return String(import.meta.env.VITE_USE_MOCK_API ?? '').toLowerCase() === 'true';
+}
+
