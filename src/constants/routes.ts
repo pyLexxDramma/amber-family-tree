@@ -12,6 +12,8 @@ export const ROUTES = {
   classic: {
     tree: `${CLASSIC_BASE}/tree`,
     timeline: `${CLASSIC_BASE}/timeline`,
+    timelineYear: (year: string) => `${CLASSIC_BASE}/timeline/year/${year}`,
+    timelineDecade: (decadeStart: string) => `${CLASSIC_BASE}/timeline/decade/${decadeStart}`,
     feed: `${CLASSIC_BASE}/feed`,
     create: `${CLASSIC_BASE}/create`,
     albums: `${CLASSIC_BASE}/albums`,

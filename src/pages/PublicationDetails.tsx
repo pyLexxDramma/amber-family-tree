@@ -12,10 +12,11 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { Heart, MoreVertical } from 'lucide-react';
+import { Heart, MoreVertical, Star } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { isDemoMode } from '@/lib/demoMode';
+import { isMilestone, toggleMilestone } from '@/lib/milestones';
 import { ApiError } from '@/integrations/request';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ const PublicationDetails: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [milestone, setMilestone] = useState(false);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
   const ensureMyMemberId = async () => {
@@ -72,6 +74,11 @@ const PublicationDetails: React.FC = () => {
   useEffect(() => {
     myMemberIdRef.current = myMemberId;
   }, [myMemberId]);
+
+  useEffect(() => {
+    if (!pub || pub === undefined || pub === null) return;
+    setMilestone(isMilestone(pub.id));
+  }, [pub]);
 
   if (pub === undefined) {
     return (
@@ -369,6 +376,17 @@ const PublicationDetails: React.FC = () => {
             >
               <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
               {(pub.likes ?? []).length}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMilestone(toggleMilestone(pub.id))}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+                milestone ? 'bg-[#E5D2B8] text-[#5D4B34] border-[#DCC7AA]' : 'bg-[var(--proto-card)] text-[var(--proto-text)] border-[var(--proto-border)] hover:border-[var(--proto-active)]/30'
+              }`}
+              aria-label="Важное событие"
+            >
+              <Star className="h-4 w-4" fill={milestone ? 'currentColor' : 'none'} />
+              Важное
             </button>
             <span className="text-sm text-[var(--proto-text-muted)]">
               {(pub.comments ?? []).length} комментариев

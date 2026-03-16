@@ -12,6 +12,8 @@ import ConfirmCode from "./pages/ConfirmCode";
 import Onboarding from "./pages/Onboarding";
 import FamilyTree from "./pages/FamilyTree";
 import TimelinePage from "./pages/TimelinePage";
+import TimelineYear from "./pages/TimelineYear";
+import TimelineDecade from "./pages/TimelineDecade";
 import Feed from "./pages/Feed";
 import PublicationDetails from "./pages/PublicationDetails";
 import CreatePublicationEntry from "./pages/CreatePublicationEntry";
@@ -71,6 +73,8 @@ const App = () => (
             <Route path={CLASSIC_BASE} element={<Navigate to={`${CLASSIC_BASE}/feed`} replace />} />
             <Route path={`${CLASSIC_BASE}/tree`} element={<FamilyTree />} />
             <Route path={`${CLASSIC_BASE}/timeline`} element={<TimelinePage />} />
+            <Route path={`${CLASSIC_BASE}/timeline/year/:year`} element={<TimelineYear />} />
+            <Route path={`${CLASSIC_BASE}/timeline/decade/:decadeStart`} element={<TimelineDecade />} />
             <Route path={`${CLASSIC_BASE}/feed`} element={<Feed />} />
             <Route path={`${CLASSIC_BASE}/albums`} element={<Albums />} />
             <Route path={`${CLASSIC_BASE}/albums/:id`} element={<AlbumDetails />} />

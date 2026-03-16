@@ -10,8 +10,9 @@ import { Users, MapPin, Tag, Send, FileImage, FileVideo, FileAudio, FileText, Sp
 import type { Publication } from '@/types';
 import { api } from '@/integrations/api';
 import { isDemoMode } from '@/lib/demoMode';
+import { getMilestoneIds } from '@/lib/milestones';
 
-type Scale = 'decades' | 'years' | 'months';
+type Scale = 'decades' | 'years';
 type PubType = Publication['type'];
 
 const typeLabels: Record<PubType, string> = {
@@ -21,17 +22,22 @@ const typeLabels: Record<PubType, string> = {
   text: 'Текст',
 };
 
+const publishDateOf = (p: Publication) => (p as { publishDate?: string; publish_date?: string }).publishDate ?? (p as { publish_date?: string }).publish_date ?? '';
+const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?: string }).eventDate ?? (p as { event_date?: string }).event_date ?? (publishDateOf(p) ? publishDateOf(p).slice(0, 10) : '');
+const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id ?? '';
+const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
+
 function buildEvents(pubs: Publication[]) {
   return pubs.map(p => ({
     id: p.id,
-    date: p.eventDate,
+    date: eventDateOf(p),
     title: p.title || 'Событие',
     subtitle: p.text || '',
     topic: p.topicTag,
     place: p.place,
     type: p.type,
-    authorId: p.authorId,
-    participantIds: p.participantIds,
+    authorId: authorIdOf(p),
+    participantIds: participantIdsOf(p),
     thumb: p.media.find(m => m.type === 'photo')?.thumbnail
       || p.media.find(m => m.type === 'photo')?.url
       || p.media.find(m => m.thumbnail)?.thumbnail
@@ -49,13 +55,11 @@ function formatDateByScale(dateStr: string, scale: Scale): string {
   const [y, m, d] = dateStr.split('-').map(Number);
   if (scale === 'decades') return getDecade(dateStr);
   if (scale === 'years') return `${d.toString().padStart(2, '0')}.${m.toString().padStart(2, '0')}.${y}`;
-  return `${d.toString().padStart(2, '0')}.${m.toString().padStart(2, '0')}`;
 }
 
 const TimelinePage: React.FC = () => {
   const navigate = useNavigate();
-  const [scale, setScale] = useState<Scale>('months');
-  const [mode, setMode] = useState<'single' | 'compare'>('single');
+  const [scale, setScale] = useState<Scale>('years');
   const [filterPersonId, setFilterPersonId] = useState<string | null>(null);
   const [filterPlace, setFilterPlace] = useState<string | null>(null);
   const [filterTag, setFilterTag] = useState<string | null>(null);
@@ -64,12 +68,23 @@ const TimelinePage: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [baseEvents, setBaseEvents] = useState<ReturnType<typeof buildEvents>>([]);
   const [allPlaces, setAllPlaces] = useState<string[]>([]);
+  const [milestoneVer, setMilestoneVer] = useState(0);
 
   useEffect(() => {
     api.feed.list().then(pubs => {
       setBaseEvents(buildEvents(pubs));
-      setAllPlaces([...new Set(pubs.map(p => p.place).filter(Boolean))] as string[]);
+      setAllPlaces([...new Set(pubs.map(p => (p as { place?: string }).place).filter(Boolean))] as string[]);
     });
+  }, []);
+
+  useEffect(() => {
+    const h = () => setMilestoneVer(v => v + 1);
+    window.addEventListener('angelo:milestones-changed', h);
+    window.addEventListener('storage', h);
+    return () => {
+      window.removeEventListener('angelo:milestones-changed', h);
+      window.removeEventListener('storage', h);
+    };
   }, []);
 
   const filteredEvents = useMemo(() => {
@@ -82,27 +97,50 @@ const TimelinePage: React.FC = () => {
     }).sort((a, b) => a.date.localeCompare(b.date));
   }, [baseEvents, filterPersonId, filterPlace, filterTag, filterType]);
 
-  const groupedByScale = useMemo(() => {
-    if (scale === 'decades') {
-      const byDecade = new Map<string, typeof filteredEvents>();
-      filteredEvents.forEach(ev => {
-        const dec = getDecade(ev.date);
-        if (!byDecade.has(dec)) byDecade.set(dec, []);
-        byDecade.get(dec)!.push(ev);
-      });
-      return Array.from(byDecade.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([label, events]) => ({ label, events }));
-    }
+  const milestoneIds = useMemo(() => getMilestoneIds(), [milestoneVer]);
+  const significantEvents = useMemo(() => {
+    if (milestoneIds.length === 0) return filteredEvents;
+    const set = new Set(milestoneIds);
+    return filteredEvents.filter(ev => set.has(ev.id));
+  }, [filteredEvents, milestoneIds]);
+
+  const cards = useMemo(() => {
     if (scale === 'years') {
-      const byYear = new Map<string, typeof filteredEvents>();
-      filteredEvents.forEach(ev => {
+      const byYear = new Map<string, typeof significantEvents>();
+      significantEvents.forEach((ev) => {
         const y = ev.date.slice(0, 4);
         if (!byYear.has(y)) byYear.set(y, []);
         byYear.get(y)!.push(ev);
       });
-      return Array.from(byYear.entries()).sort(([a], [b]) => b.localeCompare(a)).map(([label, events]) => ({ label, events }));
+      return Array.from(byYear.entries())
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([y, evs]) => ({
+          key: y,
+          title: y,
+          subtitle: `${evs.length} событий`,
+          thumb: evs[0]?.thumb,
+          onClick: () => navigate(ROUTES.classic.timelineYear(y)),
+        }));
     }
-    return [{ label: null as string | null, events: filteredEvents }];
-  }, [filteredEvents, scale]);
+
+    const byDecade = new Map<number, typeof significantEvents>();
+    significantEvents.forEach((ev) => {
+      const y = parseInt(ev.date.slice(0, 4), 10);
+      if (!Number.isFinite(y)) return;
+      const d = Math.floor(y / 10) * 10;
+      if (!byDecade.has(d)) byDecade.set(d, []);
+      byDecade.get(d)!.push(ev);
+    });
+    return Array.from(byDecade.entries())
+      .sort(([a], [b]) => b - a)
+      .map(([d, evs]) => ({
+        key: String(d),
+        title: `${d}-е`,
+        subtitle: `${evs.length} событий`,
+        thumb: evs[0]?.thumb,
+        onClick: () => navigate(ROUTES.classic.timelineDecade(String(d))),
+      }));
+  }, [navigate, scale, significantEvents]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -174,7 +212,7 @@ const TimelinePage: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
-          title="Экран «Таймлайн»"
+          title="Таймлайн"
           onBack={() => navigate(-1)}
           light
           right={
@@ -201,7 +239,7 @@ const TimelinePage: React.FC = () => {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 mb-4">
-            {(['decades', 'years', 'months'] as const).map(s => (
+            {(['years', 'decades'] as const).map(s => (
               <button
                 key={s}
                 type="button"
@@ -210,7 +248,7 @@ const TimelinePage: React.FC = () => {
                   scale === s ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'
                 }`}
               >
-                {s === 'decades' ? 'Десятилетия' : s === 'years' ? 'Годы' : 'Месяцы'}
+                {s === 'years' ? 'Годы' : 'Десятилетия'}
               </button>
             ))}
           </div>
@@ -297,66 +335,28 @@ const TimelinePage: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="flex gap-4 mb-4">
-            <button
-              type="button"
-              onClick={() => setMode('single')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${mode === 'single' ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'}`}
-            >
-              Одиночный
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('compare')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${mode === 'compare' ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'}`}
-            >
-              Сравнение
-            </button>
-          </div>
-          <div className="relative pl-8 border-l-2 border-[var(--proto-border)] ml-2 space-y-6">
-            {groupedByScale.map(({ label, events }) => (
-              <div key={label ?? 'flat'} className="space-y-4">
-                {label != null && <p className="text-sm font-semibold text-[var(--proto-text-muted)] -ml-8">{label}</p>}
-                {events.map((ev) => (
-                  <div key={ev.id} className="relative flex gap-4">
-                    <span className="absolute -left-[2.25rem] top-1 text-xs font-medium text-[var(--proto-text-muted)]">
-                      {formatDateByScale(ev.date, scale)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => navigate(ROUTES.classic.publication(ev.id))}
-                      className="flex-1 flex gap-3 p-3 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors text-left"
-                    >
-                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[var(--proto-bg)]">
-                        <img src={ev.thumb} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{ev.title}</p>
-                        <p className="text-xs text-[var(--proto-text-muted)]">{ev.topic}{ev.place ? ` · ${ev.place}` : ''}</p>
-                      </div>
-                    </button>
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-3">
+            {cards.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={c.onClick}
+                className="w-full rounded-2xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors flex items-stretch"
+              >
+                <div className="w-24 shrink-0 bg-[var(--proto-border)]">
+                  {c.thumb ? <img src={c.thumb} alt="" className="w-full h-full object-cover" /> : null}
+                </div>
+                <div className="p-4 flex-1">
+                  <p className="text-lg font-semibold text-[var(--proto-text)]">{c.title}</p>
+                  <p className="text-sm text-[var(--proto-text-muted)]">{c.subtitle}</p>
+                </div>
+              </button>
             ))}
           </div>
-          {filteredEvents.length === 0 && (
-            <p className="text-sm text-[var(--proto-text-muted)] py-4">Нет событий по выбранным фильтрам</p>
+
+          {cards.length === 0 && (
+            <p className="text-sm text-[var(--proto-text-muted)] py-4">Нет значимых событий</p>
           )}
-          {mode === 'compare' && filteredEvents.length > 0 && (
-            <p className="text-xs text-[var(--proto-text-muted)] mt-4">Режим сравнения: можно выбрать второго человека для сравнения таймлайнов (в разработке).</p>
-          )}
-          <div className="mt-8 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
-            <p className="text-sm font-semibold text-[var(--proto-text)] mb-3">AI инсайты</p>
-            <div className="space-y-2">
-              <button type="button" className="w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors text-left">
-                Подсветка радостных периодов
-              </button>
-              <button type="button" className="w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors text-left">
-                Подсветка задумчивых/сложных периодов
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </AppLayout>
