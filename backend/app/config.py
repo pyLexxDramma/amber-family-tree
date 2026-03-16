@@ -32,6 +32,7 @@ class Settings(BaseSettings):
 
     otp_expiry_seconds: int = Field(600, alias="OTP_EXPIRY_SECONDS")
     otp_debug_log_code: bool = Field(False, alias="OTP_DEBUG_LOG_CODE")
+    frontend_url: str = Field("https://angelo-test.ru", alias="FRONTEND_URL")
 
 
 @lru_cache(maxsize=1)

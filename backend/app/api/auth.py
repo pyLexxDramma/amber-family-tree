@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.family import Family
 from app.models.family_member import FamilyMember
 from app.models.user import User
+from app.seed.reference import seed_reference_user
 from app.schemas.auth import (
     AppUser,
     FamilyMemberInUser,
@@ -20,6 +21,19 @@ from app.schemas.auth import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+REFERENCE_EMAIL = "alina.fadeeva@angelo-demo.ru"
+REFERENCE_PROFILE = {
+    "first_name": "Алина",
+    "last_name": "Фадеева",
+    "middle_name": None,
+    "nickname": "Мама",
+    "birth_date": "1985-09-20",
+    "city": "Москва",
+    "about": "Мама Елизаветы. Любит сохранять семейные истории и тёплые моменты.",
+    "role": "admin",
+    "generation": 2,
+}
 
 
 @router.post("/send-code", response_model=SendCodeResponse)
@@ -44,15 +58,20 @@ async def verify(
         family = Family(id=uuid4(), name=None)
         db.add(family)
         await db.flush()
+        seed = REFERENCE_PROFILE if body.identifier.strip().lower() == REFERENCE_EMAIL else None
         member = FamilyMember(
             id=uuid4(),
             family_id=family.id,
-            first_name="User",
-            last_name=body.identifier[:20],
-            birth_date="",
-            role="member",
+            first_name=seed["first_name"] if seed else "",
+            last_name=seed["last_name"] if seed else "",
+            middle_name=seed["middle_name"] if seed else None,
+            nickname=seed["nickname"] if seed else None,
+            birth_date=seed["birth_date"] if seed else "",
+            city=seed["city"] if seed else None,
+            about=seed["about"] if seed else None,
+            role=seed["role"] if seed else "member",
             is_active=True,
-            generation=0,
+            generation=seed["generation"] if seed else 0,
             relations=[],
         )
         db.add(member)
@@ -66,11 +85,25 @@ async def verify(
         db.add(user)
         await db.commit()
         await db.refresh(user)
+        if seed:
+            await seed_reference_user(db, user, member)
     else:
         await db.commit()
         await db.refresh(user)
         if user.member_id:
             member = await db.get(FamilyMember, user.member_id)
+            if (
+                member
+                and body.identifier.strip().lower() == REFERENCE_EMAIL
+                and not member.about
+            ):
+                for k, v in REFERENCE_PROFILE.items():
+                    setattr(member, k, v)
+                await db.commit()
+                await db.refresh(member)
+            if member and body.identifier.strip().lower() == REFERENCE_EMAIL:
+                await seed_reference_user(db, user, member)
+                await db.refresh(member)
 
     if not member:
         raise HTTPException(
