@@ -14,9 +14,26 @@ export interface VerifyResponse {
   user: AppUser;
 }
 
+export interface PublicationCreateBody {
+  type: string;
+  title?: string | null;
+  text?: string;
+  event_date: string;
+  event_date_approximate?: boolean;
+  place?: string | null;
+  topic_tag?: string;
+  co_author_ids?: string[];
+  participant_ids?: string[];
+  visible_for?: string[] | null;
+  exclude_for?: string[] | null;
+  media_keys?: string[];
+  content_blocks?: Array<{ type: string; text?: string; n?: number; url?: string }> | null;
+}
+
 export interface FeedApi {
   list(params?: FeedListParams): Promise<Publication[]>;
   getById(id: string): Promise<Publication | null>;
+  createPublication(body: PublicationCreateBody): Promise<{ id: string }>;
   addComment(publicationId: string, text: string): Promise<Comment>;
   addLike(publicationId: string): Promise<Publication>;
   removeLike(publicationId: string): Promise<Publication>;

@@ -1,9 +1,25 @@
-import type { AngeloApi, FeedListParams } from './api.types';
+import type { AngeloApi, FeedListParams, PublicationCreateBody } from './api.types';
 import { mockPublications } from '@/data/mock-publications';
 import { currentUserId, getCurrentUser, getMember, mockMembers } from '@/data/mock-members';
 import { myMediaDemoItems } from '@/data/my-media-demo';
-import type { Comment, MediaItem, Message } from '@/types';
+import type { Comment, MediaItem, Message, Publication } from '@/types';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
+import { refUrl } from '@/data/mock-publications';
+
+const DEMO_PHOTOS = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
+const DEMO_VIDEO = 'Фото 1.jpg';
+const DEMO_AUDIO = 'Фото 6.png';
+let mockMediaIndex = 0;
+
+const mockMediaStore = new Map<string, { url: string; type: string }>();
+
+export function getMockMediaUrl(key: string): string | undefined {
+  return mockMediaStore.get(key)?.url;
+}
+
+export function isMockUploadUrl(url: string): boolean {
+  return url.includes('example.com');
+}
 
 function filterFeed(params?: FeedListParams) {
   let items = [...mockPublications];
@@ -85,6 +101,44 @@ export const mockApi: AngeloApi = {
       mockPublications.splice(idx, 1);
       return { deleted: true as const };
     },
+    async createPublication(body: PublicationCreateBody) {
+      const keys = body.media_keys ?? [];
+      const media: MediaItem[] = keys.map((key, i) => {
+        const stored = mockMediaStore.get(key);
+        const url = stored?.url ?? refUrl(DEMO_PHOTOS[i % DEMO_PHOTOS.length]);
+        const mediaType = (stored?.type ?? 'image') as 'photo' | 'video' | 'audio' | 'document';
+        return {
+          id: `m_${Date.now()}_${i}`,
+          type: mediaType,
+          url,
+          thumbnail: mediaType === 'video' || mediaType === 'photo' ? url : undefined,
+          name: `Media ${i + 1}`,
+          size: 0,
+        };
+      });
+      const today = new Date().toISOString().slice(0, 10);
+      const pub: Publication = {
+        id: `p_${Date.now()}`,
+        type: (body.type as Publication['type']) ?? 'text',
+        authorId: currentUserId,
+        coAuthorIds: body.co_author_ids ?? [],
+        title: body.title ?? undefined,
+        text: body.text ?? '',
+        eventDate: body.event_date ?? today,
+        eventDateApproximate: body.event_date_approximate ?? false,
+        place: body.place ?? undefined,
+        publishDate: new Date().toISOString().slice(0, 10),
+        media,
+        participantIds: body.participant_ids ?? [],
+        topicTag: body.topic_tag ?? '',
+        likes: [],
+        comments: [],
+        isRead: false,
+        contentBlocks: body.content_blocks ?? undefined,
+      };
+      mockPublications.push(pub);
+      return { id: pub.id };
+    },
   },
   family: {
     async listMembers() {
@@ -135,7 +189,11 @@ export const mockApi: AngeloApi = {
   media: {
     async presign(body) {
       const key = `mock/${Date.now()}_${body.filename}`;
-      return { upload_url: `https://example.com/upload?key=${encodeURIComponent(key)}`, key, url: `https://example.com/media/${key}` };
+      const type = body.content_type?.startsWith('video/') ? 'video' : body.content_type?.startsWith('audio/') ? 'audio' : 'image';
+      const file = type === 'video' ? DEMO_VIDEO : type === 'audio' ? DEMO_AUDIO : DEMO_PHOTOS[mockMediaIndex++ % DEMO_PHOTOS.length];
+      const url = refUrl(file);
+      mockMediaStore.set(key, { url, type });
+      return { upload_url: `https://example.com/upload?key=${encodeURIComponent(key)}`, key, url };
     },
   },
   messages: {

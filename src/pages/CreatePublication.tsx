@@ -14,7 +14,7 @@ import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, L
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/integrations/api';
-import { requestJson } from '@/integrations/request';
+import { isMockUploadUrl } from '@/integrations/mockApi';
 import { usePrivacyVisibility } from '@/contexts/PrivacyVisibilityContext';
 import { getMaxBytesForContentType, getMaxBytesForPublicationType } from '@/lib/uploadLimits';
 import { toast } from '@/hooks/use-toast';
@@ -337,6 +337,11 @@ const CreatePublication: React.FC = () => {
         content_type: item.file.type || 'application/octet-stream',
         file_size_bytes: item.file.size,
       });
+      if (isMockUploadUrl(presign.upload_url)) {
+        const uploadMs = Math.round(performance.now() - startedAt);
+        setUploadItem(blockId, item.id, { status: 'uploaded', key: presign.key, uploadMs });
+        return;
+      }
       if (typeof window !== 'undefined') {
         try {
           const u = new URL(presign.upload_url);
@@ -463,7 +468,7 @@ const CreatePublication: React.FC = () => {
         const set = new Set<string>([me.id, ...accessPeopleIds]);
         visibleFor = Array.from(set);
       }
-      const created = await requestJson<{ id: string }>('POST', '/feed', {
+      const created = await api.feed.createPublication({
         type: pubType,
         title: title || null,
         text: bodyText,

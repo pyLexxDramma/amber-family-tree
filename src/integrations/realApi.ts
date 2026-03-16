@@ -1,4 +1,4 @@
-import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse } from './api.types';
+import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse, PublicationCreateBody } from './api.types';
 import type { AppUser, Comment, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getJson, requestJson } from './request';
 import {
@@ -26,6 +26,25 @@ export const realApi: AngeloApi = {
       const res = await getJson<unknown>(`/feed/${id}`);
       if (!res) return null;
       return normalizePublication(res);
+    },
+    async createPublication(body: PublicationCreateBody) {
+      const payload: Record<string, unknown> = {
+        type: body.type,
+        title: body.title ?? null,
+        text: body.text ?? '',
+        event_date: body.event_date,
+        event_date_approximate: body.event_date_approximate ?? false,
+        place: body.place ?? null,
+        topic_tag: body.topic_tag ?? '',
+        co_author_ids: body.co_author_ids ?? [],
+        participant_ids: body.participant_ids ?? [],
+        visible_for: body.visible_for ?? null,
+        exclude_for: body.exclude_for ?? null,
+        media_keys: body.media_keys ?? [],
+        content_blocks: body.content_blocks ?? null,
+      };
+      const res = await requestJson<{ id: string }>('POST', '/feed', payload);
+      return res;
     },
     async addComment(publicationId: string, text: string) {
       const res = await requestJson<unknown>('POST', `/feed/${publicationId}/comments`, { text });

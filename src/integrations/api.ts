@@ -17,6 +17,7 @@ export const api: AngeloApi = {
   feed: {
     list: (params) => selectApi().feed.list(params),
     getById: (id) => selectApi().feed.getById(id),
+    createPublication: (body) => selectApi().feed.createPublication(body),
     addComment: (publicationId, text) => selectApi().feed.addComment(publicationId, text),
     addLike: (publicationId) => selectApi().feed.addLike(publicationId),
     removeLike: (publicationId) => selectApi().feed.removeLike(publicationId),
