@@ -25,8 +25,6 @@ type SortOrder = 'new' | 'old';
 
 type MediaTile = { pubId: string; mediaId: string; url: string; thumbnail?: string };
 
-const isStressBuild = String(import.meta.env.VITE_STRESS_MOCK ?? '').toLowerCase() === 'true';
-
 const Feed: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -150,7 +148,7 @@ const Feed: React.FC = () => {
           <div className="flex items-center justify-between gap-3 mb-3">
             <div>
               <h1 className="text-xl font-semibold text-[var(--proto-text)]">Лента</h1>
-              {isStressBuild && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Демо · 200+ публикаций</p>}
+              {items.length > 50 && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Демо · {items.length} публикаций</p>}
             </div>
             <div className="flex items-center gap-2">
               <button

@@ -14,9 +14,7 @@ git pull
 
 echo ">>> frontend: build demo (mocks + stress)"
 npm ci --silent 2>/dev/null || npm install
-export VITE_STRESS_MOCK=true
-export VITE_USE_MOCK_API=true
-npm run build
+VITE_STRESS_MOCK=true VITE_USE_MOCK_API=true npm run build
 
 echo ">>> copy dist to $WEB_ROOT"
 sudo mkdir -p "$WEB_ROOT"
