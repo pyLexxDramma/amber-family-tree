@@ -318,117 +318,134 @@ const PublicationDetails: React.FC = () => {
             </div>
           </button>
 
-          {photoItems.length > 1 ? (
-            <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-              <div
-                ref={photoScrollerRef}
-                className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
-                style={{ WebkitOverflowScrolling: 'touch' }}
-                onScroll={() => {
-                  const el = photoScrollerRef.current;
-                  if (!el) return;
-                  if (rafScrollRef.current != null) cancelAnimationFrame(rafScrollRef.current);
-                  rafScrollRef.current = requestAnimationFrame(() => {
-                    const w = el.clientWidth || 1;
-                    const next = Math.max(0, Math.min(photoItems.length - 1, Math.round(el.scrollLeft / w)));
-                    setPhotoIdx(next);
-                  });
-                }}
-              >
-                {photoItems.map((m) => (
-                  <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
-                    <img src={m.url} alt="" className="w-full h-full object-cover" />
+          {(() => {
+            const blocks = pub.contentBlocks;
+            const media = pub.media ?? [];
+            if (blocks && blocks.length > 0) {
+              let mediaIdx = 0;
+              return (
+                <>
+                  <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Без названия'}</h1>
+                  {blocks.map((blk, bi) => {
+                    if (blk.type === 'text' && blk.text) {
+                      return <p key={bi} className="text-base text-[var(--proto-text)] leading-relaxed whitespace-pre-wrap">{blk.text}</p>;
+                    }
+                    if (blk.type === 'life_lesson' && blk.text) {
+                      return (
+                        <div key={bi} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">Жизненный урок</p>
+                          <p className="mt-2 text-sm text-[var(--proto-text)] whitespace-pre-wrap">{blk.text}</p>
+                        </div>
+                      );
+                    }
+                    if (blk.type === 'embed' && blk.url) {
+                      return (
+                        <div key={bi} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">Вставка</p>
+                          <a href={blk.url} target="_blank" rel="noreferrer" className="mt-2 block text-sm font-semibold text-[var(--proto-active)] break-words">{blk.url}</a>
+                        </div>
+                      );
+                    }
+                    if (blk.type === 'link_album' && blk.url) {
+                      return (
+                        <div key={bi} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+                          <p className="text-xs font-semibold text-[var(--proto-text-muted)]">Альбом</p>
+                          <a href={blk.url} target="_blank" rel="noreferrer" className="mt-2 block text-sm font-semibold text-[var(--proto-active)] break-words">{blk.url}</a>
+                        </div>
+                      );
+                    }
+                    const n = blk.n ?? 0;
+                    if ((blk.type === 'photos' || blk.type === 'video' || blk.type === 'audio' || blk.type === 'attachment') && n > 0) {
+                      const slice = media.slice(mediaIdx, mediaIdx + n);
+                      mediaIdx += n;
+                      if (blk.type === 'photos' && slice.length > 0) {
+                        const imgs = slice.filter(m => m.type === 'photo');
+                        if (imgs.length > 1) {
+                          return (
+                            <div key={bi} className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+                              <div className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                {imgs.map((m) => (
+                                  <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
+                                    <img src={m.url} alt="" className="w-full h-full object-cover" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                        if (imgs.length === 1) {
+                          return (
+                            <div key={bi} className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+                              <img src={imgs[0].url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                          );
+                        }
+                      }
+                      return (
+                        <div key={bi} className="space-y-2">
+                          {slice.map((m) => (
+                            <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
+                              {m.type === 'video' ? (
+                                <video controls playsInline preload="metadata" className="w-full rounded-lg border border-[var(--proto-border)] bg-black" poster={m.thumbnail || undefined} src={m.url} />
+                              ) : m.type === 'audio' ? (
+                                <audio controls preload="metadata" className="w-full" src={m.url} />
+                              ) : (
+                                <a href={m.url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors">Открыть</a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </>
+              );
+            }
+            return (
+              <>
+                {photoItems.length > 1 ? (
+                  <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+                    <div ref={photoScrollerRef} className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }} onScroll={() => { const el = photoScrollerRef.current; if (!el) return; if (rafScrollRef.current != null) cancelAnimationFrame(rafScrollRef.current); rafScrollRef.current = requestAnimationFrame(() => { const w = el.clientWidth || 1; const next = Math.max(0, Math.min(photoItems.length - 1, Math.round(el.scrollLeft / w))); setPhotoIdx(next); }); }}>
+                      {photoItems.map((m) => (
+                        <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
+                          <img src={m.url} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="absolute top-2 right-2 rounded-full bg-black/55 text-white text-xs font-semibold px-2.5 py-1">{photoIdx + 1}/{photoItems.length}</div>
+                    <button type="button" onClick={() => scrollToPhoto(Math.max(0, photoIdx - 1))} className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors" aria-label="Предыдущее фото"><ChevronLeft className="h-5 w-5" /></button>
+                    <button type="button" onClick={() => scrollToPhoto(Math.min(photoItems.length - 1, photoIdx + 1))} className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors" aria-label="Следующее фото"><ChevronRight className="h-5 w-5" /></button>
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 px-3">
+                      {photoItems.map((m, i) => (
+                        <button key={m.id} type="button" onClick={() => scrollToPhoto(i)} className={`h-1.5 rounded-full transition-all ${i === photoIdx ? 'w-6 bg-white/90' : 'w-2.5 bg-white/45 hover:bg-white/70'}`} aria-label={`Фото ${i + 1}`} />
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-
-              <div className="absolute top-2 right-2 rounded-full bg-black/55 text-white text-xs font-semibold px-2.5 py-1">
-                {photoIdx + 1}/{photoItems.length}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => scrollToPhoto(Math.max(0, photoIdx - 1))}
-                className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors"
-                aria-label="Предыдущее фото"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToPhoto(Math.min(photoItems.length - 1, photoIdx + 1))}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors"
-                aria-label="Следующее фото"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 px-3">
-                {photoItems.map((m, i) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => scrollToPhoto(i)}
-                    className={`h-1.5 rounded-full transition-all ${i === photoIdx ? 'w-6 bg-white/90' : 'w-2.5 bg-white/45 hover:bg-white/70'}`}
-                    aria-label={`Фото ${i + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-              {mainPhoto.src ? (
-                <img
-                  src={mainPhoto.src}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  style={{ objectPosition: mainPhoto.objectPosition }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
-              )}
-            </div>
-          )}
-
-          {otherMedia.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Файлы:</p>
-              <div className="space-y-2">
-                {otherMedia.slice(0, 10).map((m) => (
-                  <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
-                    <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
-                    <p className="text-xs text-[var(--proto-text-muted)] mb-2">{m.type}</p>
-                    {m.type === 'video' ? (
-                      <video
-                        controls
-                        playsInline
-                        preload="metadata"
-                        className="w-full rounded-lg border border-[var(--proto-border)] bg-black"
-                        poster={m.thumbnail || undefined}
-                        src={m.url}
-                      />
-                    ) : m.type === 'audio' ? (
-                      <audio controls preload="metadata" className="w-full" src={m.url} />
-                    ) : (
-                      <a
-                        href={m.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
-                      >
-                        Открыть
-                      </a>
-                    )}
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+                    {mainPhoto.src ? <img src={mainPhoto.src} alt="" className="w-full h-full object-cover" style={{ objectPosition: mainPhoto.objectPosition }} /> : <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Без названия'}</h1>
-          {publicationDescription ? (
-            <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p>
-          ) : null}
+                )}
+                {otherMedia.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Файлы:</p>
+                    <div className="space-y-2">
+                      {otherMedia.slice(0, 10).map((m) => (
+                        <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
+                          <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
+                          <p className="text-xs text-[var(--proto-text-muted)] mb-2">{m.type}</p>
+                          {m.type === 'video' ? <video controls playsInline preload="metadata" className="w-full rounded-lg border border-[var(--proto-border)] bg-black" poster={m.thumbnail || undefined} src={m.url} /> : m.type === 'audio' ? <audio controls preload="metadata" className="w-full" src={m.url} /> : <a href={m.url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors">Открыть</a>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Без названия'}</h1>
+                {publicationDescription ? <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p> : null}
+              </>
+            );
+          })()}
 
           {demo && emotions.length > 0 && (
             <div>
