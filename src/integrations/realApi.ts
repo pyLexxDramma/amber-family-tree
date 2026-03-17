@@ -72,7 +72,17 @@ export const realApi: AngeloApi = {
       const res = await requestJson<unknown>('DELETE', `/feed/${publicationId}/comments/${commentId}/like`);
       return normalizeComment(res);
     },
-    async updatePublication(publicationId: string, patch: { title?: string | null; text?: string | null }) {
+    async updatePublication(
+      publicationId: string,
+      patch: {
+        title?: string | null;
+        text?: string | null;
+        event_date?: string;
+        event_date_approximate?: boolean;
+        place?: string | null;
+        topic_tag?: string;
+      },
+    ) {
       const res = await requestJson<unknown>('PATCH', `/feed/${publicationId}`, patch);
       return normalizePublication(res);
     },

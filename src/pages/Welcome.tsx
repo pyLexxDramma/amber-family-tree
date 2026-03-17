@@ -10,13 +10,15 @@ const REFERENCE_CODE = '000000';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<'splash' | 'landing'>('splash');
+  const [phase, setPhase] = useState<'splash' | 'intro' | 'landing'>('splash');
   const [splashDone, setSplashDone] = useState(false);
+  const [introStep, setIntroStep] = useState(0);
 
   useEffect(() => {
     const shown = sessionStorage.getItem('angelo-splash-shown');
     if (shown === '1') {
-      setPhase('landing');
+      const introShown = sessionStorage.getItem('angelo-intro-shown');
+      setPhase(introShown === '1' ? 'landing' : 'intro');
       setSplashDone(true);
       return;
     }
@@ -29,7 +31,10 @@ const Welcome: React.FC = () => {
 
   useEffect(() => {
     if (splashDone && phase === 'splash') {
-      const t = setTimeout(() => setPhase('landing'), 400);
+      const t = setTimeout(() => {
+        const introShown = sessionStorage.getItem('angelo-intro-shown');
+        setPhase(introShown === '1' ? 'landing' : 'intro');
+      }, 400);
       return () => clearTimeout(t);
     }
   }, [splashDone, phase]);
@@ -42,6 +47,19 @@ const Welcome: React.FC = () => {
       navigate(ROUTES.classic.feed);
     } catch {
       navigate('/login', { state: { prefill: REFERENCE_EMAIL } });
+    }
+  };
+
+  const handleSkipIntro = () => {
+    sessionStorage.setItem('angelo-intro-shown', '1');
+    setPhase('landing');
+  };
+
+  const handleNextIntro = () => {
+    if (introStep < 2) {
+      setIntroStep(s => s + 1);
+    } else {
+      handleSkipIntro();
     }
   };
 
@@ -59,6 +77,76 @@ const Welcome: React.FC = () => {
             alt=""
             className="w-full h-auto object-contain"
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'intro') {
+    const slides = [
+      {
+        title: 'Ваше семейное дерево и хроника',
+        text: 'Angelo помогает собрать родственников в одной живой схеме: кто кому кем приходится, какие связи и поколения.',
+        image: `${import.meta.env.BASE_URL}prototype/tree-hero.png`,
+      },
+      {
+        title: 'Истории в ленте и таймлайне',
+        text: 'Фотографии, видео и воспоминания складываются в единую ленту и таймлайн по годам — от первых шагов до важных событий.',
+        image: `${import.meta.env.BASE_URL}prototype/feed.jpeg`,
+      },
+      {
+        title: 'Общий семейный альбом',
+        text: 'Каждый член семьи добавляет свои моменты, а вы управляете доступом: кому что показывать и что сохранить только для близких.',
+        image: `${import.meta.env.BASE_URL}prototype/publication.jpeg`,
+      },
+    ] as const;
+    const slide = slides[introStep] ?? slides[0];
+
+    return (
+      <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-between p-6 overflow-x-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-[420px]">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <h1 className="font-brand text-3xl sm:text-4xl font-bold text-[#333333]">Angelo</h1>
+            <BrandLogoCircle className="h-10 w-10 border-[#E5E1DC] bg-[#F0EDE8] shrink-0" />
+          </div>
+          <div className="w-full max-w-[260px] h-px bg-[#E5E1DC] mb-6" />
+          <div className="w-full rounded-3xl bg-[#F0EDE8] border border-[#E5E1DC] overflow-hidden mb-5">
+            {slide.image ? (
+              <div className="aspect-[4/3] bg-[#E5E1DC] overflow-hidden">
+                <img src={slide.image} alt="" className="w-full h-full object-cover" />
+              </div>
+            ) : null}
+            <div className="p-4 space-y-2">
+              <p className="font-serif text-lg font-semibold text-[#333333]">{slide.title}</p>
+              <p className="text-sm text-[#6B6560] leading-relaxed">{slide.text}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center gap-1 mb-5">
+            {[0, 1, 2].map(i => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === introStep ? 'w-6 bg-[#A39B8A]' : 'w-2.5 bg-[#D8D2CA]'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <button
+              type="button"
+              onClick={handleNextIntro}
+              className="w-full py-3.5 rounded-2xl bg-[#A39B8A] text-white font-semibold text-base hover:opacity-90 transition-opacity"
+            >
+              {introStep < 2 ? 'Далее' : 'Перейти к входу'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSkipIntro}
+              className="w-full py-2 text-sm text-[#6B6560] font-medium hover:underline"
+            >
+              Пропустить рассказ, перейти к входу
+            </button>
+          </div>
         </div>
       </div>
     );

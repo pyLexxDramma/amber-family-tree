@@ -66,6 +66,10 @@ const PublicationDetails: React.FC = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editText, setEditText] = useState('');
+  const [editEventDate, setEditEventDate] = useState('');
+  const [editApproximate, setEditApproximate] = useState(false);
+  const [editPlace, setEditPlace] = useState('');
+  const [editTopicTag, setEditTopicTag] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -212,6 +216,10 @@ const PublicationDetails: React.FC = () => {
   const openEdit = () => {
     setEditTitle(pub.title ?? '');
     setEditText(pub.text ?? '');
+    setEditEventDate(pub.eventDate);
+    setEditApproximate(Boolean(pub.eventDateApproximate));
+    setEditPlace(pub.place ?? '');
+    setEditTopicTag(pub.topicTag);
     setEditOpen(true);
   };
 
@@ -223,6 +231,10 @@ const PublicationDetails: React.FC = () => {
       const updated = await api.feed.updatePublication(pub.id, {
         title: editTitle.trim() ? editTitle.trim() : null,
         text: editText,
+        event_date: editEventDate || pub.eventDate,
+        event_date_approximate: editApproximate,
+        place: editPlace || null,
+        topic_tag: editTopicTag || '',
       });
       setPub(updated);
       setEditOpen(false);
@@ -650,6 +662,34 @@ const PublicationDetails: React.FC = () => {
               onChange={(e) => setEditTitle(e.target.value)}
               className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)]"
               placeholder="Название"
+            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={editEventDate}
+                onChange={(e) => setEditEventDate(e.target.value)}
+                className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] text-sm"
+              />
+              <label className="flex items-center gap-2 text-xs text-[var(--proto-text)]">
+                <input
+                  type="checkbox"
+                  checked={editApproximate}
+                  onChange={(e) => setEditApproximate(e.target.checked)}
+                />
+                Дата примерная
+              </label>
+            </div>
+            <Input
+              value={editPlace}
+              onChange={(e) => setEditPlace(e.target.value)}
+              className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)]"
+              placeholder="Место"
+            />
+            <Input
+              value={editTopicTag}
+              onChange={(e) => setEditTopicTag(e.target.value)}
+              className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)]"
+              placeholder="Тема / тег"
             />
             <Textarea
               value={editText}

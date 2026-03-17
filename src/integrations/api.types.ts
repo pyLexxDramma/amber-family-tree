@@ -39,7 +39,17 @@ export interface FeedApi {
   removeLike(publicationId: string): Promise<Publication>;
   addCommentLike(publicationId: string, commentId: string): Promise<Comment>;
   removeCommentLike(publicationId: string, commentId: string): Promise<Comment>;
-  updatePublication(publicationId: string, patch: { title?: string | null; text?: string | null }): Promise<Publication>;
+  updatePublication(
+    publicationId: string,
+    patch: {
+      title?: string | null;
+      text?: string | null;
+      event_date?: string;
+      event_date_approximate?: boolean;
+      place?: string | null;
+      topic_tag?: string;
+    },
+  ): Promise<Publication>;
   deletePublication(publicationId: string): Promise<{ deleted: true }>;
 }
 
