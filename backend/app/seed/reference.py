@@ -55,21 +55,24 @@ def _avatar_url(seed: str) -> str:
     return f"https://i.pravatar.cc/300?u={seed}"
 
 
-TOPIC_TO_PROTOTYPE = {
-    "День рождения": "/prototype/pub-birthday.png",
-    "Будни": "/prototype/pub-village.png",
-    "Праздники": "/prototype/pub-family-old.png",
-    "Путешествия": "/prototype/pub-village.png",
-    "Рецепты": "/prototype/pub-village.png",
-    "Истории": "/prototype/pub-family-old.png",
-    "Свадьба": "/prototype/pub-family-old.png",
+TOPIC_TO_FILES = {
+    "День рождения": ["Фото 1.jpg", "Фото 3.png"],
+    "Будни": ["Фото 2.png"],
+    "Праздники": ["Фото 3.png", "Фото 1.jpg"],
+    "Путешествия": ["Фото 4.png", "Фото 5.png"],
+    "Рецепты": ["Фото 6.png"],
+    "Истории": ["Фото7.png", "Фото 3.png"],
+    "Свадьба": ["Фото 1.jpg", "Фото 3.png"],
 }
+DEFAULT_FILES = ["Фото 1.jpg", "Фото 2.png", "Фото 3.png"]
 
 
 def _photo_url(topic_tag: str, seed: int) -> str:
+    from urllib.parse import quote
     base = get_settings().frontend_url.rstrip("/")
-    path = TOPIC_TO_PROTOTYPE.get(topic_tag, "/prototype/pub-family-old.png")
-    return f"{base}{path}"
+    files = TOPIC_TO_FILES.get(topic_tag, DEFAULT_FILES)
+    fname = files[seed % len(files)]
+    return f"{base}/demo/media/{quote(fname)}"
 
 
 logger = logging.getLogger(__name__)
