@@ -113,6 +113,7 @@ async def _load_publication_for_response(
 ) -> Publication | None:
     q = (
         select(Publication)
+        .execution_options(populate_existing=True)
         .options(
             selectinload(Publication.media),
             selectinload(Publication.comments).selectinload(Comment.likes),
@@ -124,6 +125,11 @@ async def _load_publication_for_response(
         q = q.where(Publication.family_id == family_id)
     result = await db.execute(q)
     return result.scalar_one_or_none()
+
+
+async def _get_like_ids(*, db: AsyncSession, publication_id: UUID) -> list[str]:
+    result = await db.execute(select(Like.member_id).where(Like.publication_id == publication_id))
+    return [str(x) for x in result.scalars().all()]
 
 
 @router.get("")
@@ -392,7 +398,7 @@ async def add_like(
         )
     )
     if existing.scalar_one_or_none():
-        like_ids = [str(l.member_id) for l in pub.likes]
+        like_ids = await _get_like_ids(db=db, publication_id=publication_id)
         return _publication_to_response(pub, like_ids)
     like = Like(
         id=uuid4(),
@@ -409,7 +415,7 @@ async def add_like(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
         )
-    like_ids = [str(l.member_id) for l in pub.likes]
+    like_ids = await _get_like_ids(db=db, publication_id=publication_id)
     return _publication_to_response(pub, like_ids)
 
 
@@ -550,6 +556,5 @@ async def remove_like(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
         )
-    await db.refresh(pub)
-    like_ids = [str(l.member_id) for l in pub.likes]
+    like_ids = await _get_like_ids(db=db, publication_id=publication_id)
     return _publication_to_response(pub, like_ids)
