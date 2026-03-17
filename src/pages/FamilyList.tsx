@@ -49,6 +49,7 @@ const FamilyList: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(!isDemoMode());
    const [contactOpen, setContactOpen] = useState(false);
+  const forcedInactiveIds = new Set(['m2', 'm3', 'm5']);
 
   useEffect(() => {
     api.family.listMembers()
@@ -67,7 +68,10 @@ const FamilyList: React.FC = () => {
   const myId = myProfile?.id ?? currentUserId;
 
   const filtered = members
-    .filter(m => filterTab === 'all' || (filterTab === 'active' ? (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true) : !(m.isActive ?? (m as { is_active?: boolean }).is_active ?? true)))
+    .filter(m => {
+      const active = !forcedInactiveIds.has(m.id) && (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true);
+      return filterTab === 'all' || (filterTab === 'active' ? active : !active);
+    })
     .filter(m => {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
@@ -173,7 +177,7 @@ const FamilyList: React.FC = () => {
                     const isCurrent = m.id === myId;
                     const relationLabel = getRelationshipLabel(mn, myId);
                     const avatarSrc = (m as { avatar?: string }).avatar ?? (useAvatarFallback() ? getPrototypeAvatarForMember(mn, myId).src : '');
-                    const isActive = m.isActive ?? (m as { is_active?: boolean }).is_active ?? true;
+                    const isActive = !forcedInactiveIds.has(m.id) && (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true);
                     const full = memberName(m) || 'Участник';
 
                     return (
@@ -202,6 +206,7 @@ const FamilyList: React.FC = () => {
                           <p className="font-semibold text-[var(--proto-text)] truncate">{full}</p>
                           <p className="text-sm text-[var(--proto-text-muted)] truncate">{relationLabel}</p>
                         </div>
+                        {!isActive && <span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">Неактивен</span>}
                       </button>
                     );
                   })}
