@@ -62,3 +62,8 @@ _ref/
 # Prototypes / extracted frames (not for production deploy)
 public/prototype/
 public/frame-extractor.html
+
+# Local-only helper scripts (not needed on production)
+scripts/capture-intro-screenshots.mjs
+scripts/extract-marketing-video-frames.mjs
+scripts/generate-intro-icons*.mjs

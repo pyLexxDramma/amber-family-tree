@@ -18,6 +18,7 @@ cd ..
 
 echo ">>> frontend: npm run build"
 export VITE_USE_MOCK_API=false
+export SKIP_DEMO_FEED=true
 npm ci --silent 2>/dev/null || npm install
 npm run build
 

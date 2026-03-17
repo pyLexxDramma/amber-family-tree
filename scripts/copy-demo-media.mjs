@@ -47,6 +47,10 @@ if (fs.existsSync(srcRef)) {
   console.log(`Copied ${files.length} demo media files to public/demo/media`);
 }
 
+if (process.env.SKIP_DEMO_FEED === 'true') {
+  process.exit(0);
+}
+
 fs.mkdirSync(destFeed, { recursive: true });
 const feedImages = [];
 for (const { dir, file } of FEED_SOURCES) {
