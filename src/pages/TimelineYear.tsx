@@ -62,9 +62,14 @@ const TimelineYear: React.FC = () => {
                 >
                   <div className="aspect-[4/3] bg-[var(--proto-border)]">
                     {coverSrc ? (
-                      <img src={coverSrc} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={coverSrc}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.src = getPrototypeFeedPostPhotoByTopic(pub.topicTag).src; }}
+                      />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
+                      <img src={getPrototypeFeedPostPhotoByTopic(pub.topicTag).src} alt="" className="w-full h-full object-cover" />
                     )}
                   </div>
                   <div className="p-4">

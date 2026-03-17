@@ -120,6 +120,7 @@ const TimelinePage: React.FC = () => {
           title: y,
           subtitle: `${evs.length} событий`,
           thumb: evs[0]?.thumb,
+          topicTag: evs[0]?.topic,
           onClick: () => navigate(ROUTES.classic.timelineYear(y)),
         }));
     }
@@ -139,6 +140,7 @@ const TimelinePage: React.FC = () => {
         title: `${d}-е`,
         subtitle: `${evs.length} событий`,
         thumb: evs[0]?.thumb,
+        topicTag: evs[0]?.topic,
         onClick: () => navigate(ROUTES.classic.timelineDecade(String(d))),
       }));
   }, [navigate, scale, significantEvents]);
@@ -345,7 +347,16 @@ const TimelinePage: React.FC = () => {
                 className="w-full rounded-2xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors flex items-stretch"
               >
                 <div className="w-24 shrink-0 bg-[var(--proto-border)]">
-                  {c.thumb ? <img src={c.thumb} alt="" className="w-full h-full object-cover" /> : null}
+                  {c.thumb ? (
+                    <img
+                      src={c.thumb}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(c.topicTag || '').src; }}
+                    />
+                  ) : (
+                    <img src={getPrototypePublicationPhotoByTopic(c.topicTag || '').src} alt="" className="w-full h-full object-cover" />
+                  )}
                 </div>
                 <div className="p-4 flex-1">
                   <p className="text-lg font-semibold text-[var(--proto-text)]">{c.title}</p>

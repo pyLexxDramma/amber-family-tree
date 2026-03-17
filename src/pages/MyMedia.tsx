@@ -6,6 +6,7 @@ import { ROUTES } from '@/constants/routes';
 import { Mic, Video } from 'lucide-react';
 import type { MediaItem, MediaType } from '@/types';
 import { api } from '@/integrations/api';
+import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
 import { requestJson } from '@/integrations/request';
 import { getMaxBytesForContentType } from '@/lib/uploadLimits';
 
@@ -225,9 +226,10 @@ const MyMedia: React.FC = () => {
                 <div className="relative w-full h-full min-h-[140px]">
                   {item.type !== 'audio' ? (
                     <img
-                      src={item.thumbnail || item.url}
+                      src={item.thumbnail || item.url || getPrototypePublicationPhotoByTopic(item.category || '').src}
                       alt=""
                       className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(item.category || '').src; }}
                     />
                   ) : (
                     <div

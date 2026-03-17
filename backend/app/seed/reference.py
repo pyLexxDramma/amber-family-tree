@@ -55,24 +55,21 @@ def _avatar_url(seed: str) -> str:
     return f"https://i.pravatar.cc/300?u={seed}"
 
 
-TOPIC_TO_FILE = {
-    "День рождения": "Фото 1.jpg",
-    "Будни": "Фото 2.png",
-    "Праздники": "Фото 3.png",
-    "Путешествия": "Фото 4.png",
-    "Рецепты": "Фото 6.png",
-    "Истории": "Фото7.png",
-    "Свадьба": "Фото 1.jpg",
+TOPIC_TO_PROTOTYPE = {
+    "День рождения": "/prototype/pub-birthday.png",
+    "Будни": "/prototype/pub-village.png",
+    "Праздники": "/prototype/pub-family-old.png",
+    "Путешествия": "/prototype/pub-village.png",
+    "Рецепты": "/prototype/pub-village.png",
+    "Истории": "/prototype/pub-family-old.png",
+    "Свадьба": "/prototype/pub-family-old.png",
 }
 
 
 def _photo_url(topic_tag: str, seed: int) -> str:
-    from urllib.parse import quote
     base = get_settings().frontend_url.rstrip("/")
-    fname = TOPIC_TO_FILE.get(topic_tag, "Фото 1.jpg")
-    if seed % 2 == 1 and topic_tag == "Путешествия":
-        fname = "Фото 5.png"
-    return f"{base}/demo/media/{quote(fname)}"
+    path = TOPIC_TO_PROTOTYPE.get(topic_tag, "/prototype/pub-family-old.png")
+    return f"{base}{path}"
 
 
 logger = logging.getLogger(__name__)

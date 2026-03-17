@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import type { Publication } from '@/types';
+import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
 
 type AlbumDef = {
   id: string;
@@ -16,6 +17,7 @@ type AlbumView = {
   title: string;
   photoCount: number;
   coverUrl: string | null;
+  topicTag: string;
 };
 
 function photoCoverOf(p: Publication): string | null {
@@ -45,7 +47,8 @@ const Albums: React.FC = () => {
       const matched = pubs.filter(d.match);
       const photos = matched.flatMap(p => p.media.filter(m => m.type === 'photo'));
       const cover = matched.map(photoCoverOf).find(Boolean) || null;
-      return { id: d.id, title: d.title, photoCount: photos.length, coverUrl: cover };
+      const firstPub = matched.find(p => photoCoverOf(p));
+      return { id: d.id, title: d.title, photoCount: photos.length, coverUrl: cover, topicTag: firstPub?.topicTag || '' };
     });
   }, [defs, pubs]);
 
@@ -63,7 +66,12 @@ const Albums: React.FC = () => {
                 className="text-left"
               >
                 <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--proto-border)]">
-                  {a.coverUrl ? <img src={a.coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover" /> : null}
+                  <img
+                    src={a.coverUrl || getPrototypePublicationPhotoByTopic(a.topicTag).src}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(a.topicTag).src; }}
+                  />
                   <span className="absolute bottom-2 right-2 px-2 py-1 rounded-lg text-xs font-medium bg-black/55 text-white">
                     {a.photoCount} фото
                   </span>

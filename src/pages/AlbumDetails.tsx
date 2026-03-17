@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import type { Publication } from '@/types';
+import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
 
 type AlbumDef = {
   id: string;
@@ -61,8 +62,7 @@ const AlbumDetails: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             {matched.map((p) => {
-              const cover = photoCoverOf(p);
-              if (!cover) return null;
+              const cover = photoCoverOf(p) || getPrototypePublicationPhotoByTopic(p.topicTag).src;
               return (
                 <button
                   key={p.id}
@@ -70,7 +70,12 @@ const AlbumDetails: React.FC = () => {
                   onClick={() => navigate(ROUTES.classic.publication(p.id))}
                   className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--proto-border)] hover:opacity-95 transition-opacity"
                 >
-                  <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <img
+                    src={cover}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(p.topicTag).src; }}
+                  />
                 </button>
               );
             })}
