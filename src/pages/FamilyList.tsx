@@ -211,7 +211,6 @@ const FamilyList: React.FC = () => {
                           <p className="font-semibold text-[var(--proto-text)] truncate">{full}</p>
                           <p className="text-sm text-[var(--proto-text-muted)] truncate">{relationLabel}</p>
                         </div>
-                        {!isActive && <span className="text-[10px] font-semibold text-red-600 uppercase tracking-wider">Неактивен</span>}
                       </button>
                     );
                   })}
