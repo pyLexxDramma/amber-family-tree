@@ -186,13 +186,13 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     await db.commit()
     result = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
     all_members = list(result.scalars().all())
-    author = member
-    participant_ids = [str(m.id) for m in all_members if m.id != author.id][:50]
     if not member.avatar:
         member.avatar = _avatar_url("alina")
         await db.commit()
         await db.refresh(member)
     for i, pub_data in enumerate(PUBLICATIONS):
+        author = all_members[i % max(1, len(all_members))]
+        participant_ids = [str(m.id) for m in all_members if m.id != author.id][:50]
         pub = Publication(
             id=uuid4(),
             family_id=user.family_id,

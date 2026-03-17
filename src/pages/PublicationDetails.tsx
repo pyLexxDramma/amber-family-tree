@@ -18,6 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { isMilestone, toggleMilestone } from '@/lib/milestones';
 import { ApiError } from '@/integrations/request';
+import { isMockUploadUrl } from '@/integrations/mockApi';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +46,16 @@ const compareMedia = (a: { name?: string; url?: string; thumbnail?: string }, b:
   return au.localeCompare(bu);
 };
 
+type MediaEditItem = {
+  id: string;
+  type: 'photo' | 'video' | 'audio' | 'document';
+  url: string;
+  thumbnail?: string;
+  name?: string;
+  action: 'keep' | 'remove' | 'replace';
+  replaceFile?: File;
+};
+
 const PublicationDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -70,6 +81,8 @@ const PublicationDetails: React.FC = () => {
   const [editApproximate, setEditApproximate] = useState(false);
   const [editPlace, setEditPlace] = useState('');
   const [editTopicTag, setEditTopicTag] = useState('');
+  const [editMedia, setEditMedia] = useState<MediaEditItem[]>([]);
+  const [editNewFiles, setEditNewFiles] = useState<File[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -220,6 +233,17 @@ const PublicationDetails: React.FC = () => {
     setEditApproximate(Boolean(pub.eventDateApproximate));
     setEditPlace(pub.place ?? '');
     setEditTopicTag(pub.topicTag);
+    setEditMedia(
+      (pub.media ?? []).map((m) => ({
+        id: m.id,
+        type: m.type as MediaEditItem['type'],
+        url: m.url,
+        thumbnail: m.thumbnail,
+        name: m.name,
+        action: 'keep',
+      })),
+    );
+    setEditNewFiles([]);
     setEditOpen(true);
   };
 
@@ -228,20 +252,57 @@ const PublicationDetails: React.FC = () => {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const updated = await api.feed.updatePublication(pub.id, {
+      const uploadFile = async (file: File) => {
+        const presign = await api.media.presign({
+          filename: file.name,
+          content_type: file.type || 'application/octet-stream',
+          file_size_bytes: file.size,
+          publication_id: pub.id,
+        });
+        if (isMockUploadUrl(presign.upload_url)) return presign.key;
+        const putRes = await fetch(presign.upload_url, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+          body: file,
+        });
+        if (!putRes.ok) {
+          let extra = '';
+          try {
+            const t = (await putRes.text()).trim();
+            if (t) extra = ` ${t.slice(0, 220)}`;
+          } catch {}
+          throw new Error(`upload failed: ${putRes.status}${extra}`);
+        }
+        return presign.key;
+      };
+
+      const removeMediaIds = editMedia.filter(m => m.action === 'remove' || m.action === 'replace').map(m => m.id);
+      const filesToUpload = [
+        ...editMedia.filter(m => m.action === 'replace' && m.replaceFile).map(m => m.replaceFile as File),
+        ...editNewFiles,
+      ];
+      const addMediaKeys: string[] = [];
+      for (const f of filesToUpload) addMediaKeys.push(await uploadFile(f));
+
+      const patch: any = {
         title: editTitle.trim() ? editTitle.trim() : null,
         text: editText,
         event_date: editEventDate || pub.eventDate,
         event_date_approximate: editApproximate,
         place: editPlace || null,
         topic_tag: editTopicTag || '',
-      });
+      };
+      if (removeMediaIds.length) patch.remove_media_ids = removeMediaIds;
+      if (addMediaKeys.length) patch.add_media_keys = addMediaKeys;
+
+      const updated = await api.feed.updatePublication(pub.id, patch);
       setPub(updated);
       setEditOpen(false);
       platform.hapticFeedback('light');
     } catch (e) {
       let desc: string | undefined;
       if (e instanceof ApiError) desc = `HTTP ${e.status}: ${e.bodyText.slice(0, 160)}`;
+      else if (e instanceof Error) desc = e.message.slice(0, 220);
       toast({ title: 'Не удалось сохранить изменения', description: desc });
     } finally {
       setIsSaving(false);
@@ -697,6 +758,102 @@ const PublicationDetails: React.FC = () => {
               className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] min-h-[160px]"
               placeholder="Текст публикации"
             />
+            <div className="rounded-xl border-2 border-[var(--proto-border)] bg-white p-3">
+              <p className="text-xs font-semibold text-[var(--proto-text)]">Вложения</p>
+              <div className="mt-2 space-y-2 max-h-52 overflow-auto pr-1">
+                {editMedia.length ? (
+                  editMedia.map((m) => {
+                    const preview = m.type === 'photo' ? m.url : m.type === 'video' ? (m.thumbnail || m.url) : '';
+                    const isRemoved = m.action === 'remove';
+                    const isReplace = m.action === 'replace';
+                    const accept = m.type === 'photo' ? 'image/*' : m.type === 'video' ? 'video/*' : m.type === 'audio' ? 'audio/*' : '*/*';
+                    return (
+                      <div key={m.id} className={`flex gap-3 rounded-lg border border-[var(--proto-border)] p-2 ${isRemoved ? 'opacity-60' : ''}`}>
+                        <div className="h-12 w-12 rounded-md overflow-hidden bg-[var(--proto-border)] shrink-0 flex items-center justify-center">
+                          {preview ? (
+                            <img src={preview} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] font-semibold text-[var(--proto-text-muted)] uppercase">{m.type}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
+                          <p className="text-[11px] text-[var(--proto-text-muted)]">
+                            {isRemoved ? 'Будет удалено' : isReplace ? `Заменить: ${m.replaceFile?.name || 'выберите файл'}` : 'Без изменений'}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+                              onClick={() => setEditMedia(prev => prev.map(x => x.id === m.id ? { ...x, action: x.action === 'remove' ? 'keep' : 'remove', replaceFile: undefined } : x))}
+                            >
+                              {isRemoved ? 'Отменить удаление' : 'Удалить'}
+                            </button>
+                            <label className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors inline-flex items-center cursor-pointer">
+                              Заменить
+                              <input
+                                type="file"
+                                accept={accept}
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (!f) return;
+                                  setEditMedia(prev => prev.map(x => x.id === m.id ? { ...x, action: 'replace', replaceFile: f } : x));
+                                }}
+                              />
+                            </label>
+                            {isReplace && (
+                              <button
+                                type="button"
+                                className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+                                onClick={() => setEditMedia(prev => prev.map(x => x.id === m.id ? { ...x, action: 'keep', replaceFile: undefined } : x))}
+                              >
+                                Отменить замену
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-[var(--proto-text-muted)]">Нет вложений</p>
+                )}
+              </div>
+              <div className="mt-3">
+                <label className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors cursor-pointer">
+                  Добавить фото/видео
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      if (!files.length) return;
+                      setEditNewFiles(prev => [...prev, ...files]);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                </label>
+                {editNewFiles.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {editNewFiles.map((f, i) => (
+                      <div key={`${f.name}_${i}`} className="flex items-center gap-2">
+                        <p className="text-xs text-[var(--proto-text)] truncate flex-1">{f.name}</p>
+                        <button
+                          type="button"
+                          className="text-xs text-[var(--proto-text-muted)] hover:text-[var(--proto-text)]"
+                          onClick={() => setEditNewFiles(prev => prev.filter((_, idx) => idx !== i))}
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             <Button
               type="button"
               className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"

@@ -81,6 +81,8 @@ export const realApi: AngeloApi = {
         event_date_approximate?: boolean;
         place?: string | null;
         topic_tag?: string;
+        add_media_keys?: string[];
+        remove_media_ids?: string[];
       },
     ) {
       const res = await requestJson<unknown>('PATCH', `/feed/${publicationId}`, patch);

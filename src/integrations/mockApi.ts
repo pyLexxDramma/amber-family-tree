@@ -93,6 +93,27 @@ export const mockApi: AngeloApi = {
       if (!pub) throw new Error('Publication not found');
       if (patch.title !== undefined) pub.title = patch.title ?? '';
       if (patch.text !== undefined) pub.text = patch.text ?? '';
+      const removeIds = new Set((patch as any).remove_media_ids ?? []);
+      if (removeIds.size) {
+        pub.media = (pub.media ?? []).filter(m => !removeIds.has(m.id));
+      }
+      const addKeys: string[] = (patch as any).add_media_keys ?? [];
+      if (addKeys.length) {
+        const next = addKeys.map((key, i) => {
+          const stored = mockMediaStore.get(key);
+          const url = stored?.url ?? refUrl(DEMO_PHOTOS[(mockMediaIndex + i) % DEMO_PHOTOS.length]);
+          const mediaType = (stored?.type ?? 'image') as 'photo' | 'video' | 'audio' | 'document';
+          return {
+            id: `m_${Date.now()}_${i}`,
+            type: (mediaType === 'image' ? 'photo' : mediaType),
+            url,
+            thumbnail: mediaType === 'video' || mediaType === 'photo' ? url : undefined,
+            name: key.split('/').pop() || `Media ${i + 1}`,
+            size: 0,
+          };
+        });
+        pub.media = [...(pub.media ?? []), ...(next as any)];
+      }
       return pub;
     },
     async deletePublication(publicationId) {

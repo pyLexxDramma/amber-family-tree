@@ -87,6 +87,8 @@ class PublicationUpdate(BaseModel):
     participant_ids: list[str] | None = None
     visible_for: list[str] | None = None
     exclude_for: list[str] | None = None
+    add_media_keys: list[str] | None = Field(None, description="S3 keys from presign to attach")
+    remove_media_ids: list[str] | None = Field(None, description="Media item ids to detach/delete from publication")
 
 
 class CommentCreate(BaseModel):

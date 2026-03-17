@@ -48,6 +48,8 @@ export interface FeedApi {
       event_date_approximate?: boolean;
       place?: string | null;
       topic_tag?: string;
+      add_media_keys?: string[];
+      remove_media_ids?: string[];
     },
   ): Promise<Publication>;
   deletePublication(publicationId: string): Promise<{ deleted: true }>;

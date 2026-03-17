@@ -300,8 +300,27 @@ async def update_publication(
             detail="Only author can edit publication",
         )
     data = body.model_dump(exclude_unset=True)
+    add_media_keys = data.pop("add_media_keys", None) or []
+    remove_media_ids = set(data.pop("remove_media_ids", None) or [])
     for k, v in data.items():
         setattr(pub, k, v)
+    if remove_media_ids:
+        for m in list(pub.media):
+            if str(m.id) in remove_media_ids:
+                await db.delete(m)
+    if add_media_keys:
+        for key in add_media_keys:
+            inferred = _infer_media_type_from_key(key)
+            media_item = MediaItem(
+                id=uuid4(),
+                publication_id=pub.id,
+                type=inferred or (pub.type if pub.type in ("photo", "video", "audio", "document") else "photo"),
+                url=key,
+                thumbnail=None,
+                name=key.split("/")[-1],
+                size=0,
+            )
+            db.add(media_item)
     await db.commit()
     pub = await _load_publication_for_response(
         db=db, publication_id=publication_id, family_id=current_user.family_id
