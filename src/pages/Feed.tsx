@@ -42,10 +42,30 @@ const Feed: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seedLoading, setSeedLoading] = useState(false);
 
-  const loadData = () => {
-    api.feed.list().then(setItems);
-    api.family.listMembers().then(setMembers);
+  const loadData = async (autoSeed = true) => {
+    const [pubs, mems] = await Promise.all([
+      api.feed.list(),
+      api.family.listMembers(),
+    ]);
+    setItems(pubs);
+    setMembers(mems);
     api.profile.getMyProfile().then(me => setMyMemberId(me.id)).catch(() => {});
+
+    if (autoSeed && !isDemoMode() && api.debug && pubs.length === 0) {
+      setSeedLoading(true);
+      try {
+        await api.debug.seedReference();
+        const [newPubs, newMems] = await Promise.all([
+          api.feed.list(),
+          api.family.listMembers(),
+        ]);
+        setItems(newPubs);
+        setMembers(newMems);
+      } catch {
+      } finally {
+        setSeedLoading(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -57,11 +77,11 @@ const Feed: React.FC = () => {
     setSeedLoading(true);
     try {
       await api.debug.seedReference();
-      loadData();
+      await loadData(false);
     } catch {
+    } finally {
       setSeedLoading(false);
     }
-    setSeedLoading(false);
   };
 
   const memberMap = new Map(members.map(m => [m.id, m]));

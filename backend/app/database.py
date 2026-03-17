@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 import asyncio
 import time
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
@@ -55,6 +56,7 @@ async def init_db() -> None:
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
+                await conn.execute(text("ALTER TABLE publications ADD COLUMN IF NOT EXISTS content_blocks JSONB"))
             return
         except Exception as exc:
             last_exc = exc
