@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { ROUTES } from '@/constants/routes';
@@ -13,8 +13,11 @@ const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?:
 const TimelineDecade: React.FC = () => {
   const { decadeStart } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<Publication[]>([]);
   const [milestoneVer, setMilestoneVer] = useState(0);
+  const focusParam = (searchParams.get('focus') || '').toLowerCase();
+  const [focus, setFocus] = useState<'all' | 'key'>(focusParam === 'key' ? 'key' : 'all');
 
   useEffect(() => {
     api.feed.list().then(setItems);
@@ -43,36 +46,68 @@ const TimelineDecade: React.FC = () => {
       if (!Number.isFinite(y) || !safeStart) return false;
       return y >= safeStart && y <= end;
     });
-    const filtered = milestoneIds.length ? inDecade.filter(p => milestoneIds.includes(p.id)) : inDecade;
+    const filtered = focus === 'key'
+      ? (milestoneIds.length ? inDecade.filter(p => milestoneIds.includes(p.id)) : [])
+      : inDecade;
     for (const p of filtered) {
       const y = eventDateOf(p).slice(0, 4);
       map.set(y, (map.get(y) || 0) + 1);
     }
     return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
-  }, [end, items, milestoneIds, safeStart]);
+  }, [end, focus, items, milestoneIds, safeStart]);
+
+  useEffect(() => {
+    const next = focusParam === 'key' ? 'key' : 'all';
+    setFocus(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusParam]);
+
+  const setFocusMode = (m: 'all' | 'key') => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('focus', m);
+      return next;
+    });
+  };
 
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title={safeStart ? `${safeStart}-е` : 'Десятилетие'} onBack={() => navigate(-1)} light right={null} />
         <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {(['key', 'all'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setFocusMode(m)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  focus === m ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'
+                }`}
+              >
+                {m === 'key' ? 'Ключевые' : 'Все'}
+              </button>
+            ))}
+          </div>
           <div className="space-y-3">
             {yearCounts.map(([y, c]) => (
               <button
                 key={y}
                 type="button"
-                onClick={() => navigate(ROUTES.classic.timelineYear(y))}
+                onClick={() => navigate(`${ROUTES.classic.timelineYear(y)}?focus=${focus}`)}
                 className="w-full rounded-2xl bg-white border border-[var(--proto-border)] p-4 text-left hover:border-[var(--proto-active)]/40 transition-colors"
               >
                 <p className="text-lg font-semibold text-[var(--proto-text)]">{y}</p>
-                <p className="text-sm text-[var(--proto-text-muted)]">{c} событий</p>
+                <p className="text-sm text-[var(--proto-text-muted)]">{focus === 'key' ? `${c} избранных` : `${c} событий`}</p>
               </button>
             ))}
           </div>
 
           {yearCounts.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-sm text-[var(--proto-text-muted)]">Нет значимых событий за это десятилетие</p>
+              <p className="text-sm text-[var(--proto-text-muted)]">
+                {focus === 'key' ? 'Нет ключевых (избранных) событий за это десятилетие' : 'Нет событий за это десятилетие'}
+              </p>
             </div>
           )}
         </div>

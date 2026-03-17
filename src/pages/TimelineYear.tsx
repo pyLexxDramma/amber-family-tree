@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { ROUTES } from '@/constants/routes';
@@ -15,12 +15,21 @@ const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?:
 const TimelineYear: React.FC = () => {
   const { year } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<Publication[]>([]);
   const [milestoneVer, setMilestoneVer] = useState(0);
+  const focusParam = (searchParams.get('focus') || '').toLowerCase();
+  const [focus, setFocus] = useState<'all' | 'key'>(focusParam === 'key' ? 'key' : 'all');
 
   useEffect(() => {
     api.feed.list().then(setItems);
   }, []);
+
+  useEffect(() => {
+    const next = focusParam === 'key' ? 'key' : 'all';
+    setFocus(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusParam]);
 
   useEffect(() => {
     const h = () => setMilestoneVer(v => v + 1);
@@ -39,15 +48,38 @@ const TimelineYear: React.FC = () => {
     const byYear = items
       .filter((p) => eventDateOf(p).slice(0, 4) === safeYear)
       .sort((a, b) => (eventDateOf(b) || '').localeCompare(eventDateOf(a) || ''));
-    if (milestoneIds.length === 0) return byYear;
+    if (focus === 'all') return byYear;
+    if (milestoneIds.length === 0) return [];
     return byYear.filter(p => milestoneIds.includes(p.id));
-  }, [items, milestoneIds, safeYear]);
+  }, [focus, items, milestoneIds, safeYear]);
+
+  const setFocusMode = (m: 'all' | 'key') => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('focus', m);
+      return next;
+    });
+  };
 
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar title={`События ${safeYear || ''}`} onBack={() => navigate(-1)} light right={null} />
         <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {(['key', 'all'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setFocusMode(m)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  focus === m ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'
+                }`}
+              >
+                {m === 'key' ? 'Ключевые' : 'Все'}
+              </button>
+            ))}
+          </div>
           <div className="space-y-4">
             {list.map((pub) => {
               const coverSrc = pub.media.find(m => m.type === 'photo')?.url
@@ -84,13 +116,15 @@ const TimelineYear: React.FC = () => {
 
           {list.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-sm text-[var(--proto-text-muted)]">Нет значимых событий за этот год</p>
+              <p className="text-sm text-[var(--proto-text-muted)]">
+                {focus === 'key' ? 'Нет ключевых (избранных) событий за этот год' : 'Нет событий за этот год'}
+              </p>
               <button
                 type="button"
-                onClick={() => navigate(ROUTES.classic.feed)}
+                onClick={() => focus === 'key' ? setFocusMode('all') : navigate(ROUTES.classic.feed)}
                 className="mt-4 h-11 px-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
               >
-                Перейти в ленту
+                {focus === 'key' ? 'Показать все события года' : 'Перейти в ленту'}
               </button>
             </div>
           )}

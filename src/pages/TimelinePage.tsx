@@ -14,6 +14,7 @@ import { getMilestoneIds } from '@/lib/milestones';
 
 type Scale = 'decades' | 'years';
 type PubType = Publication['type'];
+type FocusMode = 'all' | 'key';
 
 const typeLabels: Record<PubType, string> = {
   photo: 'Фото',
@@ -61,6 +62,7 @@ function formatDateByScale(dateStr: string, scale: Scale): string {
 const TimelinePage: React.FC = () => {
   const navigate = useNavigate();
   const [scale, setScale] = useState<Scale>('years');
+  const [focus, setFocus] = useState<FocusMode>('all');
   const [filterPersonId, setFilterPersonId] = useState<string | null>(null);
   const [filterPlace, setFilterPlace] = useState<string | null>(null);
   const [filterTag, setFilterTag] = useState<string | null>(null);
@@ -99,16 +101,17 @@ const TimelinePage: React.FC = () => {
   }, [baseEvents, filterPersonId, filterPlace, filterTag, filterType]);
 
   const milestoneIds = useMemo(() => getMilestoneIds(), [milestoneVer]);
-  const significantEvents = useMemo(() => {
-    if (milestoneIds.length === 0) return filteredEvents;
+  const focusEvents = useMemo(() => {
+    if (focus === 'all') return filteredEvents;
+    if (milestoneIds.length === 0) return [];
     const set = new Set(milestoneIds);
     return filteredEvents.filter(ev => set.has(ev.id));
-  }, [filteredEvents, milestoneIds]);
+  }, [filteredEvents, focus, milestoneIds]);
 
   const cards = useMemo(() => {
     if (scale === 'years') {
-      const byYear = new Map<string, typeof significantEvents>();
-      significantEvents.forEach((ev) => {
+      const byYear = new Map<string, typeof focusEvents>();
+      focusEvents.forEach((ev) => {
         const y = ev.date.slice(0, 4);
         if (!byYear.has(y)) byYear.set(y, []);
         byYear.get(y)!.push(ev);
@@ -118,15 +121,15 @@ const TimelinePage: React.FC = () => {
         .map(([y, evs]) => ({
           key: y,
           title: y,
-          subtitle: `${evs.length} событий`,
+          subtitle: focus === 'key' ? `${evs.length} избранных` : `${evs.length} событий`,
           thumb: evs[0]?.thumb,
           topicTag: evs[0]?.topic,
-          onClick: () => navigate(ROUTES.classic.timelineYear(y)),
+          onClick: () => navigate(`${ROUTES.classic.timelineYear(y)}?focus=${focus}`),
         }));
     }
 
-    const byDecade = new Map<number, typeof significantEvents>();
-    significantEvents.forEach((ev) => {
+    const byDecade = new Map<number, typeof focusEvents>();
+    focusEvents.forEach((ev) => {
       const y = parseInt(ev.date.slice(0, 4), 10);
       if (!Number.isFinite(y)) return;
       const d = Math.floor(y / 10) * 10;
@@ -138,12 +141,12 @@ const TimelinePage: React.FC = () => {
       .map(([d, evs]) => ({
         key: String(d),
         title: `${d}-е`,
-        subtitle: `${evs.length} событий`,
+        subtitle: focus === 'key' ? `${evs.length} избранных` : `${evs.length} событий`,
         thumb: evs[0]?.thumb,
         topicTag: evs[0]?.topic,
-        onClick: () => navigate(ROUTES.classic.timelineDecade(String(d))),
+        onClick: () => navigate(`${ROUTES.classic.timelineDecade(String(d))}?focus=${focus}`),
       }));
-  }, [navigate, scale, significantEvents]);
+  }, [focus, focusEvents, navigate, scale]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -255,6 +258,20 @@ const TimelinePage: React.FC = () => {
               </button>
             ))}
           </div>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {(['key', 'all'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setFocus(m)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  focus === m ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'
+                }`}
+              >
+                {m === 'key' ? 'Ключевые' : 'Все'}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-wrap gap-2 mb-4 relative" ref={menuRef}>
             <span className="text-xs text-[var(--proto-text-muted)] self-center mr-1">Фильтры:</span>
             <div className="relative">
@@ -338,36 +355,53 @@ const TimelinePage: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="space-y-3">
-            {cards.map((c) => (
+          {focus === 'key' && focusEvents.length === 0 ? (
+            <div className="rounded-2xl bg-white border border-[var(--proto-border)] p-5">
+              <p className="text-sm font-semibold text-[var(--proto-text)]">Пока нет ключевых событий</p>
+              <p className="text-sm text-[var(--proto-text-muted)] mt-2">
+                Откройте публикацию и нажмите «Важное», чтобы добавить её в избранное. Тогда она появится здесь.
+              </p>
               <button
-                key={c.key}
                 type="button"
-                onClick={c.onClick}
-                className="w-full rounded-2xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors flex items-stretch"
+                onClick={() => navigate(ROUTES.classic.feed)}
+                className="mt-4 h-11 px-4 rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
               >
-                <div className="w-24 shrink-0 bg-[var(--proto-border)]">
-                  {c.thumb ? (
-                    <img
-                      src={c.thumb}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(c.topicTag || '').src; }}
-                    />
-                  ) : (
-                    <img src={getPrototypePublicationPhotoByTopic(c.topicTag || '').src} alt="" className="w-full h-full object-cover" />
-                  )}
-                </div>
-                <div className="p-4 flex-1">
-                  <p className="text-lg font-semibold text-[var(--proto-text)]">{c.title}</p>
-                  <p className="text-sm text-[var(--proto-text-muted)]">{c.subtitle}</p>
-                </div>
+                Перейти в ленту
               </button>
-            ))}
-          </div>
-
-          {cards.length === 0 && (
-            <p className="text-sm text-[var(--proto-text-muted)] py-4">Нет значимых событий</p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {cards.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={c.onClick}
+                    className="w-full rounded-2xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors flex items-stretch"
+                  >
+                    <div className="w-24 shrink-0 bg-[var(--proto-border)]">
+                      {c.thumb ? (
+                        <img
+                          src={c.thumb}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(c.topicTag || '').src; }}
+                        />
+                      ) : (
+                        <img src={getPrototypePublicationPhotoByTopic(c.topicTag || '').src} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    <div className="p-4 flex-1">
+                      <p className="text-lg font-semibold text-[var(--proto-text)]">{c.title}</p>
+                      <p className="text-sm text-[var(--proto-text-muted)]">{c.subtitle}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {cards.length === 0 && (
+                <p className="text-sm text-[var(--proto-text-muted)] py-4">Нет событий</p>
+              )}
+            </>
           )}
         </div>
       </div>
