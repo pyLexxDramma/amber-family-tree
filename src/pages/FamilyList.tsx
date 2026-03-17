@@ -233,7 +233,7 @@ const FamilyList: React.FC = () => {
                   onClick={() => navigate(myProfile ? ROUTES.classic.editMyProfile : '/onboarding')}
                   className="h-12 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
                 >
-                  Создать профиль
+                  {myProfile ? 'Редактировать профиль' : 'Создать профиль'}
                 </button>
                 <button
                   type="button"
