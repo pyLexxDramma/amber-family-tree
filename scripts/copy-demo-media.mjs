@@ -3,17 +3,48 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const src = path.join(__dirname, '../_ref/Демо/Медиа для демо аккаунта + описание/Медиа для демо аккаунта + описание');
-const dest = path.join(__dirname, '../public/demo/media');
+const root = path.join(__dirname, '..');
+const srcRef = path.join(root, '_ref/Демо/Медиа для демо аккаунта + описание/Медиа для демо аккаунта + описание');
+const destMedia = path.join(root, 'public/demo/media');
+const destFeed = path.join(root, 'public/demo/feed');
+const protoDir = path.join(root, 'public/prototype');
 
-if (!fs.existsSync(src)) {
-  console.log('_ref demo media not found, skipping copy');
-  process.exit(0);
+const FEED_SOURCES = [
+  ...['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'].map(f => ({ dir: destMedia, file: f })),
+  { dir: protoDir, file: 'pub-birthday.png' },
+  { dir: protoDir, file: 'pub-village.png' },
+  { dir: protoDir, file: 'pub-family-old.png' },
+  { dir: path.join(protoDir, 'my-media'), file: 'photo-travel.jpg' },
+  { dir: path.join(protoDir, 'my-media'), file: 'photo-family.jpg' },
+  { dir: path.join(protoDir, 'my-media'), file: 'photo-childhood.jpg' },
+  { dir: protoDir, file: 'feed.jpeg' },
+  { dir: protoDir, file: 'family.jpeg' },
+  { dir: protoDir, file: 'publication.jpeg' },
+  { dir: protoDir, file: 'tree-hero.png' },
+];
+const MIN_FEED_COUNT = 25;
+
+if (fs.existsSync(srcRef)) {
+  fs.mkdirSync(destMedia, { recursive: true });
+  const files = fs.readdirSync(srcRef).filter(f => /\.(jpg|jpeg|png|mp3|mp4)$/i.test(f));
+  for (const f of files) {
+    fs.copyFileSync(path.join(srcRef, f), path.join(destMedia, f));
+  }
+  console.log(`Copied ${files.length} demo media files to public/demo/media`);
 }
 
-fs.mkdirSync(dest, { recursive: true });
-const files = fs.readdirSync(src).filter(f => /\.(jpg|jpeg|png|mp3|mp4)$/i.test(f));
-for (const f of files) {
-  fs.copyFileSync(path.join(src, f), path.join(dest, f));
+fs.mkdirSync(destFeed, { recursive: true });
+const feedImages = [];
+for (const { dir, file } of FEED_SOURCES) {
+  const srcPath = path.join(dir, file);
+  if (fs.existsSync(srcPath)) feedImages.push(srcPath);
 }
-console.log(`Copied ${files.length} demo media files to public/demo/media`);
+while (feedImages.length < MIN_FEED_COUNT) {
+  feedImages.push(feedImages[feedImages.length % feedImages.length]);
+}
+for (let i = 0; i < feedImages.length; i++) {
+  const ext = path.extname(feedImages[i]).toLowerCase();
+  const outName = `${i + 1}${ext === '.png' ? '.png' : '.jpg'}`;
+  fs.copyFileSync(feedImages[i], path.join(destFeed, outName));
+}
+console.log(`Created public/demo/feed with ${feedImages.length} images`);

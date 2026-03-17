@@ -55,24 +55,25 @@ def _avatar_url(seed: str) -> str:
     return f"https://i.pravatar.cc/300?u={seed}"
 
 
-TOPIC_TO_FILES = {
-    "День рождения": ["Фото 1.jpg", "Фото 3.png"],
-    "Будни": ["Фото 2.png"],
-    "Праздники": ["Фото 3.png", "Фото 1.jpg"],
-    "Путешествия": ["Фото 4.png", "Фото 5.png"],
-    "Рецепты": ["Фото 6.png"],
-    "Истории": ["Фото7.png", "Фото 3.png"],
-    "Свадьба": ["Фото 1.jpg", "Фото 3.png"],
+TOPIC_TO_FEED_INDICES = {
+    "День рождения": [1, 8, 3],
+    "Будни": [2, 11, 12],
+    "Праздники": [3, 1, 14],
+    "Путешествия": [4, 5, 10],
+    "Рецепты": [6, 14, 15],
+    "Истории": [7, 3, 16],
+    "Свадьба": [1, 3, 14],
 }
-DEFAULT_FILES = ["Фото 1.jpg", "Фото 2.png", "Фото 3.png"]
+DEFAULT_INDICES = [1, 2, 3, 4, 5, 6, 7]
+FEED_EXT = {1: "jpg", 2: "png", 3: "png", 4: "png", 5: "png", 6: "png", 7: "png", 8: "png", 9: "png", 10: "png", 11: "jpg", 12: "jpg", 13: "jpg", 14: "jpg", 15: "jpg", 16: "jpg", 17: "png", 18: "jpg", 19: "png", 20: "png", 21: "png", 22: "png", 23: "png", 24: "png", 25: "png"}
 
 
 def _photo_url(topic_tag: str, seed: int) -> str:
-    from urllib.parse import quote
     base = get_settings().frontend_url.rstrip("/")
-    files = TOPIC_TO_FILES.get(topic_tag, DEFAULT_FILES)
-    fname = files[seed % len(files)]
-    return f"{base}/demo/media/{quote(fname)}"
+    indices = TOPIC_TO_FEED_INDICES.get(topic_tag, DEFAULT_INDICES)
+    n = indices[seed % len(indices)]
+    ext = FEED_EXT.get(n, "jpg")
+    return f"{base}/demo/feed/{n}.{ext}"
 
 
 logger = logging.getLogger(__name__)
