@@ -48,6 +48,7 @@ const FamilyList: React.FC = () => {
   const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(!isDemoMode());
+   const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
     api.family.listMembers()
@@ -235,11 +236,14 @@ const FamilyList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const target = members
+                    const hasTarget = members
                       .map(norm)
-                      .find(x => x.id !== myId && (x.isActive ?? true));
-                    if (target) navigate(ROUTES.classic.messages(target.id));
-                    else toast({ title: 'Нет активных участников' });
+                      .some(x => x.id !== myId && (x.isActive ?? true));
+                    if (!hasTarget) {
+                      toast({ title: 'Нет активных участников' });
+                      return;
+                    }
+                    setContactOpen(true);
                   }}
                   className="h-12 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
                 >
@@ -270,6 +274,49 @@ const FamilyList: React.FC = () => {
                   {{ all: 'Все', active: 'Активные', inactive: 'Неактивные' }[t]}
                 </button>
               ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+          <DialogContent className="max-w-[420px] rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>С кем связаться?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-1 max-h-[360px] overflow-y-auto">
+              {members
+                .map(norm)
+                .filter(m => m.id !== myId && (m.isActive ?? true))
+                .map((m) => {
+                  const full = memberName(m) || 'Участник';
+                  const relationLabel = getRelationshipLabel(m, myId);
+                  const avatarSrc = (m as { avatar?: string }).avatar ?? (useAvatarFallback() ? getPrototypeAvatarForMember(m, myId).src : '');
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setContactOpen(false);
+                        navigate(ROUTES.classic.messages(m.id));
+                      }}
+                      className="w-full flex items-center gap-3 p-2 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors text-left"
+                    >
+                      <div className="h-9 w-9 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
+                        {avatarSrc ? (
+                          <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-[#E5E1DC] text-[#6B6560] text-xs font-semibold">
+                            {initials(full)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{full}</p>
+                        <p className="text-xs text-[var(--proto-text-muted)] truncate">{relationLabel}</p>
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </DialogContent>
         </Dialog>
