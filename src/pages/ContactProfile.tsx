@@ -87,7 +87,7 @@ const ContactProfile: React.FC = () => {
   const parents = parentIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
   const children = childIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
   const displayName = member.nickname || `${member.firstName} ${member.lastName}`.trim();
-  const demo = isDemoMode();
+  const useFallback = useAvatarFallback();
   const heroSrc = (member as { avatar?: string }).avatar || (useFallback ? getPrototypeAvatarUrl(member.id) : '');
   const initials = displayName ? displayName.trim().slice(0, 2).toUpperCase() : 'U';
 
@@ -104,6 +104,10 @@ const ContactProfile: React.FC = () => {
     platform.hapticFeedback('light');
     navigate(ROUTES.classic.profile(relId));
   };
+
+  const openMemberPosts = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=posts`);
+  const openMemberWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=posts`);
+  const openMemberMedia = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=media`);
 
   return (
     <AppLayout>
@@ -165,6 +169,29 @@ const ContactProfile: React.FC = () => {
           </div>
 
           <div className="px-4 py-6 space-y-6">
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={openMemberPosts}
+                className="h-11 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
+              >
+                Публикации
+              </button>
+              <button
+                type="button"
+                onClick={openMemberWith}
+                className="h-11 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
+              >
+                Со мной
+              </button>
+              <button
+                type="button"
+                onClick={openMemberMedia}
+                className="h-11 rounded-2xl bg-[var(--proto-active)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+              >
+                Медиа
+              </button>
+            </div>
             {(member.birthDate || member.deathDate) && (
               <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
                 {member.birthDate && (

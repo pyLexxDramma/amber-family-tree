@@ -29,6 +29,9 @@ const Feed: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const filterParam = searchParams.get('filter');
+  const authorParam = searchParams.get('author');
+  const withParam = searchParams.get('with');
+  const viewParam = searchParams.get('view');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [items, setItems] = useState<Publication[]>([]);
@@ -72,6 +75,10 @@ const Feed: React.FC = () => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (viewParam === 'media' || viewParam === 'posts') setViewMode(viewParam);
+  }, [viewParam]);
+
   const handleSeedReference = async () => {
     if (!api.debug) return;
     setSeedLoading(true);
@@ -90,6 +97,8 @@ const Feed: React.FC = () => {
   let filtered = [...items];
   if (filterParam === 'my') filtered = filtered.filter(p => authorIdOf(p) === currentId);
   if (filterParam === 'with-me') filtered = filtered.filter(p => participantIdsOf(p).includes(currentId));
+  if (authorParam) filtered = filtered.filter(p => authorIdOf(p) === authorParam);
+  if (withParam) filtered = filtered.filter(p => participantIdsOf(p).includes(withParam));
   const list = searchQuery.trim()
     ? filtered.filter(p => (p.title || p.text).toLowerCase().includes(searchQuery.toLowerCase()))
     : filtered;
