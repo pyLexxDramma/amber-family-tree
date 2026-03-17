@@ -34,7 +34,7 @@ const Register: React.FC = () => {
       <div className="absolute top-4 right-4">
         <BrandLogoCircle className="h-11 w-11" />
       </div>
-      <button onClick={() => navigate(-1)} className="touch-target mb-10 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
+      <button onClick={() => navigate('/')} className="touch-target mb-10 flex items-center justify-center h-10 w-10 -ml-2 rounded-full bg-card text-foreground hover:bg-secondary transition-colors shadow-sm">
         <ArrowLeft className="h-5 w-5" />
       </button>
 

@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
+import { ROUTES } from '@/constants/routes';
+import { setDemoMode } from '@/lib/demoMode';
+
+const REFERENCE_EMAIL = 'alina.fadeeva@angelo-demo.ru';
+const REFERENCE_CODE = '000000';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [value, setValue] = useState('');
+  const location = useLocation();
+  const prefill = (location.state as { prefill?: string })?.prefill;
+  const [value, setValue] = useState(prefill ?? '');
   const [error, setError] = useState('');
+  const [isTestLogin, setIsTestLogin] = useState(false);
+
+  useEffect(() => {
+    if (prefill) setValue(prefill);
+  }, [prefill]);
 
   const handleSubmit = async () => {
     if (!value.trim()) { setError('Введите телефон или email'); return; }
@@ -26,20 +38,46 @@ const Login: React.FC = () => {
     navigate('/confirm-code', { state: { contact: value.trim(), mode: 'login' } });
   };
 
+  const handleTestProfileLogin = async () => {
+    setIsTestLogin(true);
+    setError('');
+    try {
+      const res = await api.auth.verify(REFERENCE_EMAIL, REFERENCE_CODE);
+      localStorage.setItem('token', res.access_token);
+      setDemoMode(false);
+      navigate(ROUTES.classic.feed);
+    } catch {
+      setError('Не удалось войти в тестовый профиль');
+    } finally {
+      setIsTestLogin(false);
+    }
+  };
+
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col px-4 pt-4 pb-8 overflow-x-hidden relative">
       <div className="absolute top-4 right-4">
         <BrandLogoCircle className="h-11 w-11 border-[#E5E1DC] bg-[#F0EDE8]" />
       </div>
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate('/')}
         className="flex items-center justify-center h-10 w-10 rounded-full text-[#333333] hover:bg-[#E5E1DC] transition-colors mb-8"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
 
       <h1 className="font-serif text-2xl font-bold text-[#333333] mb-1">Вход</h1>
-      <p className="text-sm text-[#6B6560] mb-8">Введите ваши данные для входа</p>
+      <p className="text-sm text-[#6B6560] mb-6">Введите ваши данные для входа</p>
+
+      <button
+        type="button"
+        onClick={handleTestProfileLogin}
+        disabled={isTestLogin}
+        className="w-full py-2.5 rounded-xl border border-[#A39B8A]/50 text-[#A39B8A] font-medium text-sm hover:bg-[#A39B8A]/10 transition-colors mb-6 disabled:opacity-60"
+      >
+        {isTestLogin ? 'Вход…' : 'Войти в тестовый профиль'}
+      </button>
+
+      <p className="text-xs text-[#6B6560] mb-4">Любой другой email — новый пустой профиль</p>
 
       <div className="space-y-6">
         <div>
