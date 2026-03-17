@@ -86,7 +86,14 @@ PUBLICATIONS = [
 
 
 def _avatar_url(seed: str) -> str:
-    return f"https://i.pravatar.cc/300?u={seed}"
+    avatar_map = {
+        "vladimir": "/prototype/avatars/avatar-man-elderly.png",
+        "olga": "/prototype/avatars/avatar-woman-elderly.png",
+        "roman": "/prototype/avatars/avatar-man-dad.png",
+        "liza": "/prototype/avatars/avatar-woman-young.png",
+        "alina": "/prototype/avatars/avatar-woman-mom.png",
+    }
+    return avatar_map.get(seed, "/prototype/avatars/avatar-man-beard-glasses.png")
 
 
 TITLE_TO_FILE = {
