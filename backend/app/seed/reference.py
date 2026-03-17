@@ -23,18 +23,7 @@ FAMILY_MEMBERS_BASE = [
     {"first_name": "Елизавета", "last_name": "Никулина", "nickname": "Лиза", "birth_date": "2010-08-17", "city": "Москва", "generation": 3, "avatar_seed": "liza"},
 ]
 
-FAMILY_MEMBERS = FAMILY_MEMBERS_BASE + [
-    {
-        "first_name": FIRST_NAMES[i % len(FIRST_NAMES)],
-        "last_name": LAST_NAMES[i % len(LAST_NAMES)],
-        "nickname": None,
-        "birth_date": f"{1960 + (i % 40)}-{(i % 12) + 1:02d}-15",
-        "city": CITIES[i % len(CITIES)],
-        "generation": (i % 3) + 1,
-        "avatar_seed": f"member{i}",
-    }
-    for i in range(16)
-]
+FAMILY_MEMBERS = FAMILY_MEMBERS_BASE
 
 PUBLICATIONS = [
     {
@@ -150,16 +139,26 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         return
     pub_result = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
     pub_list = list(pub_result.scalars().all())
+    member_result = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
+    existing_members = list(member_result.scalars().all())
+
     if force:
         for p in pub_list:
             await db.delete(p)
+        for m in existing_members:
+            if m.id != member.id:
+                await db.delete(m)
         await db.commit()
         pub_list = []
-    elif len(pub_list) >= 7:
+        existing_members = [member]
+    elif len(pub_list) >= 7 and len(existing_members) >= len(FAMILY_MEMBERS_BASE) + 1:
         return
-    member_count = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
-    existing_count = len(member_count.scalars().all())
-    members_to_add = FAMILY_MEMBERS if existing_count < 50 else []
+
+    existing_key = {(m.first_name, m.last_name, m.birth_date) for m in existing_members}
+    members_to_add = [
+        fm for fm in FAMILY_MEMBERS
+        if (fm["first_name"], fm["last_name"], fm["birth_date"]) not in existing_key
+    ]
     for fm in members_to_add:
         m = FamilyMember(
                 id=uuid4(),
