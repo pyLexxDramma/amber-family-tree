@@ -4,6 +4,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.models.family_member import FamilyMember
 from app.models.media_item import MediaItem
 from app.models.publication import Publication
@@ -30,18 +31,18 @@ PUBLICATIONS_BASE = [
     {"title": "Свадьба", "text": "Самый важный день. Рома и я — уже десять лет вместе, и каждый день как подарок.", "event_date": "2012-06-02", "place": "Москва", "topic_tag": "Свадьба"},
 ]
 
-MULTIPLIER = 5
+MULTIPLIER = 25
 FAMILY_MEMBERS = FAMILY_MEMBERS_BASE + [
     {
-        "first_name": FIRST_NAMES[i],
-        "last_name": LAST_NAMES[i],
+        "first_name": FIRST_NAMES[i % len(FIRST_NAMES)],
+        "last_name": LAST_NAMES[i % len(LAST_NAMES)],
         "nickname": None,
         "birth_date": f"{1960 + (i % 40)}-{(i % 12) + 1:02d}-15",
         "city": CITIES[i % len(CITIES)],
         "generation": (i % 3) + 1,
         "avatar_seed": f"member{i}",
     }
-    for i in range(16)
+    for i in range(96)
 ]
 TOPICS = ["Праздники", "День рождения", "Будни", "Путешествия", "Рецепты", "Истории", "Свадьба"]
 PUBLICATIONS = [
@@ -54,8 +55,24 @@ def _avatar_url(seed: str) -> str:
     return f"https://i.pravatar.cc/300?u={seed}"
 
 
-def _photo_url(seed: int) -> str:
-    return f"https://picsum.photos/seed/{seed}/800/600"
+TOPIC_TO_FILE = {
+    "День рождения": "Фото 1.jpg",
+    "Будни": "Фото 2.png",
+    "Праздники": "Фото 3.png",
+    "Путешествия": "Фото 4.png",
+    "Рецепты": "Фото 6.png",
+    "Истории": "Фото7.png",
+    "Свадьба": "Фото 1.jpg",
+}
+
+
+def _photo_url(topic_tag: str, seed: int) -> str:
+    from urllib.parse import quote
+    base = get_settings().frontend_url.rstrip("/")
+    fname = TOPIC_TO_FILE.get(topic_tag, "Фото 1.jpg")
+    if seed % 2 == 1 and topic_tag == "Путешествия":
+        fname = "Фото 5.png"
+    return f"{base}/demo/media/{quote(fname)}"
 
 
 logger = logging.getLogger(__name__)
@@ -70,11 +87,11 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     if not force:
         pub_result = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
         pub_list = pub_result.scalars().all()
-        if len(pub_list) >= 5:
+        if len(pub_list) >= 100:
             return
     member_count = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
     existing_count = len(member_count.scalars().all())
-    members_to_add = FAMILY_MEMBERS if existing_count < 10 else []
+    members_to_add = FAMILY_MEMBERS if existing_count < 50 else []
     for fm in members_to_add:
         m = FamilyMember(
                 id=uuid4(),
@@ -96,7 +113,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     result = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
     all_members = list(result.scalars().all())
     author = member
-    participant_ids = [str(m.id) for m in all_members if m.id != author.id][:20]
+    participant_ids = [str(m.id) for m in all_members if m.id != author.id][:50]
     if not member.avatar:
         member.avatar = _avatar_url("alina")
         await db.commit()
@@ -122,7 +139,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         )
         db.add(pub)
         await db.flush()
-        url = _photo_url(pub_data.get("photo_seed", i + 1))
+        url = _photo_url(pub_data.get("topic_tag", ""), pub_data.get("photo_seed", i + 1))
         media = MediaItem(
             id=uuid4(),
             publication_id=pub.id,

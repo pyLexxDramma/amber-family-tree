@@ -5,8 +5,8 @@ import { ROUTES } from '@/constants/routes';
 import { isDemoMode } from '@/lib/demoMode';
 
 const classicNavItems = [
-  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
   { path: ROUTES.classic.feed, label: 'Лента', icon: ImageIcon },
+  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
   { path: ROUTES.classic.create, label: 'Создать', icon: Plus },
   { path: ROUTES.classic.family, label: 'Семья', icon: Users },
   { path: ROUTES.classic.store, label: 'Магазин', icon: Home },

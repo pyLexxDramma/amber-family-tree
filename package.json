@@ -12,7 +12,8 @@
   "scripts": {
     "dev": "vite",
     "dev:stress": "VITE_USE_MOCK_API=true vite",
-    "build": "vite build",
+    "copy-demo-media": "node scripts/copy-demo-media.mjs",
+    "build": "npm run copy-demo-media && vite build",
     "build:dev": "vite build --mode development",
     "build:demo": "vite build --mode stress",
     "lint": "eslint .",

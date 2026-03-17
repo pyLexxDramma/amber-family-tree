@@ -48,11 +48,13 @@ def _to_public_media_url(raw: str) -> str:
 
 
 def _media_to_response(m: MediaItem) -> dict:
+    url = _to_public_media_url(m.url)
+    thumb = m.thumbnail if (m.thumbnail and (m.thumbnail.startswith("http://") or m.thumbnail.startswith("https://"))) else url
     return MediaItemResponse(
         id=str(m.id),
         type=m.type,
-        url=_to_public_media_url(m.url),
-        thumbnail=m.thumbnail,
+        url=url,
+        thumbnail=thumb,
         name=m.name,
         size=m.size,
         duration=m.duration,
