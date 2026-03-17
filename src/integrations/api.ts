@@ -47,5 +47,6 @@ export const api: AngeloApi = {
     listWith: (memberId) => selectApi().messages.listWith(memberId),
     sendTo: (memberId, text) => selectApi().messages.sendTo(memberId, text),
   },
+  debug: realApi.debug,
 };
 

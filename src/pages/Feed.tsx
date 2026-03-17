@@ -40,12 +40,29 @@ const Feed: React.FC = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [seedLoading, setSeedLoading] = useState(false);
 
-  useEffect(() => {
+  const loadData = () => {
     api.feed.list().then(setItems);
     api.family.listMembers().then(setMembers);
     api.profile.getMyProfile().then(me => setMyMemberId(me.id)).catch(() => {});
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
+
+  const handleSeedReference = async () => {
+    if (!api.debug) return;
+    setSeedLoading(true);
+    try {
+      await api.debug.seedReference();
+      loadData();
+    } catch {
+      setSeedLoading(false);
+    }
+    setSeedLoading(false);
+  };
 
   const memberMap = new Map(members.map(m => [m.id, m]));
   const currentId = myMemberId ?? currentUserId;
@@ -395,9 +412,21 @@ const Feed: React.FC = () => {
           )}
 
           {(viewMode === 'media' ? mediaTilesWithDemo.length === 0 : list.length === 0) && (
-            <p className="text-center text-[var(--proto-text-muted)] text-sm py-12">
-              {searchQuery.trim() ? 'Ничего не найдено' : viewMode === 'media' ? 'Нет фото' : 'Нет публикаций'}
-            </p>
+            <div className="text-center py-12">
+              <p className="text-[var(--proto-text-muted)] text-sm mb-4">
+                {searchQuery.trim() ? 'Ничего не найдено' : viewMode === 'media' ? 'Нет фото' : 'Нет публикаций'}
+              </p>
+              {!searchQuery.trim() && !isDemoMode() && api.debug && (
+                <button
+                  type="button"
+                  onClick={handleSeedReference}
+                  disabled={seedLoading}
+                  className="text-sm font-medium text-[var(--proto-active)] hover:underline disabled:opacity-60"
+                >
+                  {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

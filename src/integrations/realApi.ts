@@ -10,6 +10,12 @@ import {
   normalizePublication,
 } from './normalize';
 
+const debugApi = {
+  async seedReference() {
+    return requestJson<{ ok: boolean }>('POST', '/debug/seed-reference');
+  },
+};
+
 export const realApi: AngeloApi = {
   feed: {
     async list(params?: FeedListParams) {
@@ -139,4 +145,5 @@ export const realApi: AngeloApi = {
       return normalizeMessage(res);
     },
   },
+  debug: debugApi,
 };

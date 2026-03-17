@@ -82,6 +82,10 @@ export interface MessagesApi {
   sendTo(memberId: string, text: string): Promise<Message>;
 }
 
+export interface DebugApi {
+  seedReference(): Promise<{ ok: boolean }>;
+}
+
 export interface AngeloApi {
   feed: FeedApi;
   family: FamilyApi;
@@ -89,5 +93,6 @@ export interface AngeloApi {
   profile: ProfileApi;
   media: MediaApi;
   messages: MessagesApi;
+  debug?: DebugApi;
 }
 

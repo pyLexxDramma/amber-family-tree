@@ -61,15 +61,17 @@ def _photo_url(seed: int) -> str:
 logger = logging.getLogger(__name__)
 
 
-async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember) -> None:
+async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember, force: bool = False) -> None:
     if user.identifier.strip().lower() != REFERENCE_EMAIL:
         return
     if not user.family_id:
         logger.warning("seed_reference_user: user has no family_id")
         return
-    pub_count = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
-    if pub_count.scalars().first() is not None:
-        return
+    if not force:
+        pub_result = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
+        pub_list = pub_result.scalars().all()
+        if len(pub_list) >= 5:
+            return
     member_count = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
     existing_count = len(member_count.scalars().all())
     members_to_add = FAMILY_MEMBERS if existing_count < 10 else []
