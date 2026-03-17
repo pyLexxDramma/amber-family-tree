@@ -49,7 +49,6 @@ const FamilyList: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(!isDemoMode());
    const [contactOpen, setContactOpen] = useState(false);
-  const forcedInactiveIds = new Set(['m2', 'm3', 'm5']);
 
   useEffect(() => {
     api.family.listMembers()
@@ -66,6 +65,12 @@ const FamilyList: React.FC = () => {
   }, []);
 
   const myId = myProfile?.id ?? currentUserId;
+
+  const forcedInactiveIds = React.useMemo(() => {
+    if (isDemoMode()) return new Set(['m2', 'm3', 'm5']);
+    const otherIds = members.map(m => m.id).filter(id => id !== myId);
+    return new Set(otherIds.slice(0, 3));
+  }, [members, myId]);
 
   const filtered = members
     .filter(m => {
