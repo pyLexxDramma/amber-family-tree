@@ -161,6 +161,17 @@ const MyProfile: React.FC = () => {
             </div>
           </div>
 
+          <div className="mb-5 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+            <p className="text-sm text-[var(--proto-text)] font-medium">
+              {`${(user as { firstName?: string; first_name?: string }).firstName ?? (user as { first_name?: string }).first_name ?? ''} ${(user as { lastName?: string; last_name?: string }).lastName ?? (user as { last_name?: string }).last_name ?? ''}`.trim()}
+              {user.nickname ? ` (${user.nickname})` : ''}
+            </p>
+            <p className="text-sm text-[var(--proto-text-muted)] mt-1">
+              {user.city ? `Город: ${user.city}` : 'Город: не указан'}
+              {user.birthDate ? ` · ДР: ${user.birthDate}` : ''}
+            </p>
+          </div>
+
           {user.about && (
             <div className="mb-6">
               <p className="text-sm text-[var(--proto-text-muted)]">{user.about}</p>
