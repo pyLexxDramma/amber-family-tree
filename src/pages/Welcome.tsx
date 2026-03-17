@@ -5,6 +5,28 @@ import { setDemoMode } from '@/lib/demoMode';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { api } from '@/integrations/api';
 
+import familyIcon from '@/assets/intro-icons/family.png';
+import treeIcon from '@/assets/intro-icons/tree.png';
+import sparklesIcon from '@/assets/intro-icons/sparkles.png';
+
+const INTRO_SLIDES = [
+  {
+    title: 'Сохраняйте семейные моменты',
+    text: 'Безопасное облачное хранение для фотографий и видео всей семьи. Делитесь воспоминаниями только с близкими.',
+    iconSrc: familyIcon,
+  },
+  {
+    title: 'Объединяйте поколения',
+    text: 'Создавайте генеалогическое древо, сохраняйте истории и традиции рода. Связь с корнями для ваших детей.',
+    iconSrc: treeIcon,
+  },
+  {
+    title: 'Умный AI-помощник',
+    text: 'Angelo AI автоматически распознаёт лица, места и события. Находите нужные фото голосом или текстом.',
+    iconSrc: sparklesIcon,
+  },
+] as const;
+
 const REFERENCE_EMAIL = 'alina.fadeeva@angelo-demo.ru';
 const REFERENCE_CODE = '000000';
 
@@ -83,70 +105,54 @@ const Welcome: React.FC = () => {
   }
 
   if (phase === 'intro') {
-    const slides = [
-      {
-        title: 'Ваше семейное дерево и хроника',
-        text: 'Angelo помогает собрать родственников в одной живой схеме: кто кому кем приходится, какие связи и поколения.',
-        image: `${import.meta.env.BASE_URL}prototype/tree-hero.png`,
-      },
-      {
-        title: 'Истории в ленте и таймлайне',
-        text: 'Фотографии, видео и воспоминания складываются в единую ленту и таймлайн по годам — от первых шагов до важных событий.',
-        image: `${import.meta.env.BASE_URL}prototype/feed.jpeg`,
-      },
-      {
-        title: 'Общий семейный альбом',
-        text: 'Каждый член семьи добавляет свои моменты, а вы управляете доступом: кому что показывать и что сохранить только для близких.',
-        image: `${import.meta.env.BASE_URL}prototype/publication.jpeg`,
-      },
-    ] as const;
-    const slide = slides[introStep] ?? slides[0];
-
+    const slide = INTRO_SLIDES[introStep] ?? INTRO_SLIDES[0];
     return (
-      <div className="min-h-screen min-h-[100dvh] bg-[#F8F5F1] flex flex-col items-center justify-between p-6 overflow-x-hidden">
-        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-[420px]">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <h1 className="font-brand text-3xl sm:text-4xl font-bold text-[#333333]">Angelo</h1>
-            <BrandLogoCircle className="h-10 w-10 border-[#E5E1DC] bg-[#F0EDE8] shrink-0" />
+      <div className="min-h-screen min-h-[100svh] bg-[#F5EDE0] flex flex-col">
+        <div className="pt-[calc(env(safe-area-inset-top)+28px)] px-6 flex justify-end">
+          <button
+            type="button"
+            onClick={handleSkipIntro}
+            className="text-sm font-medium text-[#6B6560] hover:text-[#333333] transition-colors"
+          >
+            Пропустить
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center text-center px-8">
+          <div className="mt-[clamp(90px,18vh,190px)]">
+            <img
+              src={slide.iconSrc}
+              alt=""
+              className="w-[clamp(150px,38vw,200px)] h-[clamp(150px,38vw,200px)]"
+              style={{ imageRendering: 'auto' }}
+            />
           </div>
-          <div className="w-full max-w-[260px] h-px bg-[#E5E1DC] mb-6" />
-          <div className="w-full rounded-3xl bg-[#F0EDE8] border border-[#E5E1DC] overflow-hidden mb-5">
-            {slide.image ? (
-              <div className="aspect-[4/3] bg-[#E5E1DC] overflow-hidden">
-                <img src={slide.image} alt="" className="w-full h-full object-cover" />
-              </div>
-            ) : null}
-            <div className="p-4 space-y-2">
-              <p className="font-serif text-lg font-semibold text-[#333333]">{slide.title}</p>
-              <p className="text-sm text-[#6B6560] leading-relaxed">{slide.text}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-1 mb-5">
+          <h2 className="mt-10 text-[clamp(26px,7vw,34px)] font-bold text-[#333333] leading-tight">
+            {slide.title}
+          </h2>
+          <p className="mt-5 text-[clamp(16px,4.6vw,20px)] text-[#6B6560] leading-relaxed max-w-[360px]">
+            {slide.text}
+          </p>
+        </div>
+
+        <div className="px-6 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+          <div className="flex items-center justify-center gap-2 mb-5">
             {[0, 1, 2].map(i => (
               <span
                 key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === introStep ? 'w-6 bg-[#A39B8A]' : 'w-2.5 bg-[#D8D2CA]'
+                className={`h-2 w-2 rounded-full ${
+                  i === introStep ? 'bg-[#D49A6C]' : 'bg-[#CFC6BB]'
                 }`}
               />
             ))}
           </div>
-          <div className="flex flex-col gap-2 w-full">
-            <button
-              type="button"
-              onClick={handleNextIntro}
-              className="w-full py-3.5 rounded-2xl bg-[#A39B8A] text-white font-semibold text-base hover:opacity-90 transition-opacity"
-            >
-              {introStep < 2 ? 'Далее' : 'Перейти к входу'}
-            </button>
-            <button
-              type="button"
-              onClick={handleSkipIntro}
-              className="w-full py-2 text-sm text-[#6B6560] font-medium hover:underline"
-            >
-              Пропустить рассказ, перейти к входу
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleNextIntro}
+            className="w-full h-14 rounded-2xl bg-[#D49A6C] text-white text-base font-semibold hover:opacity-90 active:scale-[0.99] transition-all"
+          >
+            {introStep < 2 ? 'Далее' : 'Начать'}
+          </button>
         </div>
       </div>
     );

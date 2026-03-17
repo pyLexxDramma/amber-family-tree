@@ -58,3 +58,7 @@ docs/pilot-plan-*.md
 local/
 reports/
 _ref/
+
+# Prototypes / extracted frames (not for production deploy)
+public/prototype/
+public/frame-extractor.html
