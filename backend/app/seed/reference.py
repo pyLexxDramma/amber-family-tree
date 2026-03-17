@@ -55,23 +55,43 @@ def _avatar_url(seed: str) -> str:
     return f"https://i.pravatar.cc/300?u={seed}"
 
 
-TOPIC_TO_FEED_INDICES = {
-    "День рождения": [1, 8, 3],
-    "Будни": [2, 11, 12],
-    "Праздники": [3, 1, 14],
-    "Путешествия": [4, 5, 10],
-    "Рецепты": [6, 14, 15],
-    "Истории": [7, 3, 16],
-    "Свадьба": [1, 3, 14],
+TITLE_TO_FILE = {
+    "Лизе 1 год!": "Фото 1.jpg",
+    "Первые шаги Лизы": "Фото 2.png",
+    "Новый 2014-й": "Фото 3.png",
+    "Новый 2014-й: первые праздники на новой месте": "Фото 3.png",
+    "Дикарями на Волге": "Фото 4.png",
+    "Дикарями на Волге. Июль 2018": "Фото 4.png",
+    "Майский Сочи: когда обманули календарь": "Фото 5.png",
+    "Бабушкины рецепты — лучшие": "Фото 6.png",
+    "Наша гордость": "Фото7.png",
 }
-DEFAULT_INDICES = [1, 2, 3, 4, 5, 6, 7]
+
+TOPIC_TO_FILES = {
+    "День рождения": ["Фото 1.jpg", "Фото 3.png"],
+    "Будни": ["Фото 2.png"],
+    "Праздники": ["Фото 3.png", "Фото 1.jpg"],
+    "Путешествия": ["Фото 4.png", "Фото 5.png"],
+    "Рецепты": ["Фото 6.png"],
+    "Истории": ["Фото7.png", "Фото 3.png"],
+    "Свадьба": ["Фото 1.jpg", "Фото 3.png"],
+}
+DEFAULT_FILES = ["Фото 1.jpg", "Фото 2.png", "Фото 3.png"]
 
 
-def _photo_url(topic_tag: str, seed: int) -> str:
+def _photo_url(pub_data: dict, seed: int) -> str:
+    from urllib.parse import quote
+
     base = get_settings().frontend_url.rstrip("/")
-    indices = TOPIC_TO_FEED_INDICES.get(topic_tag, DEFAULT_INDICES)
-    n = indices[seed % len(indices)]
-    return f"{base}/demo/feed/{n}.jpg"
+    title = pub_data.get("title") or ""
+    explicit = TITLE_TO_FILE.get(title)
+    if explicit:
+        fname = explicit
+    else:
+        topic_tag = pub_data.get("topic_tag", "")
+        files = TOPIC_TO_FILES.get(topic_tag, DEFAULT_FILES)
+        fname = files[seed % len(files)]
+    return f"{base}/demo/media/{quote(fname)}"
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +158,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         )
         db.add(pub)
         await db.flush()
-        url = _photo_url(pub_data.get("topic_tag", ""), pub_data.get("photo_seed", i + 1))
+        url = _photo_url(pub_data, pub_data.get("photo_seed", i + 1))
         media = MediaItem(
             id=uuid4(),
             publication_id=pub.id,
