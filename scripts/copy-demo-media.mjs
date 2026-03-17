@@ -9,8 +9,22 @@ const destMedia = path.join(root, 'public/demo/media');
 const destFeed = path.join(root, 'public/demo/feed');
 const protoDir = path.join(root, 'public/prototype');
 
+const DEMO_MEDIA_FILES = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
+const PROTO_FALLBACK = [
+  { dir: protoDir, file: 'pub-birthday.png' },
+  { dir: protoDir, file: 'pub-village.png' },
+  { dir: protoDir, file: 'pub-family-old.png' },
+  { dir: path.join(protoDir, 'my-media'), file: 'photo-travel.jpg' },
+  { dir: path.join(protoDir, 'my-media'), file: 'photo-family.jpg' },
+  { dir: path.join(protoDir, 'my-media'), file: 'photo-childhood.jpg' },
+  { dir: protoDir, file: 'feed.jpeg' },
+];
 const FEED_SOURCES = [
-  ...['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'].map(f => ({ dir: destMedia, file: f })),
+  ...DEMO_MEDIA_FILES.map((f, i) => {
+    const p = path.join(destMedia, f);
+    if (fs.existsSync(p)) return { dir: destMedia, file: f };
+    return PROTO_FALLBACK[i];
+  }),
   { dir: protoDir, file: 'pub-birthday.png' },
   { dir: protoDir, file: 'pub-village.png' },
   { dir: protoDir, file: 'pub-family-old.png' },
@@ -43,8 +57,6 @@ while (feedImages.length < MIN_FEED_COUNT) {
   feedImages.push(feedImages[feedImages.length % feedImages.length]);
 }
 for (let i = 0; i < feedImages.length; i++) {
-  const ext = path.extname(feedImages[i]).toLowerCase();
-  const outName = `${i + 1}${ext === '.png' ? '.png' : '.jpg'}`;
-  fs.copyFileSync(feedImages[i], path.join(destFeed, outName));
+  fs.copyFileSync(feedImages[i], path.join(destFeed, `${i + 1}.jpg`));
 }
 console.log(`Created public/demo/feed with ${feedImages.length} images`);

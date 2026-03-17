@@ -65,15 +65,13 @@ TOPIC_TO_FEED_INDICES = {
     "Свадьба": [1, 3, 14],
 }
 DEFAULT_INDICES = [1, 2, 3, 4, 5, 6, 7]
-FEED_EXT = {1: "jpg", 2: "png", 3: "png", 4: "png", 5: "png", 6: "png", 7: "png", 8: "png", 9: "png", 10: "png", 11: "jpg", 12: "jpg", 13: "jpg", 14: "jpg", 15: "jpg", 16: "jpg", 17: "png", 18: "jpg", 19: "png", 20: "png", 21: "png", 22: "png", 23: "png", 24: "png", 25: "png"}
 
 
 def _photo_url(topic_tag: str, seed: int) -> str:
     base = get_settings().frontend_url.rstrip("/")
     indices = TOPIC_TO_FEED_INDICES.get(topic_tag, DEFAULT_INDICES)
     n = indices[seed % len(indices)]
-    ext = FEED_EXT.get(n, "jpg")
-    return f"{base}/demo/feed/{n}.{ext}"
+    return f"{base}/demo/feed/{n}.jpg"
 
 
 logger = logging.getLogger(__name__)

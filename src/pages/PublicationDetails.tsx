@@ -366,7 +366,7 @@ const PublicationDetails: React.FC = () => {
                               <div className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
                                 {imgs.map((m) => (
                                   <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
-                                    <img src={m.url} alt="" className="w-full h-full object-cover" />
+                                    <img src={m.url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                                   </div>
                                 ))}
                               </div>
@@ -376,7 +376,7 @@ const PublicationDetails: React.FC = () => {
                         if (imgs.length === 1) {
                           return (
                             <div key={bi} className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-                              <img src={imgs[0].url} alt="" className="w-full h-full object-cover" />
+                              <img src={imgs[0].url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                             </div>
                           );
                         }
@@ -409,7 +409,7 @@ const PublicationDetails: React.FC = () => {
                     <div ref={photoScrollerRef} className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }} onScroll={() => { const el = photoScrollerRef.current; if (!el) return; if (rafScrollRef.current != null) cancelAnimationFrame(rafScrollRef.current); rafScrollRef.current = requestAnimationFrame(() => { const w = el.clientWidth || 1; const next = Math.max(0, Math.min(photoItems.length - 1, Math.round(el.scrollLeft / w))); setPhotoIdx(next); }); }}>
                       {photoItems.map((m) => (
                         <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
-                          <img src={m.url} alt="" className="w-full h-full object-cover" />
+                          <img src={m.url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                         </div>
                       ))}
                     </div>
@@ -424,7 +424,11 @@ const PublicationDetails: React.FC = () => {
                   </div>
                 ) : (
                   <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-                    {mainPhoto.src ? <img src={mainPhoto.src} alt="" className="w-full h-full object-cover" style={{ objectPosition: mainPhoto.objectPosition }} /> : <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />}
+                    {mainPhoto.src ? (
+                      <img src={mainPhoto.src} alt="" className="w-full h-full object-cover" style={{ objectPosition: mainPhoto.objectPosition }} onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                    ) : (
+                      <img src={getPrototypePublicationPhotoByTopic(pub.topicTag).src} alt="" className="w-full h-full object-cover" />
+                    )}
                   </div>
                 )}
                 {otherMedia.length > 0 && (
