@@ -148,11 +148,15 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     if not user.family_id:
         logger.warning("seed_reference_user: user has no family_id")
         return
-    if not force:
-        pub_result = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
-        pub_list = pub_result.scalars().all()
-        if len(pub_list) >= 100:
-            return
+    pub_result = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
+    pub_list = list(pub_result.scalars().all())
+    if force:
+        for p in pub_list:
+            await db.delete(p)
+        await db.commit()
+        pub_list = []
+    elif len(pub_list) >= 7:
+        return
     member_count = await db.execute(select(FamilyMember).where(FamilyMember.family_id == user.family_id))
     existing_count = len(member_count.scalars().all())
     members_to_add = FAMILY_MEMBERS if existing_count < 50 else []
