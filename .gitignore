@@ -61,6 +61,8 @@ _ref/
 
 # Prototypes / extracted frames (not for production deploy)
 public/prototype/
+!public/prototype/avatars/
+!public/prototype/avatars/*.png
 public/frame-extractor.html
 
 # Local-only helper scripts (not needed on production)

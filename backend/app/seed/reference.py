@@ -110,11 +110,11 @@ def _avatar_url(seed: str) -> str:
         "roman": "/prototype/avatars/avatar-man-dad.png",
         "liza": "/prototype/avatars/avatar-woman-young.png",
         "alina": "/prototype/avatars/avatar-woman-mom.png",
-        "anna-test": "/prototype/avatars/avatar-woman-young.png",
-        "dmitry-test": "/prototype/avatars/avatar-man-beard-glasses.png",
-        "svetlana-test": "/prototype/avatars/avatar-woman-elderly.png",
-        "kirill-test": "/prototype/avatars/avatar-man-dad.png",
-        "maria-test": "/prototype/avatars/avatar-woman-young.png",
+        "anna-test": "/prototype/avatars/avatar-test-anna.png",
+        "dmitry-test": "/prototype/avatars/avatar-test-dmitry.png",
+        "svetlana-test": "/prototype/avatars/avatar-test-svetlana.png",
+        "kirill-test": "/prototype/avatars/avatar-test-kirill.png",
+        "maria-test": "/prototype/avatars/avatar-test-maria.png",
     }
     return avatar_map.get(seed, "/prototype/avatars/avatar-man-beard-glasses.png")
 
