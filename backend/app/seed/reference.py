@@ -106,18 +106,17 @@ PUBLICATIONS = [
 def _avatar_url(seed: str) -> str:
     base = get_settings().frontend_url.rstrip("/")
     proto = f"{base}/prototype/avatars"
-    demo = f"{base}/demo/avatars"
     avatar_map = {
         "vladimir": f"{proto}/avatar-man-elderly.png",
         "olga": f"{proto}/avatar-woman-elderly.png",
         "roman": f"{proto}/avatar-man-dad.png",
         "liza": f"{proto}/avatar-woman-young.png",
         "alina": f"{proto}/avatar-woman-mom.png",
-        "anna-test": f"{base}/demo/avatars/t-anna.png",
-        "dmitry-test": f"{base}/demo/avatars/t-dmitry.png",
-        "svetlana-test": f"{base}/demo/avatars/t-svetlana.png",
-        "kirill-test": f"{base}/demo/avatars/t-kirill.png",
-        "maria-test": f"{base}/demo/avatars/t-maria.png",
+        "anna-test": f"{proto}/avatar-test-anna.png",
+        "dmitry-test": f"{proto}/avatar-test-dmitry.png",
+        "svetlana-test": f"{proto}/avatar-test-svetlana.png",
+        "kirill-test": f"{proto}/avatar-test-kirill.png",
+        "maria-test": f"{proto}/avatar-test-maria.png",
     }
     return avatar_map.get(seed, f"{proto}/avatar-man-beard-glasses.png")
 
@@ -168,16 +167,8 @@ PHOTO_TO_LATIN = {
 
 def _photo_url(pub_data: dict, seed: int) -> str:
     base = get_settings().frontend_url.rstrip("/")
-    title = pub_data.get("title") or ""
-    explicit = pub_data.get("photo_file") or TITLE_TO_FILE.get(title)
-    if explicit:
-        fname = PHOTO_TO_LATIN.get(explicit, explicit)
-    else:
-        topic_tag = pub_data.get("topic_tag", "")
-        files = TOPIC_TO_FILES.get(topic_tag, DEFAULT_FILES)
-        orig = files[seed % len(files)]
-        fname = PHOTO_TO_LATIN.get(orig, orig)
-    return f"{base}/demo/media/{fname}"
+    n = ((int(seed) - 1) % 25) + 1
+    return f"{base}/demo/feed/{n}.jpg"
 
 
 logger = logging.getLogger(__name__)
@@ -239,6 +230,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     pub_check = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
     existing_pubs = list(pub_check.scalars().all())
     existing_titles = {p.title for p in existing_pubs}
+    all_members = sorted(all_members, key=lambda m: (m.first_name or "", m.last_name or "", m.birth_date or ""))
     for i, pub_data in enumerate(PUBLICATIONS):
         if pub_data["title"] in existing_titles:
             continue
@@ -269,8 +261,8 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
             id=uuid4(),
             publication_id=pub.id,
             type="photo",
-            url=url,
-            thumbnail=url,
+            url=f"{url}?v={str(pub.id)[:8]}",
+            thumbnail=f"{url}?v={str(pub.id)[:8]}",
             name=pub_data["title"],
             size=0,
         )
