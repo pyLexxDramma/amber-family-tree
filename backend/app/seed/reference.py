@@ -17,16 +17,56 @@ LAST_NAMES = ["Иванов", "Петров", "Сидоров", "Козлов", 
 CITIES = ["Москва", "Санкт-Петербург", "Казань", "Новосибирск", "Екатеринбург", "Нижний Новгород", "Вологда", "Сочи", "Калининград", "Самара"]
 
 FAMILY_MEMBERS_BASE = [
-    {"first_name": "Владимир", "last_name": "Фадеев", "nickname": "Дедушка", "birth_date": "1959-01-17", "city": "Ленинград", "generation": 1, "avatar_seed": "vladimir"},
-    {"first_name": "Ольга", "last_name": "Никулина", "nickname": "Бабушка", "birth_date": "1961-04-11", "city": "Уфа", "generation": 1, "avatar_seed": "olga"},
-    {"first_name": "Роман", "last_name": "Никулин", "nickname": "Папа", "birth_date": "1984-03-12", "city": "Вологда", "generation": 2, "avatar_seed": "roman"},
-    {"first_name": "Елизавета", "last_name": "Никулина", "nickname": "Лиза", "birth_date": "2010-08-17", "city": "Москва", "generation": 3, "avatar_seed": "liza"},
+    {
+        "first_name": "Владимир",
+        "last_name": "Фадеев",
+        "middle_name": "Николаевич",
+        "nickname": "Дедушка",
+        "birth_date": "1959-01-17",
+        "city": "Ленинград",
+        "generation": 1,
+        "avatar_seed": "vladimir",
+        "about": "Папа Алины Фадеевой. Любит рыбалку и поездки на природу.",
+    },
+    {
+        "first_name": "Ольга",
+        "last_name": "Никулина",
+        "middle_name": "Васильевна",
+        "nickname": "Бабушка",
+        "birth_date": "1961-04-11",
+        "city": "Уфа",
+        "generation": 1,
+        "avatar_seed": "olga",
+        "about": "Мама Романа Никулина. Главный хранитель рецептов и семейных традиций.",
+    },
+    {
+        "first_name": "Роман",
+        "last_name": "Никулин",
+        "middle_name": None,
+        "nickname": "Папа",
+        "birth_date": "1984-03-12",
+        "city": "Вологда",
+        "generation": 2,
+        "avatar_seed": "roman",
+        "about": "Папа Елизаветы. Спокойный и надёжный, умеет поддержать в нужный момент.",
+    },
+    {
+        "first_name": "Елизавета",
+        "last_name": "Никулина",
+        "middle_name": None,
+        "nickname": "Лиза",
+        "birth_date": "2010-08-17",
+        "city": "Москва",
+        "generation": 3,
+        "avatar_seed": "liza",
+        "about": "Дочь. Добрая, смелая, умеет радоваться мелочам.",
+    },
 ]
 
 FAMILY_MEMBERS_TEST = [
     {"first_name": "Анна", "last_name": "Соколова", "nickname": "Аня (тест)", "birth_date": "1998-05-22", "city": "Казань", "generation": 3, "avatar_seed": "anna-test", "about": "Двоюродная сестра. Тестовый участник для демонстрации."},
-    {"first_name": "Дмитрий", "last_name": "Волков", "nickname": "Дядя Дима (тест)", "birth_date": "1981-11-08", "city": "Вологда", "generation": 2, "avatar_seed": "dmitry-test", "about": "Брат Владимира. Тестовый участник для демонстрации."},
-    {"first_name": "Светлана", "last_name": "Петрова", "nickname": "Тётя Света (тест)", "birth_date": "1979-03-15", "city": "Уфа", "generation": 2, "avatar_seed": "svetlana-test", "about": "Сестра Владимира. Тестовый участник для демонстрации."},
+    {"first_name": "Дмитрий", "last_name": "Волков", "nickname": "Дядя Дима (тест)", "birth_date": "1981-11-08", "city": "Вологда", "generation": 2, "avatar_seed": "dmitry-test", "about": "Брат Алины. Тестовый участник для демонстрации."},
+    {"first_name": "Светлана", "last_name": "Петрова", "nickname": "Тётя Света (тест)", "birth_date": "1979-03-15", "city": "Уфа", "generation": 2, "avatar_seed": "svetlana-test", "about": "Сестра Романа. Тестовый участник для демонстрации."},
     {"first_name": "Кирилл", "last_name": "Морозов", "nickname": "Кирилл (тест)", "birth_date": "2001-07-30", "city": "Сочи", "generation": 3, "avatar_seed": "kirill-test", "about": "Двоюродный брат. Тестовый участник для демонстрации."},
     {"first_name": "Мария", "last_name": "Лебедева", "nickname": "Маша (тест)", "birth_date": "2012-02-14", "city": "Вологда", "generation": 3, "avatar_seed": "maria-test", "about": "Двоюродная сестра. Тестовый участник для демонстрации."},
 ]
@@ -41,6 +81,7 @@ PUBLICATIONS = [
         "place": "Москва",
         "topic_tag": "День рождения",
         "photo_file": "Фото 1.jpg",
+        "author_seed": "alina",
     },
     {
         "title": "Первые шаги Лизы",
@@ -49,6 +90,7 @@ PUBLICATIONS = [
         "place": "Москва",
         "topic_tag": "Будни",
         "photo_file": "Фото 2.png",
+        "author_seed": "roman",
     },
     {
         "title": "Новый 2014-й: первые праздники на новой месте",
@@ -57,6 +99,7 @@ PUBLICATIONS = [
         "place": "Москва",
         "topic_tag": "Праздники",
         "photo_file": "Фото 3.png",
+        "author_seed": "alina",
     },
     {
         "title": "Дикарями на Волге. Июль 2018",
@@ -65,41 +108,53 @@ PUBLICATIONS = [
         "place": "Ржев",
         "topic_tag": "Путешествия",
         "photo_file": "Фото 4.png",
+        "author_seed": "alina",
     },
     {
-        "title": "Майский Сочи: когда обманули календарь",
-        "text": "Май— мы сбежали из Москвы на три дня, и это было лучшее решение. Вода в море ещё холодная, но воздух уже совсем летний. Мы гуляли по гальке босиком, Рома тащил подстилку и бутерброды, а я ловила момент и думала: вот оно, счастье — просто идти вдоль воды и держать их за руки. Лизе стесняется, когда её фотографируют, но тут забылась и смеялась по-настоящему. Сочи, спасибо за это тепло в начале мая.",
-        "event_date": "2019-05-02",
+        "title": "Дядя Дима на рыбалке",
+        "text": "Первый выезд на воду в этом сезоне — утро, тишина и терпение. Дима уверяет, что лучший улов начинается с хорошего чая и правильной компании.",
+        "event_date": "2024-08-19",
+        "place": "Рыбинское водохранилище",
+        "topic_tag": "Путешествия",
+        "feed_index": 9,
+        "author_seed": "dmitry-test",
+    },
+    {
+        "title": "В гостях у тёти Светы",
+        "text": "Света встречает нас так, будто мы не виделись целую вечность. Пироги, чай и разговоры до позднего вечера — за это я и люблю Уфу.",
+        "event_date": "2024-11-10",
+        "place": "Уфа",
+        "topic_tag": "Будни",
+        "feed_index": 12,
+        "author_seed": "svetlana-test",
+    },
+    {
+        "title": "Кирилл и море",
+        "text": "Кирилл впервые встал на доску — и, конечно, сразу захотел «ещё раз». Сочи умеет делать людей счастливее за один день.",
+        "event_date": "2024-05-02",
         "place": "Сочи",
         "topic_tag": "Путешествия",
-        "photo_file": "Фото 5.png",
+        "feed_index": 18,
+        "author_seed": "kirill-test",
     },
     {
-        "title": "Бабушкины рецепты — лучшие",
-        "text": "Урожай яблок в тот год был такой, что мы не знали, куда их девать — Ольга Васильевна сказала: «Будем печь шарлотку!» Лиза впервые готовила почти полностью сама (я только щёлкала камерой, пока Рома пытался объяснить, как правильно взбивать яйца). Бабушка руководила процессом: «Муку просей, сахара не жалей, и никаких миксеров — венчиком вкуснее!» Скоро пирог отправится в духовку, а на столе уже заваривается чай.",
-        "event_date": "2020-08-14",
-        "place": "Подмосковье",
-        "topic_tag": "Рецепты",
-        "photo_file": "Фото 6.png",
-    },
-    {
-        "title": "Наша гордость",
-        "text": "19 мая, школьный актовый зал. Лизе вручили грамоту за волонтёрский проект — она весь год помогала в приюте для животных и организовала сбор корма. Пока её приглашали на сцену, я чуть не расплакалась в третьем ряду. Рома с бабушкой Олей пробрались поближе к сцене и встретили её вот такими объятиями. Лиза смущается, но по глазам видно — ей важно, что они здесь. Смотрю на эту фотку и думаю: наш ребёнок растёт не просто умной, а доброй. Мы всё делаем правильно.",
-        "event_date": "2024-05-19",
-        "place": "Москва",
+        "title": "Аня защитила диплом",
+        "text": "Наконец-то всё позади: бессонные ночи, кофе литрами и бесконечные правки. Аня держит диплом и улыбается — мы гордимся!",
+        "event_date": "2024-06-28",
+        "place": "Казань",
         "topic_tag": "Истории",
-        "photo_file": "Фото7.png",
+        "feed_index": 21,
+        "author_seed": "anna-test",
     },
-    {"title": "Выпускной в Казанском университете", "text": "Наконец-то диплом в руках! Пять лет пролетели незаметно.", "event_date": "2024-06-28", "place": "Казань", "topic_tag": "День рождения", "photo_file": "Фото7.png"},
-    {"title": "Тбилиси — город, в который влюбляешься", "text": "Путешествие с подругами в Грузию. Старый город, хинкали, вино.", "event_date": "2024-09-12", "place": "Тбилиси", "topic_tag": "Путешествия", "photo_file": "Фото 4.png"},
-    {"title": "Рыбалка с Кириллом на Рыбинке", "text": "Выходные на водохранилище. Кирилл впервые поймал щуку!", "event_date": "2023-08-19", "place": "Рыбинское водохранилище", "topic_tag": "Путешествия", "photo_file": "Фото 4.png"},
-    {"title": "60 лет отцу — праздник на берегу", "text": "Собрали семью в Сочи на юбилей папы.", "event_date": "2024-07-20", "place": "Сочи", "topic_tag": "День рождения", "photo_file": "Фото 5.png"},
-    {"title": "Оливье по бабушкиному рецепту", "text": "Каждый год 31 декабря — одно и то же. Рецепт передала мама.", "event_date": "2024-12-31", "place": "Уфа", "topic_tag": "Рецепты", "photo_file": "Фото 6.png"},
-    {"title": "Воскресный обед в кругу семьи", "text": "Аня приехала на выходные. Накрыли стол, достали фарфор.", "event_date": "2024-11-10", "place": "Уфа", "topic_tag": "Будни", "photo_file": "Фото 1.jpg"},
-    {"title": "Сезон сноуборда открыт", "text": "Роза Хутор, первый выезд в этом году.", "event_date": "2025-01-05", "place": "Красная Поляна", "topic_tag": "Путешествия", "photo_file": "Фото 5.png"},
-    {"title": "Сессия закрыта — можно выдохнуть", "text": "Три экзамена за неделю. Кофе, конспекты, бессонные ночи.", "event_date": "2024-06-15", "place": "Сочи", "topic_tag": "Будни", "photo_file": "Фото 2.png"},
-    {"title": "Школьный бал — первый выход в свет", "text": "Выпускной в 4 классе! Платье выбирали с мамой целый месяц.", "event_date": "2023-05-25", "place": "Вологда", "topic_tag": "Истории", "photo_file": "Фото7.png"},
-    {"title": "Каникулы у тёти Светы", "text": "Поехала к тёте в Уфу на неделю. Гуляли по городу, пекли пироги.", "event_date": "2024-08-03", "place": "Уфа", "topic_tag": "Путешествия", "photo_file": "Фото 3.png"},
+    {
+        "title": "Маша испекла шарлотку",
+        "text": "Маша настояла, что всё сделает сама: яблоки, тесто и даже сахар «на глаз». Получилось неожиданно идеально — бабушка бы одобрила.",
+        "event_date": "2024-12-31",
+        "place": "Вологда",
+        "topic_tag": "Рецепты",
+        "feed_index": 24,
+        "author_seed": "maria-test",
+    },
 ]
 
 
@@ -167,7 +222,15 @@ PHOTO_TO_LATIN = {
 
 def _photo_url(pub_data: dict, seed: int) -> str:
     base = get_settings().frontend_url.rstrip("/")
-    n = ((int(seed) - 1) % 25) + 1
+    title = pub_data.get("title") or ""
+    explicit = pub_data.get("photo_file") or TITLE_TO_FILE.get(title)
+    if explicit:
+        fname = PHOTO_TO_LATIN.get(explicit, explicit)
+        return f"{base}/demo/media/{fname}"
+    feed_index = pub_data.get("feed_index")
+    if feed_index is None:
+        feed_index = int(seed)
+    n = ((int(feed_index) - 1) % 25) + 1
     return f"{base}/demo/feed/{n}.jpg"
 
 
@@ -208,6 +271,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
                 family_id=user.family_id,
                 first_name=fm["first_name"],
                 last_name=fm["last_name"],
+                middle_name=fm.get("middle_name"),
                 nickname=fm.get("nickname"),
                 birth_date=fm["birth_date"],
                 city=fm.get("city"),
@@ -227,6 +291,77 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         member.avatar = _avatar_url("alina")
         await db.commit()
         await db.refresh(member)
+    def _k(first: str, last: str, birth: str) -> tuple[str, str, str]:
+        return (first.strip(), last.strip(), birth.strip())
+
+    by_key = {_k(m.first_name, m.last_name, m.birth_date): m for m in all_members}
+    vladimir = by_key.get(_k("Владимир", "Фадеев", "1959-01-17"))
+    olga = by_key.get(_k("Ольга", "Никулина", "1961-04-11"))
+    roman = by_key.get(_k("Роман", "Никулин", "1984-03-12"))
+    liza = by_key.get(_k("Елизавета", "Никулина", "2010-08-17"))
+    dmitry = by_key.get(_k("Дмитрий", "Волков", "1981-11-08"))
+    svetlana = by_key.get(_k("Светлана", "Петрова", "1979-03-15"))
+    kirill = by_key.get(_k("Кирилл", "Морозов", "2001-07-30"))
+    anna = by_key.get(_k("Анна", "Соколова", "1998-05-22"))
+    maria = by_key.get(_k("Мария", "Лебедева", "2012-02-14"))
+
+    rel_updates: dict[FamilyMember, list[dict]] = {}
+    if vladimir:
+        rel_updates[vladimir] = [
+            {"memberId": str(member.id), "type": "child"},
+            {"memberId": str(dmitry.id), "type": "child"} if dmitry else None,
+        ]
+    if olga:
+        rel_updates[olga] = [
+            {"memberId": str(roman.id), "type": "child"} if roman else None,
+            {"memberId": str(svetlana.id), "type": "child"} if svetlana else None,
+        ]
+    rel_updates[member] = [
+        {"memberId": str(vladimir.id), "type": "parent"} if vladimir else None,
+        {"memberId": str(roman.id), "type": "spouse"} if roman else None,
+        {"memberId": str(liza.id), "type": "child"} if liza else None,
+    ]
+    if roman:
+        rel_updates[roman] = [
+            {"memberId": str(olga.id), "type": "parent"} if olga else None,
+            {"memberId": str(member.id), "type": "spouse"},
+            {"memberId": str(liza.id), "type": "child"} if liza else None,
+            {"memberId": str(svetlana.id), "type": "sibling"} if svetlana else None,
+        ]
+    if liza:
+        rel_updates[liza] = [
+            {"memberId": str(roman.id), "type": "parent"} if roman else None,
+            {"memberId": str(member.id), "type": "parent"},
+        ]
+    if dmitry:
+        rel_updates[dmitry] = [
+            {"memberId": str(vladimir.id), "type": "parent"} if vladimir else None,
+            {"memberId": str(kirill.id), "type": "child"} if kirill else None,
+            {"memberId": str(member.id), "type": "sibling"},
+        ]
+    if svetlana:
+        rel_updates[svetlana] = [
+            {"memberId": str(olga.id), "type": "parent"} if olga else None,
+            {"memberId": str(anna.id), "type": "child"} if anna else None,
+            {"memberId": str(maria.id), "type": "child"} if maria else None,
+            {"memberId": str(roman.id), "type": "sibling"} if roman else None,
+        ]
+    if kirill:
+        rel_updates[kirill] = [
+            {"memberId": str(dmitry.id), "type": "parent"} if dmitry else None,
+        ]
+    if anna:
+        rel_updates[anna] = [
+            {"memberId": str(svetlana.id), "type": "parent"} if svetlana else None,
+        ]
+    if maria:
+        rel_updates[maria] = [
+            {"memberId": str(svetlana.id), "type": "parent"} if svetlana else None,
+        ]
+
+    for m, rels in rel_updates.items():
+        m.relations = [r for r in rels if r is not None]
+    await db.commit()
     pub_check = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
     existing_pubs = list(pub_check.scalars().all())
     existing_titles = {p.title for p in existing_pubs}
@@ -234,7 +369,14 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     for i, pub_data in enumerate(PUBLICATIONS):
         if pub_data["title"] in existing_titles:
             continue
-        author = all_members[i % max(1, len(all_members))]
+        author_seed = pub_data.get("author_seed")
+        if author_seed:
+            if author_seed == "alina":
+                author = member
+            else:
+                author = next((m for m in all_members if m.avatar == _avatar_url(author_seed)), None) or member
+        else:
+            author = all_members[i % max(1, len(all_members))]
         participant_ids = [str(m.id) for m in all_members if m.id != author.id][:50]
         pub = Publication(
             id=uuid4(),

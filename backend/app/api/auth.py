@@ -33,7 +33,7 @@ REFERENCE_PROFILE = {
     "birth_date": "1985-09-20",
     "city": "Москва",
     "about": "Мама Елизаветы. Любит сохранять семейные истории и тёплые моменты.",
-    "avatar": "https://i.pravatar.cc/300?u=alina",
+    "avatar": "/prototype/avatars/avatar-woman-mom.png",
     "role": "admin",
     "generation": 2,
 }
