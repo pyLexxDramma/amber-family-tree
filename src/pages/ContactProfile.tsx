@@ -10,6 +10,7 @@ import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { toast } from '@/hooks/use-toast';
 import { useAvatarFallback } from '@/lib/demoMode';
+import { getLocalNickname, setLocalNickname } from '@/lib/localUserData';
 
 type Rel = { type: string; memberId: string };
 
@@ -32,8 +33,10 @@ const ContactProfile: React.FC = () => {
   const platform = usePlatform();
   const [member, setMember] = useState<FamilyMember | null | undefined>(undefined);
   const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [me, setMe] = useState<FamilyMember | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [liked, setLiked] = useState(false);
+  const [localNick, setLocalNick] = useState('');
 
   const memberMap = useMemo(() => {
     const map = new Map<string, FamilyMember>();
@@ -65,6 +68,10 @@ const ContactProfile: React.FC = () => {
     return () => { cancelled = true; };
   }, [id]);
 
+  useEffect(() => {
+    api.profile.getMyProfile().then(setMe).catch(() => setMe(null));
+  }, []);
+
   if (member === undefined) {
     return (
       <AppLayout>
@@ -81,12 +88,11 @@ const ContactProfile: React.FC = () => {
     );
   }
 
-  const rels = normalizeRelations(member.relations);
-  const parentIds = rels.filter((r) => r.type === 'parent').map((r) => r.memberId);
-  const childIds = rels.filter((r) => r.type === 'child').map((r) => r.memberId);
-  const parents = parentIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
-  const children = childIds.map((mid) => memberMap.get(mid)).filter(Boolean) as FamilyMember[];
-  const displayName = member.nickname || `${member.firstName} ${member.lastName}`.trim();
+  const fullName = `${member.firstName} ${member.lastName}`.trim() || 'Профиль';
+  const viewerId = me?.id || 'viewer';
+  const assignedNick = me ? getLocalNickname(me.id, member.id) : null;
+  const displayNick = assignedNick || member.nickname || '';
+  const displayName = displayNick ? `${fullName} (${displayNick})` : fullName;
   const useFallback = useAvatarFallback();
   const heroSrc = (member as { avatar?: string }).avatar || (useFallback ? getPrototypeAvatarUrl(member.id) : '');
   const initials = displayName ? displayName.trim().slice(0, 2).toUpperCase() : 'U';
@@ -108,6 +114,13 @@ const ContactProfile: React.FC = () => {
   const openMemberPosts = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=posts`);
   const openMemberWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=posts`);
   const openMemberMedia = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=media`);
+  const openMemberMediaWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=media`);
+
+  useEffect(() => {
+    if (!me) return;
+    const v = getLocalNickname(me.id, member.id);
+    setLocalNick(v ?? '');
+  }, [me, member.id]);
 
   return (
     <AppLayout>
@@ -169,7 +182,7 @@ const ContactProfile: React.FC = () => {
           </div>
 
           <div className="px-4 py-6 space-y-6">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={openMemberPosts}
@@ -182,16 +195,47 @@ const ContactProfile: React.FC = () => {
                 onClick={openMemberWith}
                 className="h-11 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
               >
-                Со мной
+                Публикации со мной
               </button>
               <button
                 type="button"
                 onClick={openMemberMedia}
-                className="h-11 rounded-2xl bg-[var(--proto-active)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+                className="h-11 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
               >
                 Медиа
               </button>
+              <button
+                type="button"
+                onClick={openMemberMediaWith}
+                className="h-11 rounded-2xl bg-[var(--proto-active)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+              >
+                Медиа со мной
+              </button>
             </div>
+
+            {me && me.id !== member.id && (
+              <div className="rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
+                <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-2">Ник (виден только вам)</p>
+                <div className="flex gap-2">
+                  <input
+                    value={localNick}
+                    onChange={(e) => setLocalNick(e.target.value)}
+                    className="flex-1 h-11 rounded-xl border border-[var(--proto-border)] bg-white px-4 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]/30"
+                    placeholder="Например: Тётя Света"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocalNickname(me.id, member.id, localNick);
+                      toast({ title: localNick.trim() ? 'Ник сохранён' : 'Ник удалён' });
+                    }}
+                    className="h-11 px-4 rounded-xl bg-[var(--proto-active)] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    Сохранить
+                  </button>
+                </div>
+              </div>
+            )}
             {(member.birthDate || member.deathDate) && (
               <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
                 {member.birthDate && (
@@ -217,45 +261,6 @@ const ContactProfile: React.FC = () => {
               </div>
             )}
 
-            <div>
-              <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-3">Семья</p>
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={() => parents[0] && goToRelative(parents[0]!.id)}
-                  disabled={parents.length === 0}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/30 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <div className="h-10 w-10 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
-                    <Users className="h-5 w-5 m-auto text-[var(--proto-active)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[var(--proto-text)]">
-                      {parents.length === 0 ? 'Родители не указаны' : parents.map(p => p.nickname || p.firstName).join(', ')}
-                    </p>
-                    <p className="text-xs text-[var(--proto-text-muted)]">{parents.length > 0 ? `Родител${parents.length > 1 ? 'и' : 'ь'}` : ''}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => children[0] && goToRelative(children[0]!.id)}
-                  disabled={children.length === 0}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/30 transition-all text-left disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <div className="h-10 w-10 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
-                    <Users className="h-5 w-5 m-auto text-[var(--proto-active)]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[var(--proto-text)]">
-                      {children.length === 0 ? 'Дети не указаны' : children.map(c => c.nickname || c.firstName).join(', ')}
-                    </p>
-                    <p className="text-xs text-[var(--proto-text-muted)]">{children.length > 0 ? `Дет${children.length > 1 ? 'и' : 'ь'}` : ''}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

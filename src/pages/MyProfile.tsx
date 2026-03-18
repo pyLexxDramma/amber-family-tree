@@ -11,12 +11,14 @@ import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { isDemoMode, setDemoMode } from '@/lib/demoMode';
 import { toast } from '@/hooks/use-toast';
+import { getProfileExtras } from '@/lib/localUserData';
 
 const MyProfile: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<FamilyMember | null>(null);
   const plan = plans.find(p => p.id === currentSubscription.planId);
   const [demoCounts, setDemoCounts] = useState<{ members: number; photos: number }>({ members: 0, photos: 0 });
+  const extras = user ? getProfileExtras(user.id) : {};
 
   useEffect(() => {
     api.profile.getMyProfile().then(setUser);
@@ -42,6 +44,7 @@ const MyProfile: React.FC = () => {
     { label: 'Мои публикации', icon: Newspaper, path: `${ROUTES.classic.feed}?filter=my` },
     { label: 'Публикации со мной', icon: Image, path: `${ROUTES.classic.feed}?filter=with-me` },
     { label: 'Моё медиа', icon: Image, path: ROUTES.classic.myMedia },
+    { label: 'Медиа со мной', icon: Image, path: `${ROUTES.classic.feed}?filter=with-me&view=media` },
     { label: 'Подписка', icon: CreditCard, path: ROUTES.classic.store },
     { label: 'Настройки', icon: Settings, path: ROUTES.classic.settings },
     { label: 'Помощь и поддержка', icon: HelpCircle, path: ROUTES.classic.help },
@@ -167,9 +170,16 @@ const MyProfile: React.FC = () => {
               {user.nickname ? ` (${user.nickname})` : ''}
             </p>
             <p className="text-sm text-[var(--proto-text-muted)] mt-1">
-              {user.city ? `Город: ${user.city}` : 'Город: не указан'}
+              {user.city ? `Живу в: ${user.city}` : 'Живу в: не указано'}
               {user.birthDate ? ` · ДР: ${user.birthDate}` : ''}
             </p>
+            {(extras.phone || extras.email) && (
+              <p className="text-sm text-[var(--proto-text-muted)] mt-1">
+                {extras.phone ? `Тел: ${extras.phone}` : ''}
+                {extras.phone && extras.email ? ' · ' : ''}
+                {extras.email ? `Email: ${extras.email}` : ''}
+              </p>
+            )}
           </div>
 
           {user.about && (

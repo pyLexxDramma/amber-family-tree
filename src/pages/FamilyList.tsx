@@ -42,7 +42,6 @@ const norm = (m: FamilyMember & { first_name?: string; last_name?: string; avata
 const FamilyList: React.FC = () => {
   const navigate = useNavigate();
   const [subTab, setSubTab] = useState<'profiles' | 'groups'>('profiles');
-  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'inactive'>('all');
   const [search, setSearch] = useState('');
   const [members, setMembers] = useState<FamilyMember[]>(isDemoMode() ? mockMembers : []);
   const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
@@ -66,17 +65,7 @@ const FamilyList: React.FC = () => {
 
   const myId = myProfile?.id ?? currentUserId;
 
-  const forcedInactiveIds = React.useMemo(() => {
-    if (isDemoMode()) return new Set(['m2', 'm3', 'm5']);
-    const otherIds = members.map(m => m.id).filter(id => id !== myId);
-    return new Set(otherIds.slice(0, 3));
-  }, [members, myId]);
-
   const filtered = members
-    .filter(m => {
-      const active = !forcedInactiveIds.has(m.id) && (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true);
-      return filterTab === 'all' || (filterTab === 'active' ? active : !active);
-    })
     .filter(m => {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
@@ -154,23 +143,6 @@ const FamilyList: React.FC = () => {
 
             {subTab === 'profiles' && (
               <>
-                <div className="flex gap-2 flex-wrap">
-                  {(['all', 'active', 'inactive'] as const).map(t => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setFilterTab(t)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        filterTab === t
-                          ? 'bg-[var(--proto-active)] text-white border border-[var(--proto-active)]'
-                          : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)] hover:text-[var(--proto-text)]'
-                      }`}
-                    >
-                      {{ all: 'Все', active: 'Активные', inactive: 'Неактивные' }[t]}
-                    </button>
-                  ))}
-                </div>
-
                 <div className="space-y-2">
                   {!isDemoMode() && isLoadingMembers && (
                     <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 text-sm text-[var(--proto-text-muted)]">
@@ -182,7 +154,7 @@ const FamilyList: React.FC = () => {
                     const isCurrent = m.id === myId;
                     const relationLabel = getRelationshipLabel(mn, myId);
                     const avatarSrc = (m as { avatar?: string }).avatar ?? (useAvatarFallback() ? getPrototypeAvatarForMember(mn, myId).src : '');
-                    const isActive = !forcedInactiveIds.has(m.id) && (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true);
+                    const isActive = (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true);
                     const full = memberName(m) || 'Участник';
 
                     return (
@@ -190,8 +162,8 @@ const FamilyList: React.FC = () => {
                         key={m.id}
                         type="button"
                         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl bg-[var(--proto-card)] border-2 hover:border-[var(--proto-active)]/30 transition-colors text-left ${
-                          isActive ? 'border-emerald-500/60' : 'border-red-500/60'
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border border-[var(--proto-border)] hover:border-[var(--proto-active)]/30 transition-colors text-left ${
+                          isActive ? 'bg-[var(--proto-card)]' : 'bg-[#E9E6E1] opacity-80'
                         }`}
                       >
                         <div className="h-12 w-12 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">

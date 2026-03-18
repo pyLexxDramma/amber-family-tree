@@ -9,12 +9,14 @@ import { isDemoMode } from '@/lib/demoMode';
 import { api } from '@/integrations/api';
 import { Camera } from 'lucide-react';
 import type { FamilyMember } from '@/types';
+import { getProfileExtras, setProfileExtras } from '@/lib/localUserData';
 
 const field = (u: FamilyMember & { first_name?: string; last_name?: string }) => ({
   firstName: u.firstName ?? u.first_name ?? '',
   lastName: u.lastName ?? u.last_name ?? '',
   middleName: u.middleName ?? '',
   nickname: u.nickname ?? '',
+  birthDate: u.birthDate ?? '',
   city: u.city ?? '',
   about: u.about ?? '',
 });
@@ -29,15 +31,21 @@ const EditMyProfile: React.FC = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [extras, setExtras] = useState<{ phone: string; email: string }>({ phone: '', email: '' });
 
   useEffect(() => {
     if (isDemo) {
-      setForm(field(getCurrentUserForDisplay()));
+      const u = getCurrentUserForDisplay();
+      setForm(field(u));
+      const ex = getProfileExtras(u.id);
+      setExtras({ phone: ex.phone ?? '', email: ex.email ?? '' });
     } else {
       api.profile.getMyProfile().then(u => {
         setUser(u);
         setForm(field(u));
         setAvatarUrl((u as { avatar?: string }).avatar ?? null);
+        const ex = getProfileExtras(u.id);
+        setExtras({ phone: ex.phone ?? '', email: ex.email ?? '' });
       });
     }
   }, [isDemo]);
@@ -66,24 +74,29 @@ const EditMyProfile: React.FC = () => {
 
   const handleSave = async () => {
     if (isDemo) {
+      const u = getCurrentUserForDisplay();
       setDemoProfilePatch({
         firstName: form.firstName?.trim() || undefined,
         lastName: form.lastName?.trim() || undefined,
         middleName: form.middleName?.trim() || undefined,
         nickname: form.nickname?.trim() || undefined,
+        birthDate: form.birthDate?.trim() || undefined,
         city: form.city?.trim() || undefined,
         about: form.about?.trim() || undefined,
       });
+      setProfileExtras(u.id, { phone: extras.phone, email: extras.email });
       navigate(ROUTES.classic.myProfile);
       return;
     }
     setSaving(true);
     try {
+      if (user) setProfileExtras(user.id, { phone: extras.phone, email: extras.email });
       await api.profile.updateMyProfile({
         firstName: form.firstName?.trim() || undefined,
         lastName: form.lastName?.trim() || undefined,
         middleName: form.middleName?.trim() || undefined,
         nickname: form.nickname?.trim() || undefined,
+        birthDate: form.birthDate?.trim() || undefined,
         city: form.city?.trim() || undefined,
         about: form.about?.trim() || undefined,
         avatar: avatarUrl || undefined,
@@ -178,13 +191,42 @@ const EditMyProfile: React.FC = () => {
               />
             </label>
             <label className="block">
-              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Город</span>
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Живу в</span>
               <input
                 type="text"
                 value={form.city ?? ''}
                 onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
                 className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
                 placeholder="Город"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Дата рождения</span>
+              <input
+                type="date"
+                value={form.birthDate ?? ''}
+                onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Телефон</span>
+              <input
+                type="tel"
+                value={extras.phone}
+                onChange={e => setExtras(x => ({ ...x, phone: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="+7…"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">E-mail</span>
+              <input
+                type="email"
+                value={extras.email}
+                onChange={e => setExtras(x => ({ ...x, email: e.target.value }))}
+                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
+                placeholder="name@email.com"
               />
             </label>
             <label className="block">

@@ -13,6 +13,7 @@ export type DemoProfilePatch = {
   lastName?: string;
   middleName?: string;
   nickname?: string;
+  birthDate?: string;
   city?: string;
   about?: string;
 };
@@ -44,6 +45,7 @@ export function getCurrentUserForDisplay(): FamilyMember {
     lastName: patch.lastName ?? base.lastName,
     middleName: patch.middleName ?? base.middleName,
     nickname: patch.nickname ?? base.nickname,
+    birthDate: patch.birthDate ?? base.birthDate,
     city: patch.city ?? base.city,
     about: patch.about ?? base.about,
   };
