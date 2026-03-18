@@ -9,7 +9,16 @@ const demoMockData = String(import.meta.env.VITE_DEMO_MOCK_DATA ?? '').toLowerCa
 function selectApi(): AngeloApi {
   if (isDemoMode()) return mockApi;
   if (useMock) return mockApi;
-  if (demoMockData) return { auth: realApi.auth, feed: mockApi.feed, family: realApi.family, profile: realApi.profile, media: realApi.media, messages: realApi.messages };
+  if (demoMockData)
+    return {
+      auth: realApi.auth,
+      feed: mockApi.feed,
+      family: realApi.family,
+      profile: realApi.profile,
+      media: realApi.media,
+      messages: realApi.messages,
+      contactRequests: realApi.contactRequests,
+    } as AngeloApi;
   return realApi;
 }
 
@@ -46,6 +55,13 @@ export const api: AngeloApi = {
   messages: {
     listWith: (memberId) => selectApi().messages.listWith(memberId),
     sendTo: (memberId, text) => selectApi().messages.sendTo(memberId, text),
+  },
+  contactRequests: {
+    getStateWith: (memberId) => selectApi().contactRequests.getStateWith(memberId),
+    createWith: (memberId) => selectApi().contactRequests.createWith(memberId),
+    listIncoming: () => selectApi().contactRequests.listIncoming(),
+    accept: (requestId) => selectApi().contactRequests.accept(requestId),
+    reject: (requestId) => selectApi().contactRequests.reject(requestId),
   },
   debug: realApi.debug,
 };

@@ -1,5 +1,5 @@
 import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse, PublicationCreateBody } from './api.types';
-import type { AppUser, Comment, FamilyMember, MediaItem, Message, Publication } from '@/types';
+import type { AppUser, Comment, ContactRequest, ContactRequestState, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getJson, requestJson } from './request';
 import {
   normalizeAppUser,
@@ -155,6 +155,24 @@ export const realApi: AngeloApi = {
     async sendTo(memberId: string, text: string) {
       const res = await requestJson<unknown>('POST', `/messages/with/${memberId}`, { text });
       return normalizeMessage(res);
+    },
+  },
+  contactRequests: {
+    async getStateWith(memberId: string): Promise<ContactRequestState> {
+      return getJson<ContactRequestState>(`/contact-requests/with/${memberId}`);
+    },
+    async createWith(memberId: string): Promise<ContactRequestState> {
+      return requestJson<ContactRequestState>('POST', `/contact-requests/with/${memberId}`, {});
+    },
+    async listIncoming(): Promise<ContactRequest[]> {
+      const res = await getJson<unknown>('/contact-requests/incoming');
+      return Array.isArray(res) ? (res as ContactRequest[]) : [];
+    },
+    async accept(requestId: string): Promise<ContactRequestState> {
+      return requestJson<ContactRequestState>('POST', `/contact-requests/${requestId}/accept`, {});
+    },
+    async reject(requestId: string): Promise<ContactRequestState> {
+      return requestJson<ContactRequestState>('POST', `/contact-requests/${requestId}/reject`, {});
     },
   },
   debug: debugApi,

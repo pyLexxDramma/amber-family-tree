@@ -4,7 +4,7 @@ import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { Heart, MessageCircle, Calendar } from 'lucide-react';
+import { Heart, Calendar } from 'lucide-react';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
@@ -155,17 +155,6 @@ const ContactProfileInner: React.FC = () => {
                   aria-label="Лайк"
                 >
                   <Heart className="h-4 w-4" fill={liked ? 'currentColor' : 'none'} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    platform.hapticFeedback('light');
-                    navigate(ROUTES.classic.messages(member.id));
-                  }}
-                  className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                  aria-label="Сообщение"
-                >
-                  <MessageCircle className="h-4 w-4" />
                 </button>
               </div>
             </div>

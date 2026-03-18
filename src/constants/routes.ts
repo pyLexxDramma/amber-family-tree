@@ -24,6 +24,7 @@ export const ROUTES = {
     myMedia: `${CLASSIC_BASE}/my-media`,
     profile: (id: string) => `${CLASSIC_BASE}/profile/${id}`,
     messages: (id: string) => `${CLASSIC_BASE}/messages/${id}`,
+    contactRequests: `${CLASSIC_BASE}/contact-requests`,
     publication: (id: string) => `${CLASSIC_BASE}/publication/${id}`,
     invite: `${CLASSIC_BASE}/invite`,
     store: `${CLASSIC_BASE}/store`,

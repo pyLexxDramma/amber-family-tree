@@ -2,7 +2,7 @@ import type { AngeloApi, FeedListParams, PublicationCreateBody } from './api.typ
 import { mockPublications } from '@/data/mock-publications';
 import { currentUserId, getCurrentUser, getMember, mockMembers } from '@/data/mock-members';
 import { myMediaDemoItems } from '@/data/my-media-demo';
-import type { Comment, MediaItem, Message, Publication } from '@/types';
+import type { Comment, ContactRequest, ContactRequestState, MediaItem, Message, Publication } from '@/types';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 import { refUrl } from '@/data/mock-publications';
 
@@ -235,7 +235,53 @@ export const mockApi: AngeloApi = {
       return msg;
     },
   },
+  contactRequests: {
+    async getStateWith(memberId: string): Promise<ContactRequestState> {
+      const req = mockContactRequests.find(
+        r =>
+          (r.fromMemberId === currentUserId && r.toMemberId === memberId) ||
+          (r.fromMemberId === memberId && r.toMemberId === currentUserId),
+      );
+      if (!req) return { status: 'none', requestId: null, direction: 'none' };
+      const direction = req.fromMemberId === currentUserId ? 'outgoing' : 'incoming';
+      return { status: req.status, requestId: req.id, direction };
+    },
+    async createWith(memberId: string): Promise<ContactRequestState> {
+      const existing = mockContactRequests.find(
+        r =>
+          (r.fromMemberId === currentUserId && r.toMemberId === memberId) ||
+          (r.fromMemberId === memberId && r.toMemberId === currentUserId),
+      );
+      if (existing) {
+        const direction = existing.fromMemberId === currentUserId ? 'outgoing' : 'incoming';
+        return { status: existing.status, requestId: existing.id, direction };
+      }
+
+      const id = `cr_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      const next: ContactRequest = {
+        id,
+        fromMemberId: currentUserId,
+        toMemberId: memberId,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      };
+      mockContactRequests = [...mockContactRequests, next];
+      return { status: 'pending', requestId: id, direction: 'outgoing' };
+    },
+    async listIncoming(): Promise<ContactRequest[]> {
+      return mockContactRequests.filter(r => r.toMemberId === currentUserId && r.status === 'pending');
+    },
+    async accept(requestId: string): Promise<ContactRequestState> {
+      mockContactRequests = mockContactRequests.map(r => (r.id === requestId ? { ...r, status: 'accepted' } : r));
+      return { status: 'accepted', requestId, direction: 'incoming' };
+    },
+    async reject(requestId: string): Promise<ContactRequestState> {
+      mockContactRequests = mockContactRequests.map(r => (r.id === requestId ? { ...r, status: 'rejected' } : r));
+      return { status: 'rejected', requestId, direction: 'incoming' };
+    },
+  },
 };
 
 let mockMessages: Message[] = [];
+let mockContactRequests: ContactRequest[] = [];
 

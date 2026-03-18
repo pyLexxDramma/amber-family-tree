@@ -3,6 +3,7 @@ export type RelationType = 'parent' | 'child' | 'spouse' | 'sibling' | 'grandpar
 export type MediaType = 'photo' | 'video' | 'audio' | 'document';
 export type PublicationType = 'photo' | 'video' | 'audio' | 'document' | 'text';
 export type InvitationStatus = 'sent' | 'accepted' | 'rejected' | 'expired';
+export type ContactRequestStatus = 'none' | 'pending' | 'accepted' | 'rejected';
 
 export interface FamilyMember {
   id: string;
@@ -83,6 +84,20 @@ export interface Invitation {
   link: string;
   status: InvitationStatus;
   createdAt: string;
+}
+
+export interface ContactRequest {
+  id: string;
+  fromMemberId: string;
+  toMemberId: string;
+  status: ContactRequestStatus;
+  createdAt: string;
+}
+
+export interface ContactRequestState {
+  status: ContactRequestStatus | 'none';
+  requestId?: string | null;
+  direction: 'none' | 'outgoing' | 'incoming';
 }
 
 export interface TreeNode {

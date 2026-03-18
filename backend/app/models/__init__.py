@@ -9,6 +9,7 @@ from app.models.comment_like import CommentLike
 from app.models.like import Like
 from app.models.invitation import Invitation
 from app.models.message import Message
+from app.models.contact_request import ContactRequest
 
 __all__ = [
     "Base",
@@ -22,4 +23,5 @@ __all__ = [
     "Like",
     "Invitation",
     "Message",
+    "ContactRequest",
 ]

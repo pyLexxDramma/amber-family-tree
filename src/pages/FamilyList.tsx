@@ -46,7 +46,9 @@ const FamilyList: React.FC = () => {
   const [members, setMembers] = useState<FamilyMember[]>(isDemoMode() ? mockMembers : []);
   const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
   const [isLoadingMembers, setIsLoadingMembers] = useState(!isDemoMode());
-   const [contactOpen, setContactOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactPending, setContactPending] = useState(false);
+  const [contactTargetId, setContactTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     api.family.listMembers()
@@ -208,6 +210,7 @@ const FamilyList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    if (contactPending) return;
                     const hasTarget = members
                       .map(norm)
                       .some(x => x.id !== myId && (x.isActive ?? true));
@@ -217,11 +220,22 @@ const FamilyList: React.FC = () => {
                     }
                     setContactOpen(true);
                   }}
-                  className="h-12 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
+                  className={`h-12 rounded-2xl border-2 text-sm font-semibold transition-colors ${
+                    contactPending
+                      ? 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text-muted)] cursor-default'
+                      : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/40'
+                  }`}
                 >
-                  Связаться
+                  {contactPending ? 'На рассмотрении' : 'Установить контакт'}
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.classic.contactRequests)}
+                className="mt-3 text-xs text-[var(--proto-text-muted)] underline"
+              >
+                Запросы контакта
+              </button>
             </div>
           </div>
         </div>
@@ -243,9 +257,24 @@ const FamilyList: React.FC = () => {
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() => {
-                        setContactOpen(false);
-                        navigate(ROUTES.classic.messages(m.id));
+                      onClick={async () => {
+                        try {
+                          const res = await api.contactRequests.createWith(m.id);
+                          setContactTargetId(m.id);
+                          if (res.status === 'pending') {
+                            setContactPending(true);
+                            toast({ title: 'Запрос на установление контакта отправлен' });
+                          } else if (res.status === 'accepted') {
+                            toast({ title: 'Контакт уже установлен, можно писать сообщения' });
+                            navigate(ROUTES.classic.messages(m.id));
+                          } else if (res.status === 'rejected') {
+                            toast({ title: 'Ранее запрос был отклонён' });
+                          }
+                        } catch {
+                          toast({ title: 'Не удалось отправить запрос' });
+                        } finally {
+                          setContactOpen(false);
+                        }
                       }}
                       className="w-full flex items-center gap-3 p-2 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors text-left"
                     >
