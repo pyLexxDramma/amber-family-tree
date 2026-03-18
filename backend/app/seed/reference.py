@@ -113,11 +113,11 @@ def _avatar_url(seed: str) -> str:
         "roman": f"{proto}/avatar-man-dad.png",
         "liza": f"{proto}/avatar-woman-young.png",
         "alina": f"{proto}/avatar-woman-mom.png",
-        "anna-test": "/demo/avatars/t-anna.png",
-        "dmitry-test": "/demo/avatars/t-dmitry.png",
-        "svetlana-test": "/demo/avatars/t-svetlana.png",
-        "kirill-test": "/demo/avatars/t-kirill.png",
-        "maria-test": "/demo/avatars/t-maria.png",
+        "anna-test": f"{base}/demo/avatars/t-anna.png",
+        "dmitry-test": f"{base}/demo/avatars/t-dmitry.png",
+        "svetlana-test": f"{base}/demo/avatars/t-svetlana.png",
+        "kirill-test": f"{base}/demo/avatars/t-kirill.png",
+        "maria-test": f"{base}/demo/avatars/t-maria.png",
     }
     return avatar_map.get(seed, f"{proto}/avatar-man-beard-glasses.png")
 
@@ -167,6 +167,7 @@ PHOTO_TO_LATIN = {
 
 
 def _photo_url(pub_data: dict, seed: int) -> str:
+    base = get_settings().frontend_url.rstrip("/")
     title = pub_data.get("title") or ""
     explicit = pub_data.get("photo_file") or TITLE_TO_FILE.get(title)
     if explicit:
@@ -176,7 +177,7 @@ def _photo_url(pub_data: dict, seed: int) -> str:
         files = TOPIC_TO_FILES.get(topic_tag, DEFAULT_FILES)
         orig = files[seed % len(files)]
         fname = PHOTO_TO_LATIN.get(orig, orig)
-    return f"/demo/media/{fname}"
+    return f"{base}/demo/media/{fname}"
 
 
 logger = logging.getLogger(__name__)

@@ -26,6 +26,11 @@ echo ">>> copy dist to $WEB_ROOT"
 sudo mkdir -p "$WEB_ROOT"
 sudo cp -r dist/* "$WEB_ROOT/"
 
+echo ">>> verify demo media"
+for f in demo/media/photo1.jpg demo/avatars/t-anna.png; do
+  [ -f "$WEB_ROOT/$f" ] && echo "  OK $f" || echo "  MISSING $f"
+done
+
 echo ">>> fix nginx root (if needed)"
 for f in /etc/nginx/sites-available/angelo /etc/nginx/sites-available/angelo-test.ru; do
   [ -f "$f" ] && sudo sed -i 's|root /var/www/angelo/dist|root /var/www/angelo|' "$f" 2>/dev/null || true
