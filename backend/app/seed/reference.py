@@ -23,7 +23,15 @@ FAMILY_MEMBERS_BASE = [
     {"first_name": "Елизавета", "last_name": "Никулина", "nickname": "Лиза", "birth_date": "2010-08-17", "city": "Москва", "generation": 3, "avatar_seed": "liza"},
 ]
 
-FAMILY_MEMBERS = FAMILY_MEMBERS_BASE
+FAMILY_MEMBERS_TEST = [
+    {"first_name": "Анна", "last_name": "Соколова", "nickname": "Аня (тест)", "birth_date": "1998-05-22", "city": "Казань", "generation": 3, "avatar_seed": "anna-test", "about": "Двоюродная сестра. Тестовый участник для демонстрации."},
+    {"first_name": "Дмитрий", "last_name": "Волков", "nickname": "Дядя Дима (тест)", "birth_date": "1981-11-08", "city": "Вологда", "generation": 2, "avatar_seed": "dmitry-test", "about": "Брат Владимира. Тестовый участник для демонстрации."},
+    {"first_name": "Светлана", "last_name": "Петрова", "nickname": "Тётя Света (тест)", "birth_date": "1979-03-15", "city": "Уфа", "generation": 2, "avatar_seed": "svetlana-test", "about": "Сестра Владимира. Тестовый участник для демонстрации."},
+    {"first_name": "Кирилл", "last_name": "Морозов", "nickname": "Кирилл (тест)", "birth_date": "2001-07-30", "city": "Сочи", "generation": 3, "avatar_seed": "kirill-test", "about": "Двоюродный брат. Тестовый участник для демонстрации."},
+    {"first_name": "Мария", "last_name": "Лебедева", "nickname": "Маша (тест)", "birth_date": "2012-02-14", "city": "Вологда", "generation": 3, "avatar_seed": "maria-test", "about": "Двоюродная сестра. Тестовый участник для демонстрации."},
+]
+
+FAMILY_MEMBERS = FAMILY_MEMBERS_BASE + FAMILY_MEMBERS_TEST
 
 PUBLICATIONS = [
     {
@@ -82,6 +90,16 @@ PUBLICATIONS = [
         "topic_tag": "Истории",
         "photo_file": "Фото7.png",
     },
+    {"title": "Выпускной в Казанском университете", "text": "Наконец-то диплом в руках! Пять лет пролетели незаметно.", "event_date": "2024-06-28", "place": "Казань", "topic_tag": "День рождения", "photo_file": "Фото 3.png"},
+    {"title": "Тбилиси — город, в который влюбляешься", "text": "Путешествие с подругами в Грузию. Старый город, хинкали, вино.", "event_date": "2024-09-12", "place": "Тбилиси", "topic_tag": "Путешествия", "photo_file": "Фото 4.png"},
+    {"title": "Рыбалка с Кириллом на Рыбинке", "text": "Выходные на водохранилище. Кирилл впервые поймал щуку!", "event_date": "2023-08-19", "place": "Рыбинское водохранилище", "topic_tag": "Путешествия", "photo_file": "Фото 4.png"},
+    {"title": "60 лет отцу — праздник на берегу", "text": "Собрали семью в Сочи на юбилей папы.", "event_date": "2024-07-20", "place": "Сочи", "topic_tag": "День рождения", "photo_file": "Фото 5.png"},
+    {"title": "Оливье по бабушкиному рецепту", "text": "Каждый год 31 декабря — одно и то же. Рецепт передала мама.", "event_date": "2024-12-31", "place": "Уфа", "topic_tag": "Рецепты", "photo_file": "Фото 6.png"},
+    {"title": "Воскресный обед в кругу семьи", "text": "Аня приехала на выходные. Накрыли стол, достали фарфор.", "event_date": "2024-11-10", "place": "Уфа", "topic_tag": "Будни", "photo_file": "Фото 1.jpg"},
+    {"title": "Сезон сноуборда открыт", "text": "Роза Хутор, первый выезд в этом году.", "event_date": "2025-01-05", "place": "Красная Поляна", "topic_tag": "Путешествия", "photo_file": "Фото 5.png"},
+    {"title": "Сессия закрыта — можно выдохнуть", "text": "Три экзамена за неделю. Кофе, конспекты, бессонные ночи.", "event_date": "2024-06-15", "place": "Сочи", "topic_tag": "Будни", "photo_file": "Фото 2.png"},
+    {"title": "Школьный бал — первый выход в свет", "text": "Выпускной в 4 классе! Платье выбирали с мамой целый месяц.", "event_date": "2023-05-25", "place": "Вологда", "topic_tag": "Истории", "photo_file": "Фото7.png"},
+    {"title": "Каникулы у тёти Светы", "text": "Поехала к тёте в Уфу на неделю. Гуляли по городу, пекли пироги.", "event_date": "2024-08-03", "place": "Уфа", "topic_tag": "Путешествия", "photo_file": "Фото 3.png"},
 ]
 
 
@@ -92,6 +110,11 @@ def _avatar_url(seed: str) -> str:
         "roman": "/prototype/avatars/avatar-man-dad.png",
         "liza": "/prototype/avatars/avatar-woman-young.png",
         "alina": "/prototype/avatars/avatar-woman-mom.png",
+        "anna-test": "/prototype/avatars/avatar-woman-young.png",
+        "dmitry-test": "/prototype/avatars/avatar-man-beard-glasses.png",
+        "svetlana-test": "/prototype/avatars/avatar-woman-elderly.png",
+        "kirill-test": "/prototype/avatars/avatar-man-dad.png",
+        "maria-test": "/prototype/avatars/avatar-woman-young.png",
     }
     return avatar_map.get(seed, "/prototype/avatars/avatar-man-beard-glasses.png")
 
@@ -158,7 +181,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         await db.commit()
         pub_list = []
         existing_members = [member]
-    elif len(pub_list) >= 7 and len(existing_members) >= len(FAMILY_MEMBERS_BASE) + 1:
+    elif len(pub_list) >= 7 and len(existing_members) >= len(FAMILY_MEMBERS) + 1:
         return
 
     existing_key = {(m.first_name, m.last_name, m.birth_date) for m in existing_members}
@@ -175,6 +198,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
                 nickname=fm.get("nickname"),
                 birth_date=fm["birth_date"],
                 city=fm.get("city"),
+                about=fm.get("about"),
                 role="member",
                 is_active=True,
                 generation=fm.get("generation", 0),
