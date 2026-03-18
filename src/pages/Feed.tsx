@@ -10,6 +10,7 @@ import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { FamilyMember, Publication } from '@/types';
+import { toast } from '@/hooks/use-toast';
 
 const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
@@ -83,7 +84,10 @@ const Feed: React.FC = () => {
     try {
       await api.debug.seedReference();
       await loadData(false);
-    } catch {
+      toast({ title: 'Тестовые данные загружены. Обновите страницу, если не видите изменения.' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast({ title: 'Ошибка: ' + msg, variant: 'destructive' });
     } finally {
       setSeedLoading(false);
     }
@@ -192,16 +196,6 @@ const Feed: React.FC = () => {
             <div>
               <h1 className="text-xl font-semibold text-[var(--proto-text)]">Лента</h1>
               {items.length > 50 && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Демо · {items.length} публикаций</p>}
-              {api.debug && (
-                <button
-                  type="button"
-                  onClick={handleSeedReference}
-                  disabled={seedLoading}
-                  className="mt-2 text-sm font-medium text-[var(--proto-active)] hover:underline disabled:opacity-60"
-                >
-                  {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
-                </button>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <button

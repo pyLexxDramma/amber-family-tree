@@ -42,6 +42,8 @@ def _infer_media_type_from_key(key: str) -> str | None:
 def _to_public_media_url(raw: str) -> str:
     if raw.startswith("http://") or raw.startswith("https://"):
         return raw
+    if raw.startswith("/"):
+        return raw
     settings = get_settings()
     base = (settings.s3_public_endpoint_url or settings.s3_endpoint_url).rstrip("/")
     return f"{base}/{settings.s3_bucket}/{raw}"
