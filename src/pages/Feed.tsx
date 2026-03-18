@@ -192,6 +192,16 @@ const Feed: React.FC = () => {
             <div>
               <h1 className="text-xl font-semibold text-[var(--proto-text)]">Лента</h1>
               {items.length > 50 && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Демо · {items.length} публикаций</p>}
+              {api.debug && (
+                <button
+                  type="button"
+                  onClick={handleSeedReference}
+                  disabled={seedLoading}
+                  className="mt-2 text-sm font-medium text-[var(--proto-active)] hover:underline disabled:opacity-60"
+                >
+                  {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -241,7 +251,7 @@ const Feed: React.FC = () => {
                 Посты
               </button>
             </div>
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 flex-wrap">
               <button
                 type="button"
                 onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
@@ -265,7 +275,7 @@ const Feed: React.FC = () => {
                   type="button"
                   onClick={handleSeedReference}
                   disabled={seedLoading}
-                  className="px-3 py-1.5 rounded-full border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-active)] hover:border-[var(--proto-active)]/40 disabled:opacity-60 shrink-0"
+                  className="px-3 py-1.5 rounded-full border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-active)] hover:border-[var(--proto-active)]/40 disabled:opacity-60"
                 >
                   {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
                 </button>
