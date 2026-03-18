@@ -1,20 +1,20 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TreeDeciduous, Image as ImageIcon, Plus, Users, Home, User } from 'lucide-react';
+import { TreeDeciduous, Image as ImageIcon, Plus, Users, Home, User, Clock } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { isDemoMode } from '@/lib/demoMode';
 
 const classicNavItems = [
   { path: ROUTES.classic.feed, label: 'Лента', icon: ImageIcon },
-  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
+  { path: ROUTES.classic.timeline, label: 'Хронология', icon: Clock },
   { path: ROUTES.classic.create, label: 'Создать', icon: Plus },
   { path: ROUTES.classic.family, label: 'Семья', icon: Users },
-  { path: ROUTES.classic.store, label: 'Магазин', icon: Home },
+  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
 ];
 
 const demoNavItems = [
   { path: ROUTES.classic.feed, label: 'Главная', icon: Home },
-  { path: ROUTES.classic.albums, label: 'Альбомы', icon: ImageIcon },
+  { path: ROUTES.classic.timeline, label: 'Хронология', icon: Clock },
   { path: ROUTES.classic.create, label: 'Добавить', icon: Plus },
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
   { path: ROUTES.classic.myProfile, label: 'Профиль', icon: User },

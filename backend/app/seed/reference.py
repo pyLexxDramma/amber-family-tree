@@ -90,7 +90,7 @@ PUBLICATIONS = [
         "topic_tag": "Истории",
         "photo_file": "Фото7.png",
     },
-    {"title": "Выпускной в Казанском университете", "text": "Наконец-то диплом в руках! Пять лет пролетели незаметно.", "event_date": "2024-06-28", "place": "Казань", "topic_tag": "День рождения", "photo_file": "Фото 3.png"},
+    {"title": "Выпускной в Казанском университете", "text": "Наконец-то диплом в руках! Пять лет пролетели незаметно.", "event_date": "2024-06-28", "place": "Казань", "topic_tag": "День рождения", "photo_file": "Фото7.png"},
     {"title": "Тбилиси — город, в который влюбляешься", "text": "Путешествие с подругами в Грузию. Старый город, хинкали, вино.", "event_date": "2024-09-12", "place": "Тбилиси", "topic_tag": "Путешествия", "photo_file": "Фото 4.png"},
     {"title": "Рыбалка с Кириллом на Рыбинке", "text": "Выходные на водохранилище. Кирилл впервые поймал щуку!", "event_date": "2023-08-19", "place": "Рыбинское водохранилище", "topic_tag": "Путешествия", "photo_file": "Фото 4.png"},
     {"title": "60 лет отцу — праздник на берегу", "text": "Собрали семью в Сочи на юбилей папы.", "event_date": "2024-07-20", "place": "Сочи", "topic_tag": "День рождения", "photo_file": "Фото 5.png"},
@@ -113,11 +113,11 @@ def _avatar_url(seed: str) -> str:
         "roman": f"{proto}/avatar-man-dad.png",
         "liza": f"{proto}/avatar-woman-young.png",
         "alina": f"{proto}/avatar-woman-mom.png",
-        "anna-test": f"{demo}/m6.jpg",
-        "dmitry-test": f"{demo}/m7.jpg",
-        "svetlana-test": f"{demo}/m8.jpg",
-        "kirill-test": f"{demo}/m9.jpg",
-        "maria-test": f"{demo}/m10.jpg",
+        "anna-test": f"{demo}/t-anna.png",
+        "dmitry-test": f"{demo}/t-dmitry.png",
+        "svetlana-test": f"{demo}/t-svetlana.png",
+        "kirill-test": f"{demo}/t-kirill.png",
+        "maria-test": f"{demo}/t-maria.png",
     }
     return avatar_map.get(seed, f"{proto}/avatar-man-beard-glasses.png")
 
