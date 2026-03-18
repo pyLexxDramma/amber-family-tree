@@ -181,7 +181,7 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         await db.commit()
         pub_list = []
         existing_members = [member]
-    elif len(pub_list) >= 7 and len(existing_members) >= len(FAMILY_MEMBERS) + 1:
+    elif len(pub_list) >= len(PUBLICATIONS) and len(existing_members) >= len(FAMILY_MEMBERS) + 1:
         return
 
     existing_key = {(m.first_name, m.last_name, m.birth_date) for m in existing_members}
@@ -214,7 +214,12 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
         member.avatar = _avatar_url("alina")
         await db.commit()
         await db.refresh(member)
+    pub_check = await db.execute(select(Publication).where(Publication.family_id == user.family_id))
+    existing_pubs = list(pub_check.scalars().all())
+    existing_titles = {p.title for p in existing_pubs}
     for i, pub_data in enumerate(PUBLICATIONS):
+        if pub_data["title"] in existing_titles:
+            continue
         author = all_members[i % max(1, len(all_members))]
         participant_ids = [str(m.id) for m in all_members if m.id != author.id][:50]
         pub = Publication(
