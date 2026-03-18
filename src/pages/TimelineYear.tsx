@@ -8,9 +8,20 @@ import type { Publication } from '@/types';
 import { getPrototypeFeedPostPhotoByTopic } from '@/lib/prototype-assets';
 import { getMilestoneIds } from '@/lib/milestones';
 import { isDemoMode } from '@/lib/demoMode';
+import { Video } from 'lucide-react';
 
 const publishDateOf = (p: Publication) => (p as { publishDate?: string; publish_date?: string }).publishDate ?? (p as { publish_date?: string }).publish_date ?? '';
 const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?: string }).eventDate ?? (p as { event_date?: string }).event_date ?? (publishDateOf(p) ? publishDateOf(p).slice(0, 10) : '');
+
+const topicPillClass: Record<string, string> = {
+  Путешествия: 'bg-emerald-500/70 text-white',
+  Праздники: 'bg-amber-600/70 text-white',
+  'День рождения': 'bg-amber-600/70 text-white',
+  Рецепты: 'bg-amber-700/70 text-white',
+  Будни: 'bg-slate-500/70 text-white',
+  Истории: 'bg-slate-600/70 text-white',
+  Семья: 'bg-slate-500/70 text-white',
+};
 
 const TimelineYear: React.FC = () => {
   const { year } = useParams();
@@ -63,7 +74,7 @@ const TimelineYear: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
+      <div className="prototype-screen min-h-screen bg-[#F5F0E8]">
         <TopBar title={`События ${safeYear || ''}`} onBack={() => navigate(-1)} light right={null} />
         <div className="mx-auto max-w-full px-3 pt-3 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
           <div className="flex flex-wrap gap-2 mb-4">
@@ -80,34 +91,53 @@ const TimelineYear: React.FC = () => {
               </button>
             ))}
           </div>
-          <div className="space-y-4">
+          <div className="columns-2 gap-3">
             {list.map((pub) => {
               const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                 || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
                 || (isDemoMode() ? getPrototypeFeedPostPhotoByTopic(pub.topicTag).src : '');
+              const hasVideo = !!pub.media.find(m => m.type === 'video');
+              const eventY = eventDateOf(pub).slice(0, 4);
+              const pillClass = topicPillClass[pub.topicTag] ?? 'bg-slate-600/70 text-white';
               return (
                 <button
                   key={pub.id}
                   type="button"
                   onClick={() => navigate(ROUTES.classic.publication(pub.id))}
-                  className="w-full rounded-3xl bg-white border border-[var(--proto-border)] overflow-hidden text-left hover:border-[var(--proto-active)]/40 transition-colors"
+                  className="w-full break-inside-avoid mb-3 rounded-xl overflow-hidden bg-[var(--proto-border)] hover:opacity-95 transition-opacity text-left block"
                 >
-                  <div className="aspect-[4/3] bg-[var(--proto-border)]">
+                  <div className="relative aspect-[4/5]">
                     {coverSrc ? (
                       <img
                         src={coverSrc}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                         onError={(e) => { e.currentTarget.src = getPrototypeFeedPostPhotoByTopic(pub.topicTag).src; }}
                       />
                     ) : (
-                      <img src={getPrototypeFeedPostPhotoByTopic(pub.topicTag).src} alt="" className="w-full h-full object-cover" />
+                      <img src={getPrototypeFeedPostPhotoByTopic(pub.topicTag).src} alt="" className="absolute inset-0 w-full h-full object-cover" />
                     )}
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs text-[var(--proto-text-muted)]">{eventDateOf(pub)}</p>
-                    <p className="text-sm font-semibold text-[var(--proto-text)] mt-1">{pub.title || 'Событие'}</p>
-                    {pub.place ? <p className="text-xs text-[var(--proto-text-muted)] mt-2">📍 {pub.place}</p> : null}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                    <div className="absolute top-2 left-2 flex flex-col gap-1.5">
+                      <span className="inline-block px-2.5 py-1 rounded-lg bg-blue-600/80 text-white text-xs font-semibold">
+                        {eventY}
+                      </span>
+                      {pub.topicTag && (
+                        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-medium ${pillClass}`}>
+                          {pub.topicTag}
+                        </span>
+                      )}
+                    </div>
+                    {hasVideo && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Video className="h-12 w-12 text-white drop-shadow-lg" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-sm font-semibold text-white drop-shadow-md line-clamp-2">
+                        {pub.title || 'Событие'}
+                      </p>
+                    </div>
                   </div>
                 </button>
               );
