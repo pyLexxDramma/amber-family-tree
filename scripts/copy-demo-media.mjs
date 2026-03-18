@@ -10,6 +10,15 @@ const destFeed = path.join(root, 'public/demo/feed');
 const protoDir = path.join(root, 'public/prototype');
 
 const DEMO_MEDIA_FILES = ['Фото 1.jpg', 'Фото 2.png', 'Фото 3.png', 'Фото 4.png', 'Фото 5.png', 'Фото 6.png', 'Фото7.png'];
+const PHOTO_TO_LATIN = {
+  'Фото 1.jpg': 'photo1.jpg',
+  'Фото 2.png': 'photo2.png',
+  'Фото 3.png': 'photo3.png',
+  'Фото 4.png': 'photo4.png',
+  'Фото 5.png': 'photo5.png',
+  'Фото 6.png': 'photo6.png',
+  'Фото7.png': 'photo7.png',
+};
 const PROTO_FALLBACK = [
   { dir: protoDir, file: 'pub-birthday.png' },
   { dir: protoDir, file: 'pub-village.png' },
@@ -45,6 +54,13 @@ if (fs.existsSync(srcRef)) {
     fs.copyFileSync(path.join(srcRef, f), path.join(destMedia, f));
   }
   console.log(`Copied ${files.length} demo media files to public/demo/media`);
+}
+fs.mkdirSync(destMedia, { recursive: true });
+for (const [cyrillic, latin] of Object.entries(PHOTO_TO_LATIN)) {
+  const src = path.join(destMedia, cyrillic);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, path.join(destMedia, latin));
+  }
 }
 
 if (process.env.SKIP_DEMO_FEED === 'true') {

@@ -145,20 +145,29 @@ TOPIC_TO_FILES = {
 }
 DEFAULT_FILES = ["Фото 1.jpg", "Фото 2.png", "Фото 3.png"]
 
+PHOTO_TO_LATIN = {
+    "Фото 1.jpg": "photo1.jpg",
+    "Фото 2.png": "photo2.png",
+    "Фото 3.png": "photo3.png",
+    "Фото 4.png": "photo4.png",
+    "Фото 5.png": "photo5.png",
+    "Фото 6.png": "photo6.png",
+    "Фото7.png": "photo7.png",
+}
+
 
 def _photo_url(pub_data: dict, seed: int) -> str:
-    from urllib.parse import quote
-
     base = get_settings().frontend_url.rstrip("/")
     title = pub_data.get("title") or ""
     explicit = pub_data.get("photo_file") or TITLE_TO_FILE.get(title)
     if explicit:
-        fname = explicit
+        fname = PHOTO_TO_LATIN.get(explicit, explicit)
     else:
         topic_tag = pub_data.get("topic_tag", "")
         files = TOPIC_TO_FILES.get(topic_tag, DEFAULT_FILES)
-        fname = files[seed % len(files)]
-    return f"{base}/demo/media/{quote(fname)}"
+        orig = files[seed % len(files)]
+        fname = PHOTO_TO_LATIN.get(orig, orig)
+    return f"{base}/demo/media/{fname}"
 
 
 logger = logging.getLogger(__name__)
