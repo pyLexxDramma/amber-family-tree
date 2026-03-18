@@ -6,7 +6,7 @@ import { TopBar } from '@/components/TopBar';
 import { currentUserId, mockMembers } from '@/data/mock-members';
 import { getPrototypeAvatarForMember } from '@/lib/prototype-assets';
 import { getFamilyRole } from '@/lib/family-role';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search } from 'lucide-react';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -45,7 +45,6 @@ const FamilyList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [members, setMembers] = useState<FamilyMember[]>(isDemoMode() ? mockMembers : []);
   const [myProfile, setMyProfile] = useState<FamilyMember | null>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [isLoadingMembers, setIsLoadingMembers] = useState(!isDemoMode());
    const [contactOpen, setContactOpen] = useState(false);
 
@@ -97,14 +96,6 @@ const FamilyList: React.FC = () => {
                   className="w-full h-10 pl-9 pr-3 rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] text-sm text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]/30 focus:border-[var(--proto-active)]"
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => setFilterOpen(true)}
-                className="h-10 w-10 rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors shrink-0"
-                aria-label="Фильтры"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-              </button>
             </div>
 
             <div className="flex gap-6 border-b border-[var(--proto-border)]">
@@ -234,30 +225,6 @@ const FamilyList: React.FC = () => {
             </div>
           </div>
         </div>
-
-        <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-          <DialogContent className="max-w-[420px] rounded-2xl">
-            <DialogHeader>
-              <DialogTitle>Фильтр</DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-3 gap-2">
-              {(['all', 'active', 'inactive'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => { setFilterTab(t); setFilterOpen(false); }}
-                  className={`h-11 rounded-xl text-sm font-semibold border-2 transition-colors ${
-                    filterTab === t
-                      ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]'
-                      : 'bg-[var(--proto-card)] text-[var(--proto-text)] border-[var(--proto-border)] hover:border-[var(--proto-active)]/40'
-                  }`}
-                >
-                  {{ all: 'Все', active: 'Активные', inactive: 'Неактивные' }[t]}
-                </button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         <Dialog open={contactOpen} onOpenChange={setContactOpen}>
           <DialogContent className="max-w-[420px] rounded-2xl">

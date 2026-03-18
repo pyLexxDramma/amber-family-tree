@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { Users, Heart, MessageCircle, Calendar, ChevronRight } from 'lucide-react';
+import { Heart, MessageCircle, Calendar } from 'lucide-react';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
@@ -12,38 +12,38 @@ import { toast } from '@/hooks/use-toast';
 import { useAvatarFallback } from '@/lib/demoMode';
 import { getLocalNickname, setLocalNickname } from '@/lib/localUserData';
 
-type Rel = { type: string; memberId: string };
-
-function normalizeRelations(relations: unknown): Rel[] {
-  if (!Array.isArray(relations)) return [];
-  return relations
-    .map((r) => {
-      if (!r || typeof r !== 'object') return null;
-      const type = (r as any).type;
-      const memberId = (r as any).memberId ?? (r as any).member_id;
-      if (typeof type !== 'string' || typeof memberId !== 'string') return null;
-      return { type, memberId };
-    })
-    .filter(Boolean) as Rel[];
+class ContactProfileErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err: unknown) {
+    console.error('ContactProfile crashed', err);
+  }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <AppLayout>
+        <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex items-center justify-center p-6">
+          <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5 text-center max-w-sm">
+            <p className="text-sm font-semibold text-[var(--proto-text)]">Не удалось открыть профиль</p>
+            <p className="text-xs text-[var(--proto-text-muted)] mt-2">Обновите страницу. Если повторится — посмотрите консоль браузера.</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 }
 
-const ContactProfile: React.FC = () => {
+const ContactProfileInner: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const platform = usePlatform();
   const [member, setMember] = useState<FamilyMember | null | undefined>(undefined);
-  const [members, setMembers] = useState<FamilyMember[]>([]);
   const [me, setMe] = useState<FamilyMember | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [liked, setLiked] = useState(false);
   const [localNick, setLocalNick] = useState('');
-
-  const memberMap = useMemo(() => {
-    const map = new Map<string, FamilyMember>();
-    for (const m of members) map.set(m.id, m);
-    if (member) map.set(member.id, member);
-    return map;
-  }, [member, members]);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,13 +53,9 @@ const ContactProfile: React.FC = () => {
         return;
       }
       try {
-        const [m, list] = await Promise.all([
-          api.family.getMember(id),
-          api.family.listMembers(),
-        ]);
+        const m = await api.family.getMember(id);
         if (cancelled) return;
         setMember(m);
-        setMembers(list);
       } catch {
         if (cancelled) return;
         setMember(null);
@@ -71,6 +67,12 @@ const ContactProfile: React.FC = () => {
   useEffect(() => {
     api.profile.getMyProfile().then(setMe).catch(() => setMe(null));
   }, []);
+
+  useEffect(() => {
+    if (!me || !member || !member.id) return;
+    const v = getLocalNickname(me.id, member.id);
+    setLocalNick(v ?? '');
+  }, [me, member?.id]);
 
   if (member === undefined) {
     return (
@@ -89,7 +91,6 @@ const ContactProfile: React.FC = () => {
   }
 
   const fullName = `${member.firstName} ${member.lastName}`.trim() || 'Профиль';
-  const viewerId = me?.id || 'viewer';
   const assignedNick = me ? getLocalNickname(me.id, member.id) : null;
   const displayNick = assignedNick || member.nickname || '';
   const displayName = displayNick ? `${fullName} (${displayNick})` : fullName;
@@ -106,21 +107,10 @@ const ContactProfile: React.FC = () => {
     }
   };
 
-  const goToRelative = (relId: string) => {
-    platform.hapticFeedback('light');
-    navigate(ROUTES.classic.profile(relId));
-  };
-
   const openMemberPosts = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=posts`);
   const openMemberWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=posts`);
   const openMemberMedia = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=media`);
   const openMemberMediaWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=media`);
-
-  useEffect(() => {
-    if (!me) return;
-    const v = getLocalNickname(me.id, member.id);
-    setLocalNick(v ?? '');
-  }, [me, member.id]);
 
   return (
     <AppLayout>
@@ -267,5 +257,11 @@ const ContactProfile: React.FC = () => {
     </AppLayout>
   );
 };
+
+const ContactProfile: React.FC = () => (
+  <ContactProfileErrorBoundary>
+    <ContactProfileInner />
+  </ContactProfileErrorBoundary>
+);
 
 export default ContactProfile;
