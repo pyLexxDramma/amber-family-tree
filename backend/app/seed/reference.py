@@ -104,19 +104,21 @@ PUBLICATIONS = [
 
 
 def _avatar_url(seed: str) -> str:
+    base = get_settings().frontend_url.rstrip("/")
     avatar_map = {
-        "vladimir": "/prototype/avatars/avatar-man-elderly.png",
-        "olga": "/prototype/avatars/avatar-woman-elderly.png",
-        "roman": "/prototype/avatars/avatar-man-dad.png",
-        "liza": "/prototype/avatars/avatar-woman-young.png",
-        "alina": "/prototype/avatars/avatar-woman-mom.png",
-        "anna-test": "/prototype/avatars/avatar-test-anna.png",
-        "dmitry-test": "/prototype/avatars/avatar-test-dmitry.png",
-        "svetlana-test": "/prototype/avatars/avatar-test-svetlana.png",
-        "kirill-test": "/prototype/avatars/avatar-test-kirill.png",
-        "maria-test": "/prototype/avatars/avatar-test-maria.png",
+        "vladimir": "avatar-man-elderly.png",
+        "olga": "avatar-woman-elderly.png",
+        "roman": "avatar-man-dad.png",
+        "liza": "avatar-woman-young.png",
+        "alina": "avatar-woman-mom.png",
+        "anna-test": "avatar-test-anna.png",
+        "dmitry-test": "avatar-test-dmitry.png",
+        "svetlana-test": "avatar-test-svetlana.png",
+        "kirill-test": "avatar-test-kirill.png",
+        "maria-test": "avatar-test-maria.png",
     }
-    return avatar_map.get(seed, "/prototype/avatars/avatar-man-beard-glasses.png")
+    fname = avatar_map.get(seed, "avatar-man-beard-glasses.png")
+    return f"{base}/prototype/avatars/{fname}"
 
 
 TITLE_TO_FILE = {
