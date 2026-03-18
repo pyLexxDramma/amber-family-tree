@@ -39,8 +39,17 @@ export function getPrototypeAvatar(memberId: string, currentUserId?: string): Av
   return AVATAR_ENTRIES[(num - 1) % AVATAR_ENTRIES.length];
 }
 
+function hashId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 export function getPrototypeAvatarForMember(member: FamilyMember, currentUserId: string): AvatarEntry {
-  return AVATAR_ENTRIES[getAvatarIndexForMember(member, currentUserId)];
+  const roleIndex = getAvatarIndexForMember(member, currentUserId);
+  const spread = hashId(member.id) % AVATAR_ENTRIES.length;
+  const idx = (roleIndex + spread) % AVATAR_ENTRIES.length;
+  return AVATAR_ENTRIES[idx];
 }
 
 export function getPrototypePublicationPhoto(): { src: string; objectPosition: string } {
@@ -58,6 +67,14 @@ const PUB_PHOTOS: Record<string, string> = {
   'Детство': `${BASE}/pub-birthday.png`,
 };
 
+const DEMO_MEDIA_PHOTOS = ['photo1.jpg', 'photo2.png', 'photo3.png', 'photo4.png', 'photo5.png', 'photo6.png', 'photo7.png'];
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 export function getPrototypePublicationPhotoByTopic(topicTag: string): { src: string; objectPosition: string } {
   const src = PUB_PHOTOS[topicTag] || `${BASE}/pub-family-old.png`;
   return { src, objectPosition: 'center center' };
@@ -65,6 +82,13 @@ export function getPrototypePublicationPhotoByTopic(topicTag: string): { src: st
 
 export function getPrototypeFeedPostPhotoByTopic(topicTag: string): { src: string; objectPosition: string } {
   return getPrototypePublicationPhotoByTopic(topicTag);
+}
+
+export function getPrototypePublicationPhotoBySeed(pubId: string, index: number): { src: string; objectPosition: string } {
+  const n = hashStr(`${pubId}-${index}`) % DEMO_MEDIA_PHOTOS.length;
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+/g, '/');
+  const src = `${base}demo/media/${DEMO_MEDIA_PHOTOS[n]}`;
+  return { src, objectPosition: 'center center' };
 }
 
 export function getPrototypeAuthorAvatar(): AvatarEntry {

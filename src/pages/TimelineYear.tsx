@@ -5,7 +5,7 @@ import { TopBar } from '@/components/TopBar';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import type { Publication } from '@/types';
-import { getPrototypeFeedPostPhotoByTopic } from '@/lib/prototype-assets';
+import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { getMilestoneIds } from '@/lib/milestones';
 import { isDemoMode } from '@/lib/demoMode';
 import { Video } from 'lucide-react';
@@ -95,7 +95,7 @@ const TimelineYear: React.FC = () => {
             {list.map((pub) => {
               const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                 || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
-                || (isDemoMode() ? getPrototypeFeedPostPhotoByTopic(pub.topicTag).src : '');
+                || getPrototypePublicationPhotoBySeed(pub.id, 0).src;
               const hasVideo = !!pub.media.find(m => m.type === 'video');
               const eventY = eventDateOf(pub).slice(0, 4);
               const pillClass = topicPillClass[pub.topicTag] ?? 'bg-slate-600/70 text-white';
@@ -112,10 +112,10 @@ const TimelineYear: React.FC = () => {
                         src={coverSrc}
                         alt=""
                         className="absolute inset-0 w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.src = getPrototypeFeedPostPhotoByTopic(pub.topicTag).src; }}
+                        onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoBySeed(pub.id, 0).src; }}
                       />
                     ) : (
-                      <img src={getPrototypeFeedPostPhotoByTopic(pub.topicTag).src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={getPrototypePublicationPhotoBySeed(pub.id, 0).src} alt="" className="absolute inset-0 w-full h-full object-cover" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                     <div className="absolute top-2 left-2 flex flex-col gap-1.5">

@@ -6,9 +6,7 @@ import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { currentUserId } from '@/data/mock-members';
 import { api } from '@/integrations/api';
 import { isDemoMode } from '@/lib/demoMode';
-import {
-  getPrototypeFeedPostPhotoByTopic,
-} from '@/lib/prototype-assets';
+import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { FamilyMember, Publication } from '@/types';
@@ -126,7 +124,7 @@ const Feed: React.FC = () => {
     : sorted.slice(0, 12).map((p, i) => ({
         pubId: p.id,
         mediaId: `demo-${p.id}-${i}`,
-        url: getPrototypeFeedPostPhotoByTopic(p.topicTag).src,
+        url: getPrototypePublicationPhotoBySeed(p.id, i).src,
         thumbnail: undefined as string | undefined,
       }));
 
@@ -262,6 +260,16 @@ const Feed: React.FC = () => {
                 <Filter className="h-4 w-4" />
                 Фильтры
               </button>
+              {!isDemoMode() && api.debug && (
+                <button
+                  type="button"
+                  onClick={handleSeedReference}
+                  disabled={seedLoading}
+                  className="px-3 py-1.5 rounded-full border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-active)] hover:border-[var(--proto-active)]/40 disabled:opacity-60"
+                >
+                  {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -385,7 +393,7 @@ const Feed: React.FC = () => {
                         {sectionItems.map((pub) => {
                           const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                             || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
-                            || getPrototypeFeedPostPhotoByTopic(pub.topicTag).src;
+                            || getPrototypePublicationPhotoBySeed(pub.id, 0).src;
                           const photosCount = pub.media.filter(m => m.type === 'photo').length;
                           const aid = authorIdOf(pub);
                           const author = aid ? (memberMap.get(aid) ?? null) : null;
@@ -398,7 +406,7 @@ const Feed: React.FC = () => {
                             >
                               <div className="relative aspect-[4/3] bg-[var(--proto-border)]">
                                 {coverSrc ? (
-                                  <img src={coverSrc} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypeFeedPostPhotoByTopic(pub.topicTag).src; }} />
+                                  <img src={coverSrc} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoBySeed(pub.id, 0).src; }} />
                                 ) : (
                                   <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
                                 )}

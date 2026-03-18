@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
+import { getPrototypePublicationPhotoByTopic, getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { topicTags } from '@/data/mock-publications';
 import { currentUserId, getMember } from '@/data/mock-members';
 import { Users, MapPin, Tag, Send, FileImage, FileVideo, FileAudio, FileText, Sparkles, Heart, Cake, Trophy } from 'lucide-react';
@@ -29,7 +29,6 @@ const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: st
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
 
 function buildEvents(pubs: Publication[]) {
-  const demo = isDemoMode();
   return pubs.map(p => ({
     id: p.id,
     date: eventDateOf(p),
@@ -43,7 +42,7 @@ function buildEvents(pubs: Publication[]) {
     thumb: p.media.find(m => m.type === 'photo')?.thumbnail
       || p.media.find(m => m.type === 'photo')?.url
       || p.media.find(m => m.thumbnail)?.thumbnail
-      || (demo ? getPrototypePublicationPhotoByTopic(p.topicTag).src : ''),
+      || getPrototypePublicationPhotoBySeed(p.id, 0).src,
   }));
 }
 
@@ -120,6 +119,7 @@ const TimelinePage: React.FC = () => {
         .sort(([a], [b]) => b.localeCompare(a))
         .map(([y, evs]) => ({
           key: y,
+          id: evs[0]?.id,
           title: y,
           subtitle: focus === 'key' ? `${evs.length} избранных` : `${evs.length} событий`,
           thumb: evs[0]?.thumb,
@@ -140,6 +140,7 @@ const TimelinePage: React.FC = () => {
       .sort(([a], [b]) => b - a)
       .map(([d, evs]) => ({
         key: String(d),
+        id: evs[0]?.id,
         title: `${d}-е`,
         subtitle: focus === 'key' ? `${evs.length} избранных` : `${evs.length} событий`,
         thumb: evs[0]?.thumb,
@@ -385,10 +386,10 @@ const TimelinePage: React.FC = () => {
                           src={c.thumb}
                           alt=""
                           className="w-full h-full object-cover"
-                          onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(c.topicTag || '').src; }}
+                          onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoBySeed(c.id || c.key, 0).src; }}
                         />
                       ) : (
-                        <img src={getPrototypePublicationPhotoByTopic(c.topicTag || '').src} alt="" className="w-full h-full object-cover" />
+                        <img src={getPrototypePublicationPhotoBySeed(c.id || c.key, 0).src} alt="" className="w-full h-full object-cover" />
                       )}
                     </div>
                     <div className="p-4 flex-1">
