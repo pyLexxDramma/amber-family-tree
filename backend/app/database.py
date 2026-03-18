@@ -21,6 +21,7 @@ from app.models import (  # noqa: F401
     Like,
     Invitation,
     Message,
+    ContactRequest,
 )
 
 settings = get_settings()
