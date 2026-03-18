@@ -264,16 +264,6 @@ const Feed: React.FC = () => {
                 <Filter className="h-4 w-4" />
                 Фильтры
               </button>
-              {api.debug && (
-                <button
-                  type="button"
-                  onClick={handleSeedReference}
-                  disabled={seedLoading}
-                  className="px-3 py-1.5 rounded-full border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-active)] hover:border-[var(--proto-active)]/40 disabled:opacity-60"
-                >
-                  {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
-                </button>
-              )}
             </div>
           </div>
 
@@ -456,16 +446,6 @@ const Feed: React.FC = () => {
               <p className="text-[var(--proto-text-muted)] text-sm mb-4">
                 {searchQuery.trim() ? 'Ничего не найдено' : viewMode === 'media' ? 'Нет фото' : 'Нет публикаций'}
               </p>
-              {!searchQuery.trim() && !isDemoMode() && api.debug && (
-                <button
-                  type="button"
-                  onClick={handleSeedReference}
-                  disabled={seedLoading}
-                  className="text-sm font-medium text-[var(--proto-active)] hover:underline disabled:opacity-60"
-                >
-                  {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
-                </button>
-              )}
             </div>
           )}
         </div>

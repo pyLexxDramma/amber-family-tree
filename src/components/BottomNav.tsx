@@ -6,7 +6,7 @@ import { isDemoMode } from '@/lib/demoMode';
 
 const classicNavItems = [
   { path: ROUTES.classic.feed, label: 'Лента', icon: ImageIcon },
-  { path: ROUTES.classic.timeline, label: 'Хронология', icon: Clock },
+  { path: ROUTES.classic.timeline, label: 'Таймлайн', icon: Clock },
   { path: ROUTES.classic.create, label: 'Создать', icon: Plus },
   { path: ROUTES.classic.family, label: 'Семья', icon: Users },
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
@@ -14,7 +14,7 @@ const classicNavItems = [
 
 const demoNavItems = [
   { path: ROUTES.classic.feed, label: 'Главная', icon: Home },
-  { path: ROUTES.classic.timeline, label: 'Хронология', icon: Clock },
+  { path: ROUTES.classic.timeline, label: 'Таймлайн', icon: Clock },
   { path: ROUTES.classic.create, label: 'Добавить', icon: Plus },
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
   { path: ROUTES.classic.myProfile, label: 'Профиль', icon: User },

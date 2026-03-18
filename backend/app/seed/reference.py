@@ -116,7 +116,7 @@ PUBLICATIONS = [
         "event_date": "2024-08-19",
         "place": "Рыбинское водохранилище",
         "topic_tag": "Путешествия",
-        "feed_index": 9,
+        "feed_index": 11,
         "author_seed": "dmitry-test",
     },
     {
@@ -134,7 +134,7 @@ PUBLICATIONS = [
         "event_date": "2024-05-02",
         "place": "Сочи",
         "topic_tag": "Путешествия",
-        "feed_index": 18,
+        "feed_index": 5,
         "author_seed": "kirill-test",
     },
     {
@@ -143,7 +143,7 @@ PUBLICATIONS = [
         "event_date": "2024-06-28",
         "place": "Казань",
         "topic_tag": "Истории",
-        "feed_index": 21,
+        "feed_index": 7,
         "author_seed": "anna-test",
     },
     {
@@ -152,15 +152,14 @@ PUBLICATIONS = [
         "event_date": "2024-12-31",
         "place": "Вологда",
         "topic_tag": "Рецепты",
-        "feed_index": 24,
+        "feed_index": 6,
         "author_seed": "maria-test",
     },
 ]
 
 
 def _avatar_url(seed: str) -> str:
-    base = get_settings().frontend_url.rstrip("/")
-    proto = f"{base}/prototype/avatars"
+    proto = "/prototype/avatars"
     avatar_map = {
         "vladimir": f"{proto}/avatar-man-elderly.png",
         "olga": f"{proto}/avatar-woman-elderly.png",
@@ -221,17 +220,16 @@ PHOTO_TO_LATIN = {
 
 
 def _photo_url(pub_data: dict, seed: int) -> str:
-    base = get_settings().frontend_url.rstrip("/")
     title = pub_data.get("title") or ""
     explicit = pub_data.get("photo_file") or TITLE_TO_FILE.get(title)
     if explicit:
         fname = PHOTO_TO_LATIN.get(explicit, explicit)
-        return f"{base}/demo/media/{fname}"
+        return f"/demo/media/{fname}"
     feed_index = pub_data.get("feed_index")
     if feed_index is None:
         feed_index = int(seed)
     n = ((int(feed_index) - 1) % 25) + 1
-    return f"{base}/demo/feed/{n}.jpg"
+    return f"/demo/feed/{n}.jpg"
 
 
 logger = logging.getLogger(__name__)
