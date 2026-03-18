@@ -260,12 +260,12 @@ const Feed: React.FC = () => {
                 <Filter className="h-4 w-4" />
                 Фильтры
               </button>
-              {!isDemoMode() && api.debug && (
+              {api.debug && (
                 <button
                   type="button"
                   onClick={handleSeedReference}
                   disabled={seedLoading}
-                  className="px-3 py-1.5 rounded-full border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-active)] hover:border-[var(--proto-active)]/40 disabled:opacity-60"
+                  className="px-3 py-1.5 rounded-full border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-active)] hover:border-[var(--proto-active)]/40 disabled:opacity-60 shrink-0"
                 >
                   {seedLoading ? 'Заполняем…' : 'Заполнить тестовые данные'}
                 </button>
