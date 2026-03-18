@@ -1,6 +1,7 @@
 import React from 'react';
 import { getMember, currentUserId } from '@/data/mock-members';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
+import { getFamilyRole } from '@/lib/family-role';
 
 interface PersonCardProps {
   memberId: string;
@@ -35,9 +36,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({ memberId, isSelected, on
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">
           <p className="editorial-caption text-white/50 mb-1">
-            {member.relations[0]?.type === 'parent' && 'Дедушка'}
-            {member.relations[0]?.type === 'spouse' && member.generation === 1 && 'Бабушка'}
-            {!member.relations[0]?.type && 'Член семьи'}
+            {getFamilyRole(member, currentUserId)}
           </p>
           <h3 className="editorial-title text-white text-xl">{member.firstName} {member.lastName}</h3>
           {member.nickname && (

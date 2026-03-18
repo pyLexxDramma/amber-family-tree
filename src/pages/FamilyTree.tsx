@@ -9,6 +9,7 @@ import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
+import { getFamilyRole } from '@/lib/family-role';
 
 type TreeTab = 'stories' | 'timeline' | 'media' | 'connections';
 type BranchFilter = 'all' | 'paternal' | 'partners';
@@ -311,7 +312,7 @@ const FamilyTree: React.FC = () => {
         <p className="mt-3 text-sm font-semibold text-[var(--proto-text)] leading-tight">
           {m.firstName} {m.lastName}
         </p>
-        <p className="text-xs font-semibold text-[#A39B8A]">{m.nickname || 'Член семьи'}</p>
+        <p className="text-xs font-semibold text-[#A39B8A]">{focusId ? getFamilyRole(m, focusId) : (m.nickname || 'Член семьи')}</p>
         {m.birthDate ? <p className="text-xs text-[var(--proto-text-muted)] mt-1">{m.birthDate}</p> : null}
       </button>
     );

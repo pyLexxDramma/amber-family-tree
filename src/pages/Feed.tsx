@@ -121,7 +121,6 @@ const Feed: React.FC = () => {
       .filter(x => !!x.url)
   );
 
-  const demoPhotos = isDemoMode();
   const mediaTilesWithDemo = mediaTiles.length > 0
     ? mediaTiles
     : sorted.slice(0, 12).map((p, i) => ({
@@ -386,7 +385,7 @@ const Feed: React.FC = () => {
                         {sectionItems.map((pub) => {
                           const coverSrc = pub.media.find(m => m.type === 'photo')?.url
                             || pub.media.find(m => (m as { thumbnail?: string }).thumbnail)?.thumbnail
-                            || (demoPhotos ? getPrototypeFeedPostPhotoByTopic(pub.topicTag).src : '');
+                            || getPrototypeFeedPostPhotoByTopic(pub.topicTag).src;
                           const photosCount = pub.media.filter(m => m.type === 'photo').length;
                           const aid = authorIdOf(pub);
                           const author = aid ? (memberMap.get(aid) ?? null) : null;
@@ -399,7 +398,7 @@ const Feed: React.FC = () => {
                             >
                               <div className="relative aspect-[4/3] bg-[var(--proto-border)]">
                                 {coverSrc ? (
-                                  <img src={coverSrc} alt="" className="w-full h-full object-cover" />
+                                  <img src={coverSrc} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypeFeedPostPhotoByTopic(pub.topicTag).src; }} />
                                 ) : (
                                   <div className="w-full h-full bg-gradient-to-br from-[#F0EDE8] to-[#E5E1DC]" />
                                 )}

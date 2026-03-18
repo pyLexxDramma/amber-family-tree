@@ -59,12 +59,29 @@ function getUncleAuntIds(currentUserId: string): string[] {
   return [...new Set([...parentSiblings, ...grandparentSiblings])];
 }
 
+function roleFromNicknameAbout(member: FamilyMember): FamilyRole | null {
+  const n = (member.nickname || '').trim();
+  const about = (member.about || '').trim();
+  if (n.startsWith('Дядя')) return 'Дядя';
+  if (n.startsWith('Тётя')) return 'Тётя';
+  if (about.includes('Двоюродная сестра')) return 'Двоюродная сестра';
+  if (about.includes('Двоюродный брат')) return 'Двоюродный брат';
+  if (about.includes('Племянница')) return 'Племянница';
+  if (about.includes('Племянник')) return 'Племянник';
+  if (about.includes('Брат ') || about.startsWith('Брат.')) return 'Брат';
+  if (about.includes('Сестра ') || about.startsWith('Сестра.')) return 'Сестра';
+  return null;
+}
+
 export function getFamilyRole(member: FamilyMember, currentUserId: string): FamilyRole {
   const n = (member.nickname || '').trim();
   if (n.startsWith('Дедушка')) return 'Дедушка';
   if (n.startsWith('Бабушка')) return 'Бабушка';
   if (n === 'Папа') return 'Папа';
   if (n === 'Мама') return 'Мама';
+
+  const fromNickname = roleFromNicknameAbout(member);
+  if (fromNickname) return fromNickname;
 
   const rel = member.relations.find(r => r.memberId === currentUserId);
   const currentParentIds = getCurrentParentIds(currentUserId);
