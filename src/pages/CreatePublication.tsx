@@ -49,10 +49,6 @@ type StoryBlock =
   | { id: string; type: 'attachment'; items: UploadItem[] }
   | { id: string; type: 'photos' | 'video' | 'audio'; items: UploadItem[] };
 
-type TitleEditState =
-  | { mode: 'view' }
-  | { mode: 'edit'; draft: string; original: string };
-
 type PickMediaTarget =
   | { kind: 'photos' | 'video' | 'audio' | 'attachment'; blockId?: string }
   | null;
@@ -65,7 +61,6 @@ const CreatePublication: React.FC = () => {
   const [step, setStep] = useState<'story' | 'info' | 'publish'>('story');
   const [createKind, setCreateKind] = useState<'story' | 'album'>('story');
   const [title, setTitle] = useState('');
-  const [titleEdit, setTitleEdit] = useState<TitleEditState>({ mode: 'edit', draft: '', original: '' });
   const [blocks, setBlocks] = useState<StoryBlock[]>([]);
   const [text, setText] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -193,8 +188,9 @@ const CreatePublication: React.FC = () => {
     filePickRef.current = target;
     setPickMediaFor(target.kind);
     setPickMediaTarget(target);
-    if (!fileInputRef.current) return;
-    fileInputRef.current.accept = acceptForKind(target.kind);
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept = acceptForKind(target.kind);
     setPickDebug(`open:${target.kind}${target.blockId ? `:${target.blockId}` : ''}`);
     try {
       const picker = (window as any).showOpenFilePicker as undefined | ((opts: any) => Promise<any[]>);
@@ -213,7 +209,12 @@ const CreatePublication: React.FC = () => {
       }
     } catch {
     }
-    fileInputRef.current.click();
+    requestAnimationFrame(() => {
+      if (fileInputRef.current) {
+        fileInputRef.current.accept = acceptForKind(target.kind);
+        fileInputRef.current.click();
+      }
+    });
   };
 
   const objectUrlFor = (item: UploadItem) => {
@@ -526,7 +527,7 @@ const CreatePublication: React.FC = () => {
           }}
         />
         <div className="mx-auto max-w-full px-3 pt-2 pb-8 sm:max-w-md sm:px-5 md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
-          <div className="flex gap-2 border-b border-[var(--proto-border)] mb-4">
+          <div className="flex flex-wrap gap-2 border-b border-[var(--proto-border)] mb-4">
             {[
               { id: 'story' as const, label: '1. ИСТОРИЯ' },
               { id: 'info' as const, label: '2. ИНФО' },
@@ -536,7 +537,7 @@ const CreatePublication: React.FC = () => {
                 key={t.id}
                 type="button"
                 onClick={() => setStep(t.id)}
-                className={`flex-1 py-2 text-xs font-semibold tracking-wide transition-colors ${step === t.id ? 'text-[var(--proto-text)] border-b-2 border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-b-2 border-transparent'}`}
+                className={`flex-1 min-w-[80px] py-2 text-xs font-semibold tracking-wide transition-colors ${step === t.id ? 'text-[var(--proto-text)] border-b-2 border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-b-2 border-transparent'}`}
               >
                 {t.label}
               </button>
@@ -570,62 +571,17 @@ const CreatePublication: React.FC = () => {
                 </div>
               </div>
 
-              {titleEdit.mode === 'edit' ? (
-                <div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <Input
-                        value={titleEdit.draft}
-                        onChange={e => setTitleEdit(v => v.mode === 'edit' ? { ...v, draft: e.target.value.slice(0, 80) } : v)}
-                        className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)]"
-                        placeholder={createKind === 'album' ? 'Название альбома' : 'Название истории'}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (titleEdit.mode !== 'edit') return;
-                        setTitle(titleEdit.draft.trim());
-                        setTitleEdit({ mode: 'view' });
-                      }}
-                      className="h-10 w-10 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
-                      aria-label="Сохранить"
-                    >
-                      <Check className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (titleEdit.mode !== 'edit') return;
-                        setTitleEdit({ mode: 'view' });
-                      }}
-                      className="h-10 w-10 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
-                      aria-label="Отмена"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="mt-1 text-right text-xs text-[var(--proto-text-muted)]">
-                    {titleEdit.draft.length} / 80
-                  </div>
+              <div>
+                <Input
+                  value={title}
+                  onChange={e => setTitle(e.target.value.slice(0, 80))}
+                  className="rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)]"
+                  placeholder={createKind === 'album' ? 'Название альбома' : 'Название истории'}
+                />
+                <div className="mt-1 text-right text-xs text-[var(--proto-text-muted)]">
+                  {title.length} / 80
                 </div>
-              ) : (
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-2">
-                    <h2 className="font-serif text-2xl font-semibold text-[var(--proto-text)]">
-                      {title.trim() ? title : 'Без названия'}
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setTitleEdit({ mode: 'edit', draft: title, original: title })}
-                      className="h-9 w-9 rounded-full border border-[var(--proto-border)] bg-[var(--proto-card)] flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
-                      aria-label="Редактировать заголовок"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
+              </div>
 
               <div ref={storyRequiredRef} className="flex flex-col items-center">
                 <div className="w-full rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] px-4 py-3 mb-3">
@@ -814,31 +770,32 @@ const CreatePublication: React.FC = () => {
                 </button>
               )}
 
-              <Button
-                type="button"
-                className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
-                onClick={() => {
-                  setStoryAttempted(true);
-                  if (storyBlockers.length) {
-                    setPendingScroll('story');
-                    toast({ title: 'Заполните обязательные поля', description: storyBlockers[0] });
-                    return;
-                  }
-                  setStep('info');
-                }}
-              >
-                Следующий шаг <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full rounded-2xl h-12 border-2 bg-white"
-                onClick={() => setPreviewOpen(true)}
-                disabled={!title.trim() && blocks.length === 0}
-              >
-                Предпросмотр
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button
+                  type="button"
+                  className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
+                  onClick={() => {
+                    setStoryAttempted(true);
+                    if (storyBlockers.length) {
+                      setPendingScroll('story');
+                      toast({ title: 'Заполните обязательные поля', description: storyBlockers[0] });
+                      return;
+                    }
+                    setStep('info');
+                  }}
+                >
+                  Следующий шаг <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full rounded-2xl h-12 border-2 bg-white"
+                  onClick={() => setPreviewOpen(true)}
+                  disabled={!title.trim() && blocks.length === 0}
+                >
+                  Предпросмотр
+                </Button>
+              </div>
 
               {storyAttempted && storyBlockers.length > 0 && (
                 <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
@@ -1084,40 +1041,41 @@ const CreatePublication: React.FC = () => {
                 </SheetContent>
               </Sheet>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold"
+                    onClick={() => setStep('story')}
+                  >
+                    Назад
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+                    onClick={() => {
+                      setInfoAttempted(true);
+                      if (infoBlockers.length) {
+                        setTagError('Тема обязательна');
+                        setPendingScroll('topic');
+                        toast({ title: 'Заполните обязательные поля', description: infoBlockers[0] });
+                        return;
+                      }
+                      setStep('publish');
+                    }}
+                  >
+                    Следующий шаг
+                  </Button>
+                </div>
                 <Button
+                  type="button"
                   variant="outline"
-                  className="flex-1 rounded-2xl h-12 border-2 border-[var(--proto-active)] text-[var(--proto-active)] font-semibold"
-                  onClick={() => setStep('story')}
+                  className="w-full rounded-2xl h-12 border-2 bg-white"
+                  onClick={() => setPreviewOpen(true)}
+                  disabled={!title.trim() && blocks.length === 0}
                 >
-                  Назад
-                </Button>
-                <Button
-                  className="flex-1 rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
-                  onClick={() => {
-                    setInfoAttempted(true);
-                    if (infoBlockers.length) {
-                      setTagError('Тема обязательна');
-                      setPendingScroll('topic');
-                      toast({ title: 'Заполните обязательные поля', description: infoBlockers[0] });
-                      return;
-                    }
-                    setStep('publish');
-                  }}
-                >
-                  Следующий шаг
+                  Предпросмотр
                 </Button>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full rounded-2xl h-12 border-2 bg-white"
-                onClick={() => setPreviewOpen(true)}
-                disabled={!title.trim() && blocks.length === 0}
-              >
-                Предпросмотр
-              </Button>
 
               {infoAttempted && infoBlockers.length > 0 && (
                 <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
@@ -1489,11 +1447,11 @@ const CreatePublication: React.FC = () => {
         </Dialog>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
-            <DialogHeader className="text-center sm:text-center">
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6 flex flex-col max-h-[90vh]">
+            <DialogHeader className="text-center sm:text-center shrink-0">
               <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Предпросмотр</DialogTitle>
             </DialogHeader>
-            <div className="mt-2 max-h-[70vh] overflow-auto space-y-4">
+            <div className="mt-2 flex-1 min-h-0 overflow-auto space-y-4">
               <h2 className="font-serif text-2xl font-semibold text-[var(--proto-text)] text-center">
                 {title.trim() ? title : 'Без названия'}
               </h2>
@@ -1601,7 +1559,7 @@ const CreatePublication: React.FC = () => {
             </div>
             <Button
               type="button"
-              className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
+              className="shrink-0 mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold"
               onClick={() => setPreviewOpen(false)}
             >
               Вернуться

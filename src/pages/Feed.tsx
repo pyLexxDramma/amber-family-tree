@@ -8,7 +8,7 @@ import { api } from '@/integrations/api';
 import { isDemoMode } from '@/lib/demoMode';
 import { getMilestoneIds } from '@/lib/milestones';
 import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
-import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown } from 'lucide-react';
+import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown, Images } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { FamilyMember, Publication } from '@/types';
@@ -24,7 +24,7 @@ const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?:
 type ViewMode = 'media' | 'posts';
 type SortOrder = 'new' | 'old';
 
-type MediaTile = { pubId: string; mediaId: string; url: string; thumbnail?: string };
+type MediaTile = { pubId: string; mediaId: string; url: string; thumbnail?: string; photosCount?: number };
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
@@ -125,25 +125,24 @@ const Feed: React.FC = () => {
     return sortOrder === 'new' ? db.localeCompare(da) : da.localeCompare(db);
   });
 
-  const mediaTiles: MediaTile[] = sorted.flatMap((p) =>
-    (p.media ?? [])
-      .filter(m => m.type === 'photo')
-      .map(m => ({
-        pubId: p.id,
-        mediaId: m.id,
-        url: (m as { thumbnail?: string }).thumbnail || m.url || '',
-        thumbnail: (m as { thumbnail?: string }).thumbnail,
-      }))
-      .filter(x => !!x.url)
-  );
+  const mediaTiles: MediaTile[] = sorted
+    .filter(p => (p.media ?? []).some(m => m.type === 'photo'))
+    .map(p => {
+      const first = (p.media ?? []).find(m => m.type === 'photo');
+      const url = first ? ((first as { thumbnail?: string }).thumbnail || first.url || '') : '';
+      const photosCount = (p.media ?? []).filter(m => m.type === 'photo').length;
+      return url ? { pubId: p.id, mediaId: p.id, url, thumbnail: (first as { thumbnail?: string }).thumbnail, photosCount } : null;
+    })
+    .filter((x): x is MediaTile => x !== null);
 
   const mediaTilesWithDemo = mediaTiles.length > 0
     ? mediaTiles
     : sorted.slice(0, 12).map((p, i) => ({
         pubId: p.id,
-        mediaId: `demo-${p.id}-${i}`,
+        mediaId: p.id,
         url: getPrototypePublicationPhotoBySeed(p.id, i).src,
         thumbnail: undefined as string | undefined,
+        photosCount: 0,
       }));
 
   const monthLabel = (iso: string) => {
@@ -252,8 +251,8 @@ const Feed: React.FC = () => {
           {!hasFilteredView && items.length > 50 && (
             <p className="text-xs text-[var(--proto-text-muted)] mb-3">Демо · {items.length} публикаций</p>
           )}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] p-0.5">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="flex rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] p-0.5 shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode('media')}
@@ -269,7 +268,7 @@ const Feed: React.FC = () => {
                 Посты
               </button>
             </div>
-            <div className="flex items-center gap-2 flex-1 flex-wrap">
+            <div className="flex items-center gap-2 flex-1 flex-wrap min-w-0">
               <button
                 type="button"
                 onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
@@ -364,6 +363,12 @@ const Feed: React.FC = () => {
                   }`}
                 >
                   <img src={t.thumbnail || t.url} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                  {t.photosCount != null && t.photosCount > 1 && (
+                    <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                      <Images className="h-3 w-3" />
+                      {t.photosCount}
+                    </div>
+                  )}
                   {selectionMode && (
                     <div className="absolute top-2 right-2">
                       {selectedIds.has(t.mediaId) ? (

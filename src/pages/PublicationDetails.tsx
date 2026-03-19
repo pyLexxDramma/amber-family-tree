@@ -538,17 +538,17 @@ const PublicationDetails: React.FC = () => {
           )}
 
           {isAuthor && (
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" className="flex-1 rounded-2xl h-11 border-2 bg-white" onClick={openEdit}>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" className="flex-1 min-w-[120px] rounded-2xl h-11 border-2 bg-white" onClick={openEdit}>
                 Редактировать
               </Button>
-              <Button type="button" variant="outline" className="flex-1 rounded-2xl h-11 border-2 border-red-300 text-red-700 bg-white hover:bg-red-50" onClick={() => setDeleteOpen(true)}>
+              <Button type="button" variant="outline" className="flex-1 min-w-[120px] rounded-2xl h-11 border-2 border-red-300 text-red-700 bg-white hover:bg-red-50" onClick={() => setDeleteOpen(true)}>
                 Удалить
               </Button>
             </div>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={toggleLike}
@@ -758,9 +758,9 @@ const PublicationDetails: React.FC = () => {
               className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] min-h-[160px]"
               placeholder="Текст публикации"
             />
-            <div className="rounded-xl border-2 border-[var(--proto-border)] bg-white p-3">
+            <div className="rounded-xl border-2 border-[var(--proto-border)] bg-white p-3 overflow-hidden">
               <p className="text-xs font-semibold text-[var(--proto-text)]">Вложения</p>
-              <div className="mt-2 space-y-2 max-h-52 overflow-auto pr-1">
+              <div className="mt-2 space-y-2 max-h-52 overflow-auto overflow-x-hidden pr-1">
                 {editMedia.length ? (
                   editMedia.map((m) => {
                     const preview = m.type === 'photo' ? m.url : m.type === 'video' ? (m.thumbnail || m.url) : '';
@@ -768,7 +768,7 @@ const PublicationDetails: React.FC = () => {
                     const isReplace = m.action === 'replace';
                     const accept = m.type === 'photo' ? 'image/*' : m.type === 'video' ? 'video/*' : m.type === 'audio' ? 'audio/*' : '*/*';
                     return (
-                      <div key={m.id} className={`flex gap-3 rounded-lg border border-[var(--proto-border)] p-2 ${isRemoved ? 'opacity-60' : ''}`}>
+                      <div key={m.id} className={`flex gap-2 rounded-lg border border-[var(--proto-border)] p-2 min-w-0 ${isRemoved ? 'opacity-60' : ''}`}>
                         <div className="h-12 w-12 rounded-md overflow-hidden bg-[var(--proto-border)] shrink-0 flex items-center justify-center">
                           {preview ? (
                             <img src={preview} alt="" className="h-full w-full object-cover" />
@@ -776,20 +776,20 @@ const PublicationDetails: React.FC = () => {
                             <span className="text-[10px] font-semibold text-[var(--proto-text-muted)] uppercase">{m.type}</span>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 overflow-hidden">
                           <p className="text-sm text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
-                          <p className="text-[11px] text-[var(--proto-text-muted)]">
+                          <p className="text-[11px] text-[var(--proto-text-muted)] truncate">
                             {isRemoved ? 'Будет удалено' : isReplace ? `Заменить: ${m.replaceFile?.name || 'выберите файл'}` : 'Без изменений'}
                           </p>
                           <div className="mt-2 flex flex-wrap gap-2">
                             <button
                               type="button"
-                              className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+                              className="h-8 min-w-[4.5rem] px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors shrink-0"
                               onClick={() => setEditMedia(prev => prev.map(x => x.id === m.id ? { ...x, action: x.action === 'remove' ? 'keep' : 'remove', replaceFile: undefined } : x))}
                             >
                               {isRemoved ? 'Отменить удаление' : 'Удалить'}
                             </button>
-                            <label className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors inline-flex items-center cursor-pointer">
+                            <label className="h-8 min-w-[4.5rem] px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors inline-flex items-center justify-center cursor-pointer shrink-0">
                               Заменить
                               <input
                                 type="file"
@@ -805,7 +805,7 @@ const PublicationDetails: React.FC = () => {
                             {isReplace && (
                               <button
                                 type="button"
-                                className="h-8 px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+                                className="h-8 min-w-[4.5rem] px-3 rounded-lg text-xs font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors shrink-0"
                                 onClick={() => setEditMedia(prev => prev.map(x => x.id === m.id ? { ...x, action: 'keep', replaceFile: undefined } : x))}
                               >
                                 Отменить замену
