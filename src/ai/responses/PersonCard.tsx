@@ -31,7 +31,7 @@ export const PersonCard: React.FC<PersonCardProps> = ({ memberId, isSelected, on
           src={getPrototypeAvatarUrl(member.id, currentUserId)}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ filter: member.isActive ? 'sepia(0.1)' : 'grayscale(0.5) sepia(0.1)' }}
+          style={{ filter: (member.deathDate ?? (member as { death_date?: string }).death_date ?? '').trim() ? 'grayscale(0.5) sepia(0.1)' : 'sepia(0.1)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 photo-card-text">

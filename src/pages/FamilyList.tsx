@@ -32,11 +32,13 @@ const initials = (full: string) => {
   return (a + b).toUpperCase() || '?';
 };
 
-const norm = (m: FamilyMember & { first_name?: string; last_name?: string; avatar?: string; is_active?: boolean; relations?: { memberId?: string; member_id?: string; type: string }[] }) => ({
+const hasDeathDate = (m: { deathDate?: string; death_date?: string }) =>
+  !!((m.deathDate ?? m.death_date ?? '').trim());
+
+const norm = (m: FamilyMember & { first_name?: string; last_name?: string; avatar?: string; death_date?: string; relations?: { memberId?: string; member_id?: string; type: string }[] }) => ({
   ...m,
   firstName: (m as { firstName?: string }).firstName ?? m.first_name ?? '',
   lastName: (m as { lastName?: string }).lastName ?? m.last_name ?? '',
-  isActive: m.isActive ?? m.is_active ?? true,
   relations: (m.relations ?? []).map(r => ({ memberId: r.memberId ?? (r as { member_id?: string }).member_id, type: r.type })),
 });
 
@@ -156,7 +158,7 @@ const FamilyList: React.FC = () => {
                     const isCurrent = m.id === myId;
                     const relationLabel = getRelationshipLabel(mn, myId);
                     const avatarSrc = (m as { avatar?: string }).avatar ?? (useAvatarFallback() ? getPrototypeAvatarForMember(mn, myId).src : '');
-                    const isActive = (m.isActive ?? (m as { is_active?: boolean }).is_active ?? true);
+                    const isDeceased = hasDeathDate(m);
                     const full = memberName(m) || 'Участник';
 
                     return (
@@ -165,7 +167,7 @@ const FamilyList: React.FC = () => {
                         type="button"
                         onClick={() => navigate(isCurrent ? ROUTES.classic.myProfile : ROUTES.classic.profile(m.id))}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl border border-[var(--proto-border)] hover:border-[var(--proto-active)]/30 transition-colors text-left ${
-                          isActive ? 'bg-[var(--proto-card)]' : 'bg-[#E9E6E1] opacity-80'
+                          isDeceased ? 'bg-[#E5E2DD]' : 'bg-[var(--proto-card)]'
                         }`}
                       >
                         <div className="h-12 w-12 rounded-full overflow-hidden bg-[var(--proto-bg)] shrink-0">
@@ -226,9 +228,9 @@ const FamilyList: React.FC = () => {
                     }
                     const hasTarget = members
                       .map(norm)
-                      .some(x => x.id !== myId && (x.isActive ?? true));
+                      .some(x => x.id !== myId && !hasDeathDate(x));
                     if (!hasTarget) {
-                      toast({ title: 'Нет активных участников' });
+                      toast({ title: 'Нет живых участников' });
                       return;
                     }
                     setContactOpen(true);
@@ -262,7 +264,7 @@ const FamilyList: React.FC = () => {
             <div className="space-y-1 max-h-[360px] overflow-y-auto">
               {members
                 .map(norm)
-                .filter(m => m.id !== myId && (m.isActive ?? true))
+                .filter(m => m.id !== myId && !hasDeathDate(m))
                 .map((m) => {
                   const full = memberName(m) || 'Участник';
                   const relationLabel = getRelationshipLabel(m, myId);

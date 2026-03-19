@@ -42,7 +42,7 @@ export const MiniTree: React.FC<MiniTreeProps> = ({ onSelectPerson }) => {
                       src={getPrototypeAvatarUrl(m.id, currentUserId)}
                       alt=""
                       className="h-full w-full object-cover"
-                      style={{ filter: m.isActive ? 'sepia(0.06)' : 'grayscale(0.5)' }}
+                      style={{ filter: (m.deathDate ?? (m as { death_date?: string }).death_date ?? '').trim() ? 'grayscale(0.5)' : 'sepia(0.06)' }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                     <span className="absolute bottom-2 left-2 right-2 text-sm text-white font-medium truncate">

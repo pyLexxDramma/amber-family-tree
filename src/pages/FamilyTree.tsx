@@ -42,6 +42,10 @@ function avatarSrcFor(member: FamilyMember, currentUserId: string): string | und
   return getPrototypeAvatarUrl(member.id, currentUserId);
 }
 
+function hasDeathDate(m: { deathDate?: string; death_date?: string }): boolean {
+  return !!((m.deathDate ?? m.death_date ?? '').trim());
+}
+
 function roleFor(member: FamilyMember, focusId: string): string {
   const rel = normalizeRelations(member.relations).find(r => r.memberId === focusId);
   if (!rel) return 'Родственник';
@@ -300,7 +304,7 @@ const FamilyTree: React.FC = () => {
         key={m.id}
         type="button"
         onClick={() => openProfile(m.id)}
-        className="w-full rounded-2xl bg-white border border-[var(--proto-border)] p-4 text-center hover:border-[var(--proto-active)]/40 transition-colors"
+        className={`w-full rounded-2xl border border-[var(--proto-border)] p-4 text-center hover:border-[var(--proto-active)]/40 transition-colors ${hasDeathDate(m) ? 'bg-[#E5E2DD]' : 'bg-white'}`}
       >
         <div className="mx-auto h-14 w-14 rounded-2xl bg-[var(--proto-border)] overflow-hidden flex items-center justify-center">
           {avatarSrcFor(m, currentUserId) ? (
@@ -474,7 +478,7 @@ const FamilyTree: React.FC = () => {
                         key={p.id}
                         ref={(el) => setNodeRef(`parent:${p.id}`)(el)}
                         onClick={() => openProfile(p.id)}
-                        className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                        className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(p) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
                       >
                         <Avatar className="h-14 w-14">
                           {avatarSrcFor(p, currentUserId) ? <AvatarImage src={avatarSrcFor(p, currentUserId)} /> : null}
@@ -492,7 +496,7 @@ const FamilyTree: React.FC = () => {
                         <button
                           ref={(el) => setNodeRef(`focus:${focus.id}`)(el)}
                           onClick={() => openProfile(focus.id)}
-                          className="rounded-full border-2 border-[var(--proto-active)] ring-2 ring-[var(--proto-active)]/20 hover:ring-[var(--proto-active)]/40 transition-all"
+                          className={`rounded-full border-2 ring-2 transition-all ${hasDeathDate(focus) ? 'border-[var(--proto-border)] ring-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-active)] ring-[var(--proto-active)]/20 hover:ring-[var(--proto-active)]/40'}`}
                         >
                           <Avatar className="h-20 w-20">
                             {avatarSrcFor(focus, currentUserId) ? <AvatarImage src={avatarSrcFor(focus, currentUserId)} /> : null}
@@ -510,7 +514,7 @@ const FamilyTree: React.FC = () => {
                         <button
                           ref={(el) => setNodeRef(`spouse:${showSpouse.id}`)(el)}
                           onClick={() => openProfile(showSpouse.id)}
-                          className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                          className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(showSpouse) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
                         >
                           <Avatar className="h-14 w-14">
                             {avatarSrcFor(showSpouse, currentUserId) ? <AvatarImage src={avatarSrcFor(showSpouse, currentUserId)} /> : null}
@@ -533,7 +537,7 @@ const FamilyTree: React.FC = () => {
                             key={c!.id}
                             ref={(el) => setNodeRef(`child:${c!.id}`)(el)}
                             onClick={() => openProfile(c!.id)}
-                            className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                            className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(c!) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
                           >
                             <Avatar className="h-12 w-12">
                               {avatarSrcFor(c!, currentUserId) ? <AvatarImage src={avatarSrcFor(c!, currentUserId)} /> : null}
@@ -551,7 +555,7 @@ const FamilyTree: React.FC = () => {
                             key={s!.id}
                             ref={(el) => setNodeRef(`sibling:${s!.id}`)(el)}
                             onClick={() => openProfile(s!.id)}
-                            className="rounded-full border-2 border-[var(--proto-border)] hover:border-[var(--proto-active)] transition-colors"
+                            className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(s!) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
                           >
                             <Avatar className="h-12 w-12">
                               {avatarSrcFor(s!, currentUserId) ? <AvatarImage src={avatarSrcFor(s!, currentUserId)} /> : null}
