@@ -749,11 +749,11 @@ const PublicationDetails: React.FC = () => {
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
-          <DialogHeader className="text-center sm:text-center">
+        <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[min(92vw,28rem)] max-w-[calc(100vw-2rem)] p-0 flex flex-col max-h-[calc(100dvh-2rem)]">
+          <DialogHeader className="text-center shrink-0 p-6 pb-2">
             <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Редактировать</DialogTitle>
           </DialogHeader>
-          <div className="mt-2 space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pb-4 space-y-3">
             <Input
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
@@ -890,6 +890,8 @@ const PublicationDetails: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
+          <div className="shrink-0 p-6 pt-4 border-t border-[var(--proto-border)]">
             <Button
               type="button"
               className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"

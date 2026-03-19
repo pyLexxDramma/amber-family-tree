@@ -1449,11 +1449,11 @@ const CreatePublication: React.FC = () => {
         </Dialog>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6 flex flex-col max-h-[90vh]">
-            <DialogHeader className="text-center sm:text-center shrink-0">
+          <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[min(92vw,28rem)] max-w-[calc(100vw-2rem)] p-6 flex flex-col max-h-[calc(100dvh-2rem)]">
+            <DialogHeader className="text-center shrink-0">
               <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Предпросмотр</DialogTitle>
             </DialogHeader>
-            <div className="mt-2 flex-1 min-h-0 overflow-auto space-y-4">
+            <div className="mt-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-4">
               <h2 className="font-serif text-2xl font-semibold text-[var(--proto-text)] text-center">
                 {title.trim() ? title : 'Без названия'}
               </h2>
