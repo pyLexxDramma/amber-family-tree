@@ -824,7 +824,7 @@ const CreatePublication: React.FC = () => {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {participantIds.map(pid => {
                     const m = members.find(mm => mm.id === pid);
-                    const name = m ? `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Участник';
+                    const name = (m ? `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() : '') || 'Участник';
                     return (
                       <button
                         key={pid}
@@ -961,7 +961,7 @@ const CreatePublication: React.FC = () => {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {coAuthorIds.map(cid => {
                     const m = members.find(mm => mm.id === cid);
-                    const name = m ? `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Соавтор';
+                    const name = (m ? `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() : '') || 'Соавтор';
                     return (
                       <button
                         key={cid}
