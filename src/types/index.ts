@@ -20,6 +20,7 @@ export interface FamilyMember {
   isActive: boolean;
   generation: number;
   relations: { memberId: string; type: RelationType }[];
+  managedById?: string | null;
 }
 
 export interface MediaItem {

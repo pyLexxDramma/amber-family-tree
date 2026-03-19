@@ -195,10 +195,10 @@ const FamilyList: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => navigate(myProfile ? ROUTES.classic.editMyProfile : '/onboarding')}
+                  onClick={() => navigate(myProfile ? ROUTES.classic.createMemberProfile : '/onboarding')}
                   className="h-12 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
                 >
-                  {myProfile ? 'Редактировать профиль' : 'Создать профиль'}
+                  {myProfile ? 'Создать профиль члена семьи' : 'Создать профиль'}
                 </button>
                 <button
                   type="button"

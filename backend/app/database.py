@@ -58,6 +58,7 @@ async def init_db() -> None:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
                 await conn.execute(text("ALTER TABLE publications ADD COLUMN IF NOT EXISTS content_blocks JSONB"))
+                await conn.execute(text("ALTER TABLE family_members ADD COLUMN IF NOT EXISTS managed_by_id UUID REFERENCES users(id)"))
             return
         except Exception as exc:
             last_exc = exc

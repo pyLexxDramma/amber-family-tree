@@ -103,6 +103,20 @@ export const realApi: AngeloApi = {
       if (!res) return null;
       return normalizeFamilyMember(res);
     },
+    async createMember(body: { first_name: string; last_name: string; middle_name?: string | null; birth_date: string; death_date?: string | null; city?: string | null; about?: string | null }) {
+      const res = await requestJson<unknown>('POST', '/family/members', body);
+      return normalizeFamilyMember(res);
+    },
+    async updateMember(memberId: string, patch: Partial<{ firstName: string; lastName: string; middleName?: string; birthDate: string; deathDate?: string; city?: string; about?: string; avatar?: string }>) {
+      const payload: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === undefined) continue;
+        const snake = key.replace(/[A-Z]/g, m => `_${m.toLowerCase()}`);
+        payload[snake] = value;
+      }
+      const res = await requestJson<unknown>('PATCH', `/family/members/${memberId}`, payload);
+      return normalizeFamilyMember(res);
+    },
   },
   auth: {
     async sendCode(identifier: string) {

@@ -36,6 +36,7 @@ export function normalizeFamilyMember(input: unknown): FamilyMember {
     isActive: bool(m.isActive ?? m.is_active ?? true, true),
     generation: typeof m.generation === 'number' ? m.generation : (typeof m.generation_level === 'number' ? m.generation_level : 0),
     relations,
+    managedById: optStr(m.managedById ?? m.managed_by_id) ?? undefined,
   };
 }
 

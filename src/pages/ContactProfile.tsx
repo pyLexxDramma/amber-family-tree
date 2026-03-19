@@ -4,7 +4,7 @@ import { ROUTES } from '@/constants/routes';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { Heart, Calendar } from 'lucide-react';
+import { Heart, Calendar, Pencil } from 'lucide-react';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
 import type { FamilyMember } from '@/types';
 import { api } from '@/integrations/api';
@@ -41,6 +41,7 @@ const ContactProfileInner: React.FC = () => {
   const platform = usePlatform();
   const [member, setMember] = useState<FamilyMember | null | undefined>(undefined);
   const [me, setMe] = useState<FamilyMember | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [liked, setLiked] = useState(false);
   const [localNick, setLocalNick] = useState('');
@@ -66,6 +67,7 @@ const ContactProfileInner: React.FC = () => {
 
   useEffect(() => {
     api.profile.getMyProfile().then(setMe).catch(() => setMe(null));
+    api.auth.me().then(u => setCurrentUserId(u?.id ?? null)).catch(() => setCurrentUserId(null));
   }, []);
 
   useEffect(() => {
@@ -107,6 +109,7 @@ const ContactProfileInner: React.FC = () => {
     }
   };
 
+  const canEdit = me && member.id !== me.id && (me.role === 'admin' || member.managedById === currentUserId);
   const openMemberPosts = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=posts`);
   const openMemberWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=posts`);
   const openMemberMedia = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=media`);
@@ -161,6 +164,16 @@ const ContactProfileInner: React.FC = () => {
           </div>
 
           <div className="px-4 py-6 space-y-6">
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.classic.editMemberProfile(member.id))}
+                className="w-full h-11 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors flex items-center justify-center gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Редактировать профиль
+              </button>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"

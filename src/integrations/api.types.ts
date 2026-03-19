@@ -55,9 +55,21 @@ export interface FeedApi {
   deletePublication(publicationId: string): Promise<{ deleted: true }>;
 }
 
+export interface FamilyMemberCreateBody {
+  first_name: string;
+  last_name: string;
+  middle_name?: string | null;
+  birth_date: string;
+  death_date?: string | null;
+  city?: string | null;
+  about?: string | null;
+}
+
 export interface FamilyApi {
   listMembers(): Promise<FamilyMember[]>;
   getMember(id: string): Promise<FamilyMember | null>;
+  createMember(body: FamilyMemberCreateBody): Promise<FamilyMember>;
+  updateMember(memberId: string, patch: Partial<FamilyMember>): Promise<FamilyMember>;
 }
 
 export interface AuthApi {

@@ -2,7 +2,7 @@ import type { AngeloApi, FeedListParams, PublicationCreateBody } from './api.typ
 import { mockPublications } from '@/data/mock-publications';
 import { currentUserId, getCurrentUser, getMember, mockMembers } from '@/data/mock-members';
 import { myMediaDemoItems } from '@/data/my-media-demo';
-import type { Comment, ContactRequest, ContactRequestState, MediaItem, Message, Publication } from '@/types';
+import type { Comment, ContactRequest, ContactRequestState, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 import { refUrl } from '@/data/mock-publications';
 
@@ -167,6 +167,45 @@ export const mockApi: AngeloApi = {
     },
     async getMember(id) {
       return getMember(id) ?? null;
+    },
+    async createMember(body) {
+      const u = getCurrentUser();
+      if (u.role !== 'admin') throw new Error('Admin only');
+      const id = `m_${Date.now()}`;
+      const member: FamilyMember = {
+        id,
+        firstName: body.first_name.trim(),
+        lastName: body.last_name.trim(),
+        middleName: body.middle_name?.trim() || undefined,
+        birthDate: body.birth_date.trim(),
+        deathDate: body.death_date?.trim() || undefined,
+        city: body.city?.trim() || undefined,
+        about: body.about?.trim() || undefined,
+        role: 'member',
+        isActive: true,
+        generation: 0,
+        relations: [],
+        managedById: currentUserId,
+      };
+      mockMembers.push(member);
+      return member;
+    },
+    async updateMember(memberId, patch) {
+      const member = getMember(memberId);
+      if (!member) throw new Error('Member not found');
+      const u = getCurrentUser();
+      const isAdmin = u.role === 'admin';
+      const isManager = member.managedById === currentUserId;
+      if (!isAdmin && !isManager) throw new Error('No permission');
+      if (patch.firstName !== undefined) member.firstName = patch.firstName;
+      if (patch.lastName !== undefined) member.lastName = patch.lastName;
+      if (patch.middleName !== undefined) member.middleName = patch.middleName;
+      if (patch.birthDate !== undefined) member.birthDate = patch.birthDate;
+      if (patch.deathDate !== undefined) member.deathDate = patch.deathDate;
+      if (patch.city !== undefined) member.city = patch.city;
+      if (patch.about !== undefined) member.about = patch.about;
+      if (patch.avatar !== undefined) (member as any).avatar = patch.avatar;
+      return member;
     },
   },
   auth: {

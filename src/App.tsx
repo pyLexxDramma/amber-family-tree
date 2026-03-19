@@ -24,6 +24,8 @@ import EditMyProfile from "./pages/EditMyProfile";
 import ContactProfile from "./pages/ContactProfile";
 import Messages from "./pages/Messages";
 import ContactRequests from "./pages/ContactRequests";
+import CreateMemberProfile from "./pages/CreateMemberProfile";
+import EditMemberProfile from "./pages/EditMemberProfile";
 import InviteFlow from "./pages/InviteFlow";
 import StorePage from "./pages/StorePage";
 import PlacesPage from "./pages/PlacesPage";
@@ -81,10 +83,12 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/albums/:id`} element={<AlbumDetails />} />
             <Route path={`${CLASSIC_BASE}/publication/:id`} element={<PublicationDetails />} />
             <Route path={`${CLASSIC_BASE}/create`} element={<CreatePublicationEntry />} />
+            <Route path={`${CLASSIC_BASE}/family/create-member`} element={<CreateMemberProfile />} />
             <Route path={`${CLASSIC_BASE}/family`} element={<FamilyList />} />
             <Route path={`${CLASSIC_BASE}/my-profile`} element={<MyProfile />} />
             <Route path={`${CLASSIC_BASE}/my-profile/edit`} element={<EditMyProfile />} />
             <Route path={`${CLASSIC_BASE}/my-media`} element={<MyMedia />} />
+            <Route path={`${CLASSIC_BASE}/profile/:id/edit`} element={<EditMemberProfile />} />
             <Route path={`${CLASSIC_BASE}/profile/:id`} element={<ContactProfile />} />
             <Route path={`${CLASSIC_BASE}/messages/:id`} element={<Messages />} />
             <Route path={`${CLASSIC_BASE}/contact-requests`} element={<ContactRequests />} />
