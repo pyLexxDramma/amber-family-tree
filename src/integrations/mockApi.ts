@@ -275,6 +275,10 @@ export const mockApi: AngeloApi = {
       mockMediaStore.set(key, { url, type });
       return { upload_url: `https://example.com/upload?key=${encodeURIComponent(key)}`, key, url };
     },
+    registerUploadedUrl(key: string, url: string) {
+      const stored = mockMediaStore.get(key);
+      if (stored) mockMediaStore.set(key, { ...stored, url });
+    },
   },
   messages: {
     async listWith(memberId: string) {

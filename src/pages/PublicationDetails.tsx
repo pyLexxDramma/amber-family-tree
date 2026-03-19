@@ -26,8 +26,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: string }).authorId ?? (p as { author_id?: string }).author_id;
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
-const memberDisplayName = (m: { firstName?: string; first_name?: string; lastName?: string; last_name?: string; nickname?: string } | null) =>
-  m ? ((m as { nickname?: string }).nickname || `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name}`.trim() || 'Автор') : 'Автор';
+const memberDisplayName = (m: { firstName?: string; first_name?: string; lastName?: string; last_name?: string } | null) =>
+  m ? `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name ?? ''} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name ?? ''}`.trim() || 'Автор' : 'Автор';
 
 const initialsOf = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -69,6 +69,9 @@ const PublicationDetails: React.FC = () => {
   const photoScrollerRef = useRef<HTMLDivElement | null>(null);
   const rafScrollRef = useRef<number | null>(null);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const blockScrollRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const blockRafRefs = useRef<Record<number, number>>({});
+  const [blockPhotoIndices, setBlockPhotoIndices] = useState<Record<number, number>>({});
   const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -101,6 +104,7 @@ const PublicationDetails: React.FC = () => {
 
   useEffect(() => {
     setPhotoIdx(0);
+    setBlockPhotoIndices({});
     const el = photoScrollerRef.current;
     if (el) el.scrollTo({ left: 0 });
   }, [id]);
@@ -349,6 +353,14 @@ const PublicationDetails: React.FC = () => {
     el.scrollTo({ left: idx * w, behavior: 'smooth' });
   };
 
+  const scrollBlockPhoto = (blockIndex: number, photoIndex: number, total: number) => {
+    const el = blockScrollRefs.current[blockIndex];
+    if (!el) return;
+    const w = el.clientWidth || 1;
+    const idx = Math.max(0, Math.min(total - 1, photoIndex));
+    el.scrollTo({ left: idx * w, behavior: 'smooth' });
+  };
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
@@ -434,13 +446,37 @@ const PublicationDetails: React.FC = () => {
                       if (blk.type === 'photos' && slice.length > 0) {
                         const imgs = slice.filter(m => m.type === 'photo');
                         if (imgs.length > 1) {
+                          const currentIdx = blockPhotoIndices[bi] ?? 0;
                           return (
                             <div key={bi} className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-                              <div className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
+                              <div
+                                ref={(el) => { blockScrollRefs.current[bi] = el; }}
+                                className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth"
+                                style={{ WebkitOverflowScrolling: 'touch' }}
+                                onScroll={() => {
+                                  const el = blockScrollRefs.current[bi];
+                                  if (!el) return;
+                                  const prev = blockRafRefs.current[bi];
+                                  if (prev != null) cancelAnimationFrame(prev);
+                                  blockRafRefs.current[bi] = requestAnimationFrame(() => {
+                                    const w = el.clientWidth || 1;
+                                    const next = Math.max(0, Math.min(imgs.length - 1, Math.round(el.scrollLeft / w)));
+                                    setBlockPhotoIndices(prev => (prev[bi] === next ? prev : { ...prev, [bi]: next }));
+                                  });
+                                }}
+                              >
                                 {imgs.map((m) => (
                                   <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
                                     <img src={m.url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                                   </div>
+                                ))}
+                              </div>
+                              <div className="absolute top-2 right-2 rounded-full bg-black/55 text-white text-xs font-semibold px-2.5 py-1">{currentIdx + 1}/{imgs.length}</div>
+                              <button type="button" onClick={() => scrollBlockPhoto(bi, currentIdx - 1, imgs.length)} className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors" aria-label="Предыдущее фото"><ChevronLeft className="h-5 w-5" /></button>
+                              <button type="button" onClick={() => scrollBlockPhoto(bi, currentIdx + 1, imgs.length)} className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 text-white flex items-center justify-center hover:bg-black/45 transition-colors" aria-label="Следующее фото"><ChevronRight className="h-5 w-5" /></button>
+                              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 px-3">
+                                {imgs.map((_, i) => (
+                                  <button key={i} type="button" onClick={() => scrollBlockPhoto(bi, i, imgs.length)} className={`h-1.5 rounded-full transition-all ${i === currentIdx ? 'w-6 bg-white/90' : 'w-2.5 bg-white/45 hover:bg-white/70'}`} aria-label={`Фото ${i + 1}`} />
                                 ))}
                               </div>
                             </div>

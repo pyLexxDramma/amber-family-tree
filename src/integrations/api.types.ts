@@ -101,6 +101,7 @@ export interface PresignUploadResponse {
 
 export interface MediaApi {
   presign(body: PresignUploadRequest): Promise<PresignUploadResponse>;
+  registerUploadedUrl?(key: string, url: string): void;
 }
 
 export interface MessagesApi {

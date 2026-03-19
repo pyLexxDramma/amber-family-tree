@@ -337,6 +337,8 @@ const CreatePublication: React.FC = () => {
         file_size_bytes: item.file.size,
       });
       if (isMockUploadUrl(presign.upload_url)) {
+        const objectUrl = URL.createObjectURL(item.file);
+        api.media.registerUploadedUrl?.(presign.key, objectUrl);
         const uploadMs = Math.round(performance.now() - startedAt);
         setUploadItem(blockId, item.id, { status: 'uploaded', key: presign.key, uploadMs });
         return;
@@ -822,7 +824,7 @@ const CreatePublication: React.FC = () => {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {participantIds.map(pid => {
                     const m = members.find(mm => mm.id === pid);
-                    const name = m ? (m.nickname || `${m.firstName} ${m.lastName}`.trim()) : 'Участник';
+                    const name = m ? `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Участник';
                     return (
                       <button
                         key={pid}
@@ -959,7 +961,7 @@ const CreatePublication: React.FC = () => {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {coAuthorIds.map(cid => {
                     const m = members.find(mm => mm.id === cid);
-                    const name = m ? (m.nickname || `${m.firstName} ${m.lastName}`.trim()) : 'Соавтор';
+                    const name = m ? `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Соавтор';
                     return (
                       <button
                         key={cid}
@@ -1350,7 +1352,7 @@ const CreatePublication: React.FC = () => {
             <div className="mt-2 space-y-2 max-h-[60vh] overflow-auto">
               {members.map(m => {
                 const checked = participantIds.includes(m.id);
-                const name = m.nickname || `${m.firstName} ${m.lastName}`.trim();
+                const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim();
                 return (
                   <button
                     key={m.id}
@@ -1384,7 +1386,7 @@ const CreatePublication: React.FC = () => {
             <div className="mt-2 space-y-2 max-h-[60vh] overflow-auto">
               {members.map(m => {
                 const checked = coAuthorIds.includes(m.id);
-                const name = m.nickname || `${m.firstName} ${m.lastName}`.trim();
+                const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim();
                 return (
                   <button
                     key={m.id}
@@ -1420,7 +1422,7 @@ const CreatePublication: React.FC = () => {
             <div className="mt-2 space-y-2 max-h-[60vh] overflow-auto">
               {members.map(m => {
                 const checked = accessPeopleIds.includes(m.id);
-                const name = m.nickname || `${m.firstName} ${m.lastName}`.trim();
+                const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim();
                 return (
                   <button
                     key={m.id}

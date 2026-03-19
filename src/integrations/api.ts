@@ -55,6 +55,7 @@ export const api: AngeloApi = {
   },
   media: {
     presign: (body) => selectApi().media.presign(body),
+    registerUploadedUrl: (key, url) => selectApi().media.registerUploadedUrl?.(key, url),
   },
   messages: {
     listWith: (memberId) => selectApi().messages.listWith(memberId),
