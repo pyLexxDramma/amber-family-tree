@@ -21,6 +21,8 @@ const EditMemberProfile: React.FC = () => {
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferTo, setTransferTo] = useState<string>('');
   const [transferring, setTransferring] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -100,6 +102,7 @@ const EditMemberProfile: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const canTransfer = member && isAdmin;
+  const canDelete = member && isAdmin && member.id !== myMemberId;
   const transferCandidates = members.filter(m => m.id !== id && m.id !== myMemberId);
   const handleTransfer = async () => {
     if (!id || !transferTo || !canTransfer) return;
@@ -115,6 +118,22 @@ const EditMemberProfile: React.FC = () => {
       toast({ title: msg, variant: 'destructive' });
     } finally {
       setTransferring(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id || !canDelete) return;
+    setDeleting(true);
+    try {
+      await api.family.deleteMember(id);
+      toast({ title: 'Профиль удалён' });
+      setDeleteOpen(false);
+      navigate(ROUTES.classic.family);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Не удалось удалить';
+      toast({ title: msg, variant: 'destructive' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -183,6 +202,15 @@ const EditMemberProfile: React.FC = () => {
               Назначить управляющего
             </button>
           )}
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(true)}
+              className="mt-3 w-full h-11 rounded-2xl border-2 border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors"
+            >
+              Удалить профиль
+            </button>
+          )}
         </div>
       </div>
       <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
@@ -218,6 +246,31 @@ const EditMemberProfile: React.FC = () => {
               className="h-10 px-4 rounded-xl bg-[var(--proto-active)] text-white text-sm font-semibold hover:opacity-90 disabled:opacity-60"
             >
               {transferring ? 'Передача…' : 'Передать'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="rounded-2xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Удалить профиль?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Это действие нельзя отменить. Все данные профиля будут удалены.</p>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(false)}
+              className="h-10 px-4 rounded-xl border border-[var(--proto-border)] text-sm font-medium"
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="h-10 px-4 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-60"
+            >
+              {deleting ? 'Удаление…' : 'Удалить'}
             </button>
           </DialogFooter>
         </DialogContent>

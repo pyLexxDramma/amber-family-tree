@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, MapPin, ChevronRight, Menu, Trash2, MoreHorizontal } from 'lucide-react';
+import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, ChevronRight, Menu, Trash2, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/integrations/api';
@@ -91,8 +91,6 @@ const CreatePublication: React.FC = () => {
   const [dateMode, setDateMode] = useState<'fixed' | 'period'>('fixed');
   const [dateFrom, setDateFrom] = useState({ year: '', month: '', day: '' });
   const [dateTo, setDateTo] = useState({ year: '', month: '', day: '' });
-  const [pinOnMap, setPinOnMap] = useState(false);
-  const [addressQuery, setAddressQuery] = useState('');
   const [storyTags, setStoryTags] = useState<string[]>([]);
   const [storyTagsDraft, setStoryTagsDraft] = useState('');
   const [relatedStoriesDraft, setRelatedStoriesDraft] = useState('');
@@ -954,19 +952,6 @@ const CreatePublication: React.FC = () => {
 
               <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-5">
                 <Label className="text-sm font-semibold text-[var(--proto-text)]">Где это было?</Label>
-                <div className="mt-3 flex items-center justify-between rounded-xl bg-white border border-[var(--proto-border)] px-3 py-2">
-                  <div className="flex items-center gap-2 text-sm text-[var(--proto-text)]">
-                    <MapPin className="h-4 w-4 text-[var(--proto-active)]" />
-                    Отметить на карте
-                  </div>
-                  <Switch checked={pinOnMap} onCheckedChange={setPinOnMap} />
-                </div>
-                <Input
-                  value={addressQuery}
-                  onChange={(e) => setAddressQuery(e.target.value)}
-                  placeholder="Поиск адреса или передвиньте пин"
-                  className="mt-3 rounded-xl border-2 border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]"
-                />
                 <Input
                   value={place}
                   onChange={e => setPlace(e.target.value)}

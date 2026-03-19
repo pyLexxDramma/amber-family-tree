@@ -123,6 +123,9 @@ export const realApi: AngeloApi = {
       const res = await requestJson<unknown>('POST', `/family/members/${memberId}/transfer`, { to_member_id: toMemberId });
       return normalizeFamilyMember(res);
     },
+    async deleteMember(memberId: string) {
+      return requestJson<{ deleted: true }>('DELETE', `/family/members/${memberId}`);
+    },
   },
   auth: {
     async sendCode(identifier: string) {

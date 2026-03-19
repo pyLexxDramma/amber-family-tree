@@ -71,6 +71,7 @@ export interface FamilyApi {
   createMember(body: FamilyMemberCreateBody): Promise<FamilyMember>;
   updateMember(memberId: string, patch: Partial<FamilyMember>): Promise<FamilyMember>;
   transferMember(memberId: string, toMemberId: string): Promise<FamilyMember>;
+  deleteMember(memberId: string): Promise<{ deleted: true }>;
 }
 
 export interface AuthApi {

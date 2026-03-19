@@ -218,6 +218,15 @@ export const mockApi: AngeloApi = {
       (member as any).managedById = target.id;
       return member;
     },
+    async deleteMember(memberId) {
+      const member = getMember(memberId);
+      if (!member) throw new Error('Member not found');
+      const u = getCurrentUser();
+      if (u.role !== 'admin') throw new Error('Only admin can delete');
+      const idx = mockMembers.findIndex(m => m.id === memberId);
+      if (idx >= 0) mockMembers.splice(idx, 1);
+      return { deleted: true as const };
+    },
   },
   auth: {
     async sendCode() {

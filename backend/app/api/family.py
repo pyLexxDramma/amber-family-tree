@@ -1,12 +1,19 @@
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
 from app.database import get_db
+from app.models.comment import Comment
+from app.models.comment_like import CommentLike
+from app.models.contact_request import ContactRequest
 from app.models.family_member import FamilyMember
+from app.models.invitation import Invitation
+from app.models.like import Like
+from app.models.message import Message
+from app.models.publication import Publication
 from app.models.user import User
 from app.schemas.family import FamilyMemberCreate, FamilyMemberResponse, FamilyMemberUpdate, TransferProfileBody
 
@@ -185,3 +192,41 @@ async def transfer_member(
     await db.commit()
     await db.refresh(member)
     return _member_to_response(member)
+
+
+@router.delete("/members/{member_id}")
+async def delete_member(
+    member_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    _require_admin(current_user)
+    result = await db.execute(
+        select(FamilyMember).where(
+            FamilyMember.id == member_id,
+            FamilyMember.family_id == current_user.family_id,
+        )
+    )
+    member = result.scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+    user_with_member = await db.execute(
+        select(User).where(User.member_id == member_id)
+    )
+    if user_with_member.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete profile linked to a user account",
+        )
+    pub_ids = select(Publication.id).where(Publication.author_id == member_id)
+    comment_ids = select(Comment.id).where((Comment.author_id == member_id) | (Comment.publication_id.in_(pub_ids)))
+    await db.execute(delete(CommentLike).where((CommentLike.member_id == member_id) | (CommentLike.comment_id.in_(comment_ids))))
+    await db.execute(delete(Comment).where((Comment.author_id == member_id) | (Comment.publication_id.in_(pub_ids))))
+    await db.execute(delete(Like).where((Like.member_id == member_id) | (Like.publication_id.in_(pub_ids))))
+    await db.execute(delete(Publication).where(Publication.author_id == member_id))
+    await db.execute(delete(ContactRequest).where((ContactRequest.from_member_id == member_id) | (ContactRequest.to_member_id == member_id)))
+    await db.execute(delete(Message).where((Message.sender_id == member_id) | (Message.recipient_id == member_id)))
+    await db.execute(delete(Invitation).where(Invitation.from_id == member_id))
+    await db.delete(member)
+    await db.commit()
+    return {"deleted": True}
