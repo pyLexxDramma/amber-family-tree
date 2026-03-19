@@ -15,7 +15,6 @@ const field = (u: FamilyMember & { first_name?: string; last_name?: string }) =>
   firstName: u.firstName ?? u.first_name ?? '',
   lastName: u.lastName ?? u.last_name ?? '',
   middleName: u.middleName ?? '',
-  nickname: u.nickname ?? '',
   birthDate: u.birthDate ?? '',
   city: u.city ?? '',
   about: u.about ?? '',
@@ -79,7 +78,6 @@ const EditMyProfile: React.FC = () => {
         firstName: form.firstName?.trim() || undefined,
         lastName: form.lastName?.trim() || undefined,
         middleName: form.middleName?.trim() || undefined,
-        nickname: form.nickname?.trim() || undefined,
         birthDate: form.birthDate?.trim() || undefined,
         city: form.city?.trim() || undefined,
         about: form.about?.trim() || undefined,
@@ -95,7 +93,6 @@ const EditMyProfile: React.FC = () => {
         firstName: form.firstName?.trim() || undefined,
         lastName: form.lastName?.trim() || undefined,
         middleName: form.middleName?.trim() || undefined,
-        nickname: form.nickname?.trim() || undefined,
         birthDate: form.birthDate?.trim() || undefined,
         city: form.city?.trim() || undefined,
         about: form.about?.trim() || undefined,
@@ -178,16 +175,6 @@ const EditMyProfile: React.FC = () => {
                 onChange={e => setForm(f => ({ ...f, middleName: e.target.value }))}
                 className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
                 placeholder="Отчество"
-              />
-            </label>
-            <label className="block">
-              <span className="text-xs font-medium text-[var(--proto-text-muted)] uppercase tracking-wider">Ник / как к вам обращаться</span>
-              <input
-                type="text"
-                value={form.nickname ?? ''}
-                onChange={e => setForm(f => ({ ...f, nickname: e.target.value }))}
-                className="mt-1 w-full rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 py-3 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]"
-                placeholder="Никнейм"
               />
             </label>
             <label className="block">
