@@ -6,6 +6,7 @@ import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { currentUserId } from '@/data/mock-members';
 import { api } from '@/integrations/api';
 import { isDemoMode } from '@/lib/demoMode';
+import { getMilestoneIds } from '@/lib/milestones';
 import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -43,6 +44,17 @@ const Feed: React.FC = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seedLoading, setSeedLoading] = useState(false);
+  const [milestoneVer, setMilestoneVer] = useState(0);
+
+  useEffect(() => {
+    const h = () => setMilestoneVer(v => v + 1);
+    window.addEventListener('angelo:milestones-changed', h);
+    window.addEventListener('storage', h);
+    return () => {
+      window.removeEventListener('angelo:milestones-changed', h);
+      window.removeEventListener('storage', h);
+    };
+  }, []);
 
   const loadData = async (autoSeed = true) => {
     const [pubs, mems] = await Promise.all([
@@ -96,9 +108,10 @@ const Feed: React.FC = () => {
   const memberMap = new Map(members.map(m => [m.id, m]));
   const currentId = myMemberId ?? currentUserId;
 
+  const milestoneIds = getMilestoneIds();
   let filtered = [...items];
-  if (filterParam === 'my') filtered = filtered.filter(p => authorIdOf(p) === currentId);
   if (filterParam === 'with-me') filtered = filtered.filter(p => participantIdsOf(p).includes(currentId));
+  if (filterParam === 'important') filtered = filtered.filter(p => milestoneIds.includes(p.id));
   if (authorParam) filtered = filtered.filter(p => authorIdOf(p) === authorParam);
   if (withParam) filtered = filtered.filter(p => participantIdsOf(p).includes(withParam));
   const list = searchQuery.trim()
@@ -452,31 +465,31 @@ const Feed: React.FC = () => {
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl bg-[var(--proto-bg)] border-[var(--proto-border)]">
+        <SheetContent side="bottom" className="rounded-t-3xl bg-white border-gray-200 dark:bg-stone-900 dark:border-stone-700">
           <SheetHeader>
-            <SheetTitle className="text-[var(--proto-text)]">Фильтры</SheetTitle>
+            <SheetTitle className="text-gray-900 dark:text-stone-100 font-semibold">Фильтры</SheetTitle>
           </SheetHeader>
           <div className="mt-4 space-y-2">
             <button
               type="button"
               onClick={() => setFilter(null)}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${!filterParam ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'}`}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${!filterParam ? 'bg-[var(--proto-active)] text-white' : 'bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-600 text-gray-900 dark:text-stone-100'}`}
             >
-              Все публикации
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('my')}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'my' ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'}`}
-            >
-              Только мои
+              Все
             </button>
             <button
               type="button"
               onClick={() => setFilter('with-me')}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'with-me' ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'}`}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'with-me' ? 'bg-[var(--proto-active)] text-white' : 'bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-600 text-gray-900 dark:text-stone-100'}`}
             >
-              С моим участием
+              Со мной
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('important')}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'important' ? 'bg-[var(--proto-active)] text-white' : 'bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-600 text-gray-900 dark:text-stone-100'}`}
+            >
+              Важные
             </button>
           </div>
         </SheetContent>
