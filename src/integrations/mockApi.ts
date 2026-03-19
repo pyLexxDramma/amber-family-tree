@@ -207,6 +207,17 @@ export const mockApi: AngeloApi = {
       if (patch.avatar !== undefined) (member as any).avatar = patch.avatar;
       return member;
     },
+    async transferMember(memberId, toMemberId) {
+      const member = getMember(memberId);
+      if (!member) throw new Error('Member not found');
+      const u = getCurrentUser();
+      if (u.role !== 'admin') throw new Error('Only admin can assign profile manager');
+      const target = getMember(toMemberId);
+      if (!target) throw new Error('Target member not found');
+      if (target.id === currentUserId) throw new Error('Cannot transfer to yourself');
+      (member as any).managedById = target.id;
+      return member;
+    },
   },
   auth: {
     async sendCode() {

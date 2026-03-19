@@ -40,6 +40,7 @@ export const api: AngeloApi = {
     getMember: (id) => selectApi().family.getMember(id),
     createMember: (body) => selectApi().family.createMember(body),
     updateMember: (memberId, patch) => selectApi().family.updateMember(memberId, patch),
+    transferMember: (memberId, toMemberId) => selectApi().family.transferMember(memberId, toMemberId),
   },
   auth: {
     sendCode: (identifier) => selectApi().auth.sendCode(identifier),

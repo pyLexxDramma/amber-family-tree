@@ -4,6 +4,8 @@ import { getJson, requestJson } from './request';
 import {
   normalizeAppUser,
   normalizeComment,
+  normalizeContactRequest,
+  normalizeContactRequestState,
   normalizeFamilyMember,
   normalizeMediaItem,
   normalizeMessage,
@@ -117,6 +119,10 @@ export const realApi: AngeloApi = {
       const res = await requestJson<unknown>('PATCH', `/family/members/${memberId}`, payload);
       return normalizeFamilyMember(res);
     },
+    async transferMember(memberId: string, toMemberId: string) {
+      const res = await requestJson<unknown>('POST', `/family/members/${memberId}/transfer`, { to_member_id: toMemberId });
+      return normalizeFamilyMember(res);
+    },
   },
   auth: {
     async sendCode(identifier: string) {
@@ -173,20 +179,24 @@ export const realApi: AngeloApi = {
   },
   contactRequests: {
     async getStateWith(memberId: string): Promise<ContactRequestState> {
-      return getJson<ContactRequestState>(`/contact-requests/with/${memberId}`);
+      const res = await getJson<unknown>(`/contact-requests/with/${memberId}`);
+      return normalizeContactRequestState(res);
     },
     async createWith(memberId: string): Promise<ContactRequestState> {
-      return requestJson<ContactRequestState>('POST', `/contact-requests/with/${memberId}`, {});
+      const res = await requestJson<unknown>('POST', `/contact-requests/with/${memberId}`, {});
+      return normalizeContactRequestState(res);
     },
     async listIncoming(): Promise<ContactRequest[]> {
       const res = await getJson<unknown>('/contact-requests/incoming');
-      return Array.isArray(res) ? (res as ContactRequest[]) : [];
+      return Array.isArray(res) ? res.map(normalizeContactRequest) : [];
     },
     async accept(requestId: string): Promise<ContactRequestState> {
-      return requestJson<ContactRequestState>('POST', `/contact-requests/${requestId}/accept`, {});
+      const res = await requestJson<unknown>('POST', `/contact-requests/${requestId}/accept`, {});
+      return normalizeContactRequestState(res);
     },
     async reject(requestId: string): Promise<ContactRequestState> {
-      return requestJson<ContactRequestState>('POST', `/contact-requests/${requestId}/reject`, {});
+      const res = await requestJson<unknown>('POST', `/contact-requests/${requestId}/reject`, {});
+      return normalizeContactRequestState(res);
     },
   },
   debug: debugApi,

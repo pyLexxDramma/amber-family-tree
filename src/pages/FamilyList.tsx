@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { toast } from '@/hooks/use-toast';
 
-function getRelationshipLabel(member: FamilyMember, currentId: string): string {
+function getRelationshipLabel(member: FamilyMember, currentId: string | undefined): string {
+  if (!currentId) return 'Член семьи';
   try {
     return getFamilyRole(member, currentId);
   } catch {
@@ -49,6 +50,7 @@ const FamilyList: React.FC = () => {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactPending, setContactPending] = useState(false);
   const [contactTargetId, setContactTargetId] = useState<string | null>(null);
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
 
   useEffect(() => {
     api.family.listMembers()
@@ -61,10 +63,17 @@ const FamilyList: React.FC = () => {
         }
       })
       .finally(() => setIsLoadingMembers(false));
-    api.profile.getMyProfile().then(setMyProfile).catch(() => {});
+    api.profile.getMyProfile()
+      .then(m => {
+        setMyProfile(m);
+        setMyMemberId(m?.id ?? null);
+      })
+      .catch(() => {
+        api.auth.me().then(u => setMyMemberId(u?.member?.id ?? null)).catch(() => {});
+      });
   }, []);
 
-  const myId = myProfile?.id ?? currentUserId;
+  const myId = myProfile?.id ?? myMemberId ?? (isDemoMode() ? currentUserId : undefined);
 
   const filtered = members
     .filter(m => {
@@ -211,6 +220,10 @@ const FamilyList: React.FC = () => {
                   type="button"
                   onClick={() => {
                     if (contactPending) return;
+                    if (!myId && !isDemoMode()) {
+                      toast({ title: 'Загрузка профиля…' });
+                      return;
+                    }
                     const hasTarget = members
                       .map(norm)
                       .some(x => x.id !== myId && (x.isActive ?? true));
@@ -220,8 +233,9 @@ const FamilyList: React.FC = () => {
                     }
                     setContactOpen(true);
                   }}
+                  disabled={!myId && !isDemoMode()}
                   className={`h-12 rounded-2xl border-2 text-sm font-semibold transition-colors ${
-                    contactPending
+                    contactPending || (!myId && !isDemoMode())
                       ? 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text-muted)] cursor-default'
                       : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/40'
                   }`}

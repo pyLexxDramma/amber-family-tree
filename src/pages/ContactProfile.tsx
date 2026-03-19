@@ -109,7 +109,7 @@ const ContactProfileInner: React.FC = () => {
     }
   };
 
-  const canEdit = me && member.id !== me.id && (me.role === 'admin' || member.managedById === currentUserId);
+  const canEdit = me && (member.id === me.id || member.managedById === currentUserId || me.role === 'admin');
   const openMemberPosts = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=posts`);
   const openMemberWith = () => navigate(`${ROUTES.classic.feed}?with=${member.id}&view=posts`);
   const openMemberMedia = () => navigate(`${ROUTES.classic.feed}?author=${member.id}&view=media`);
@@ -167,7 +167,7 @@ const ContactProfileInner: React.FC = () => {
             {canEdit && (
               <button
                 type="button"
-                onClick={() => navigate(ROUTES.classic.editMemberProfile(member.id))}
+                onClick={() => navigate(member.id === me!.id ? ROUTES.classic.editMyProfile : ROUTES.classic.editMemberProfile(member.id))}
                 className="w-full h-11 rounded-2xl bg-[var(--proto-card)] border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors flex items-center justify-center gap-2"
               >
                 <Pencil className="h-4 w-4" />

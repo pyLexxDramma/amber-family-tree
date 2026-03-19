@@ -5,13 +5,22 @@ import { TopBar } from '@/components/TopBar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import { toast } from '@/hooks/use-toast';
+import type { FamilyMember } from '@/types';
 
 const EditMemberProfile: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [member, setMember] = useState<FamilyMember | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [myMemberId, setMyMemberId] = useState<string | null>(null);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferTo, setTransferTo] = useState<string>('');
+  const [transferring, setTransferring] = useState(false);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -26,11 +35,21 @@ const EditMemberProfile: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    api.auth.me().then(u => setCurrentUserId(u?.id ?? null)).catch(() => setCurrentUserId(null));
+    api.profile.getMyProfile().then(m => {
+      setMyMemberId(m?.id ?? null);
+      setIsAdmin((m?.role ?? '') === 'admin');
+    }).catch(() => setMyMemberId(null));
+    api.family.listMembers().then(setMembers).catch(() => setMembers([]));
+  }, []);
+
+  useEffect(() => {
     if (!id) {
       setLoading(false);
       return;
     }
     api.family.getMember(id).then(m => {
+      setMember(m);
       setForm({
         firstName: m.firstName ?? '',
         lastName: m.lastName ?? '',
@@ -75,6 +94,27 @@ const EditMemberProfile: React.FC = () => {
       setErrors({ _save: msg });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const canTransfer = member && isAdmin;
+  const transferCandidates = members.filter(m => m.id !== id && m.id !== myMemberId);
+  const handleTransfer = async () => {
+    if (!id || !transferTo || !canTransfer) return;
+    setTransferring(true);
+    try {
+      await api.family.transferMember(id, transferTo);
+      toast({ title: 'Профиль передан' });
+      setTransferOpen(false);
+      setTransferTo('');
+      navigate(ROUTES.classic.profile(id));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Не удалось передать';
+      toast({ title: msg, variant: 'destructive' });
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -134,8 +174,54 @@ const EditMemberProfile: React.FC = () => {
           >
             {saving ? 'Сохранение…' : 'Сохранить'}
           </button>
+          {canTransfer && transferCandidates.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTransferOpen(true)}
+              className="mt-3 w-full h-11 rounded-2xl border-2 border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors"
+            >
+              Назначить управляющего
+            </button>
+          )}
         </div>
       </div>
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent className="rounded-2xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Назначить управляющего</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Выберите участника семьи, который будет управлять этим профилем.</p>
+          <select
+            value={transferTo}
+            onChange={e => setTransferTo(e.target.value)}
+            className="w-full h-11 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-card)] px-4 text-sm"
+          >
+            <option value="">— выбрать —</option>
+            {transferCandidates.map(m => (
+              <option key={m.id} value={m.id}>
+                {[m.firstName, m.lastName].filter(Boolean).join(' ')} {m.nickname ? `(${m.nickname})` : ''}
+              </option>
+            ))}
+          </select>
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setTransferOpen(false)}
+              className="h-10 px-4 rounded-xl border border-[var(--proto-border)] text-sm font-medium"
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              onClick={handleTransfer}
+              disabled={!transferTo || transferring}
+              className="h-10 px-4 rounded-xl bg-[var(--proto-active)] text-white text-sm font-semibold hover:opacity-90 disabled:opacity-60"
+            >
+              {transferring ? 'Передача…' : 'Передать'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

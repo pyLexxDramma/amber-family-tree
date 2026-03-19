@@ -70,6 +70,7 @@ export interface FamilyApi {
   getMember(id: string): Promise<FamilyMember | null>;
   createMember(body: FamilyMemberCreateBody): Promise<FamilyMember>;
   updateMember(memberId: string, patch: Partial<FamilyMember>): Promise<FamilyMember>;
+  transferMember(memberId: string, toMemberId: string): Promise<FamilyMember>;
 }
 
 export interface AuthApi {

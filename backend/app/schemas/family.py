@@ -22,6 +22,10 @@ class FamilyMemberUpdate(BaseModel):
     avatar: str | None = None
 
 
+class TransferProfileBody(BaseModel):
+    to_member_id: str
+
+
 class FamilyMemberResponse(BaseModel):
     id: str
     firstName: str = Field(..., alias="first_name")

@@ -1,6 +1,12 @@
 ---
+description: 
 alwaysApply: true
 ---
 
-- Answer briefly and to the point, until I ask you to explain in detail.
-- **Code style:** Write code without comments. Code must be maximally clean and "human-readable": clear names, simple logic, no redundant comments or decorative explanations in the code.
+**Deploy workflow:** always in this order: (1) test locally, (2) push to GitHub, (3) deploy to Fornex, (4) verify on Fornex. Never skip local testing or deploy without it.
+
+Split tasks into phases: each phase is a separate chat; output of each phase is a concise markdown summary for the next phase.
+Pick the right model for each phase: use cheap models for context prep and housekeeping, smart models for planning, architecture, and complex code.
+One chat per phase: finish a phase, copy the markdown summary, start a new chat with it as input.
+Code style: write code without comments. Use clear names, simple logic, no redundant comments or decorative explanations.
+Answer briefly and to the point, until I ask you to explain in detail.

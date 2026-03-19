@@ -6,6 +6,8 @@ class ContactRequestState(BaseModel):
     requestId: str | None = Field(default=None, alias="request_id")
     direction: str
 
+    model_config = {"populate_by_name": True}
+
 
 class ContactRequestItem(BaseModel):
     id: str

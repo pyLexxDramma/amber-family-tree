@@ -1,4 +1,4 @@
-import type { AppUser, Comment, FamilyMember, MediaItem, Message, Publication } from '@/types';
+import type { AppUser, Comment, ContactRequest, ContactRequestState, FamilyMember, MediaItem, Message, Publication } from '@/types';
 
 type AnyRec = Record<string, any>;
 
@@ -115,6 +115,26 @@ export function normalizeMessage(input: unknown): Message {
     recipientId: str(m.recipientId ?? m.recipient_id),
     text: str(m.text),
     createdAt: str(m.createdAt ?? m.created_at),
+  };
+}
+
+export function normalizeContactRequestState(input: unknown): ContactRequestState {
+  const r = (input && typeof input === 'object' ? input as AnyRec : {}) as AnyRec;
+  return {
+    status: str(r.status ?? 'none'),
+    requestId: optStr(r.requestId ?? r.request_id) ?? null,
+    direction: str(r.direction ?? 'none') as 'none' | 'outgoing' | 'incoming',
+  };
+}
+
+export function normalizeContactRequest(input: unknown): ContactRequest {
+  const r = (input && typeof input === 'object' ? input as AnyRec : {}) as AnyRec;
+  return {
+    id: str(r.id),
+    fromMemberId: str(r.fromMemberId ?? r.from_member_id),
+    toMemberId: str(r.toMemberId ?? r.to_member_id),
+    status: str(r.status) as any,
+    createdAt: str(r.createdAt ?? r.created_at),
   };
 }
 

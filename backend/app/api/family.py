@@ -8,7 +8,7 @@ from app.core.security import get_current_user
 from app.database import get_db
 from app.models.family_member import FamilyMember
 from app.models.user import User
-from app.schemas.family import FamilyMemberCreate, FamilyMemberResponse, FamilyMemberUpdate
+from app.schemas.family import FamilyMemberCreate, FamilyMemberResponse, FamilyMemberUpdate, TransferProfileBody
 
 router = APIRouter(prefix="/family", tags=["family"])
 
@@ -139,6 +139,49 @@ async def update_member(
         if v is not None and isinstance(v, str) and k not in ("avatar",):
             v = v.strip() or None
         setattr(member, k, v)
+    await db.commit()
+    await db.refresh(member)
+    return _member_to_response(member)
+
+
+@router.post("/members/{member_id}/transfer")
+async def transfer_member(
+    member_id: UUID,
+    body: TransferProfileBody,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(FamilyMember).where(
+            FamilyMember.id == member_id,
+            FamilyMember.family_id == current_user.family_id,
+        )
+    )
+    member = result.scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+    is_admin = current_user.member and (current_user.member.role or "member") == "admin"
+    if not is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can assign profile manager")
+    to_member_uuid = UUID(body.to_member_id)
+    to_member_result = await db.execute(
+        select(FamilyMember).where(
+            FamilyMember.id == to_member_uuid,
+            FamilyMember.family_id == current_user.family_id,
+        )
+    )
+    to_member = to_member_result.scalar_one_or_none()
+    if not to_member:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target member not found")
+    to_user_result = await db.execute(
+        select(User).where(User.member_id == to_member.id)
+    )
+    to_user = to_user_result.scalar_one_or_none()
+    if not to_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Target member has no linked user")
+    if to_user.id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot transfer to yourself")
+    member.managed_by_id = to_user.id
     await db.commit()
     await db.refresh(member)
     return _member_to_response(member)
