@@ -45,6 +45,7 @@ const ContactProfileInner: React.FC = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [liked, setLiked] = useState(false);
   const [localNick, setLocalNick] = useState('');
+  const [nickEditing, setNickEditing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +76,8 @@ const ContactProfileInner: React.FC = () => {
     const v = getLocalNickname(me.id, member.id);
     setLocalNick(v ?? '');
   }, [me, member?.id]);
+
+  const savedNick = me && member ? getLocalNickname(me.id, member.id) : null;
 
   if (member === undefined) {
     return (
@@ -205,23 +208,42 @@ const ContactProfileInner: React.FC = () => {
             {me && me.id !== member.id && (
               <div className="rounded-2xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
                 <p className="text-xs font-semibold text-[var(--proto-active)] uppercase tracking-wider mb-2">Ник (виден только вам)</p>
-                <div className="flex gap-2">
-                  <input
-                    value={localNick}
-                    onChange={(e) => setLocalNick(e.target.value)}
-                    className="flex-1 h-11 rounded-xl border border-[var(--proto-border)] bg-white px-4 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]/30"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLocalNickname(me.id, member.id, localNick);
-                      toast({ title: localNick.trim() ? 'Ник сохранён' : 'Ник удалён' });
-                    }}
-                    className="h-11 px-4 rounded-xl bg-[var(--proto-active)] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-                  >
-                    Сохранить
-                  </button>
-                </div>
+                {nickEditing ? (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      value={localNick}
+                      onChange={(e) => setLocalNick(e.target.value)}
+                      className="flex-1 min-w-0 h-11 rounded-xl border border-[var(--proto-border)] bg-white px-4 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocalNickname(me.id, member.id, localNick);
+                        setNickEditing(false);
+                        toast({ title: localNick.trim() ? 'Ник сохранён' : 'Ник удалён' });
+                      }}
+                      className="h-11 px-4 rounded-xl bg-[var(--proto-active)] text-white text-sm font-semibold hover:opacity-90 transition-opacity shrink-0"
+                    >
+                      Сохранить
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <div className="flex-1 min-w-0 h-11 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-bg)] px-4 flex items-center text-[var(--proto-text)]">
+                      {savedNick || '—'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocalNick(savedNick ?? '');
+                        setNickEditing(true);
+                      }}
+                      className="h-11 px-4 rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold hover:border-[var(--proto-active)]/40 transition-colors shrink-0"
+                    >
+                      Изменить
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {(member.birthDate || member.deathDate) && (
