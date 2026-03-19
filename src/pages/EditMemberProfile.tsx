@@ -227,7 +227,7 @@ const EditMemberProfile: React.FC = () => {
             <option value="">— выбрать —</option>
             {transferCandidates.map(m => (
               <option key={m.id} value={m.id}>
-                {[m.firstName, m.lastName].filter(Boolean).join(' ')} {m.nickname ? `(${m.nickname})` : ''}
+                {[m.firstName, m.lastName].filter(Boolean).join(' ')}
               </option>
             ))}
           </select>

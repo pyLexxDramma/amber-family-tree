@@ -93,12 +93,9 @@ const ContactProfileInner: React.FC = () => {
   }
 
   const fullName = `${member.firstName} ${member.lastName}`.trim() || 'Профиль';
-  const assignedNick = me ? getLocalNickname(me.id, member.id) : null;
-  const displayNick = assignedNick || member.nickname || '';
-  const displayName = displayNick ? `${fullName} (${displayNick})` : fullName;
   const useFallback = useAvatarFallback();
   const heroSrc = (member as { avatar?: string }).avatar || (useFallback ? getPrototypeAvatarUrl(member.id) : '');
-  const initials = displayName ? displayName.trim().slice(0, 2).toUpperCase() : 'U';
+  const initials = fullName ? fullName.trim().slice(0, 2).toUpperCase() : 'U';
 
   const formatDate = (d: string) => {
     try {
@@ -118,7 +115,7 @@ const ContactProfileInner: React.FC = () => {
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)] flex flex-col">
-        <TopBar title={displayName} onBack={() => navigate(-1)} light />
+        <TopBar title={fullName} onBack={() => navigate(-1)} light />
         <div className="mx-auto max-w-full w-full flex-1 px-3 sm:px-4 sm:max-w-md md:max-w-2xl lg:max-w-4xl overflow-x-hidden">
           <div className="relative w-full" style={{ minHeight: '50vh' }}>
             {heroSrc ? (
@@ -213,7 +210,6 @@ const ContactProfileInner: React.FC = () => {
                     value={localNick}
                     onChange={(e) => setLocalNick(e.target.value)}
                     className="flex-1 h-11 rounded-xl border border-[var(--proto-border)] bg-white px-4 text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--proto-active)]/30"
-                    placeholder="Например: Тётя Света"
                   />
                   <button
                     type="button"
