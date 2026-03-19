@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
@@ -7,10 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
+import { isMockUploadUrl } from '@/integrations/mockApi';
 import { toast } from '@/hooks/use-toast';
+import { Camera } from 'lucide-react';
 
 const CreateMemberProfile: React.FC = () => {
   const navigate = useNavigate();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -32,6 +38,30 @@ const CreateMemberProfile: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    e.currentTarget.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 20 * 1_000_000) {
+      setAvatarError('Макс. 20 МБ');
+      return;
+    }
+    setAvatarError(null);
+    setAvatarUploading(true);
+    try {
+      const presign = await api.media.presign({ filename: file.name, content_type: file.type, file_size_bytes: file.size });
+      if (!isMockUploadUrl(presign.upload_url)) {
+        const putRes = await fetch(presign.upload_url, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+        if (!putRes.ok) throw new Error('upload failed');
+      }
+      setAvatarUrl(presign.url);
+    } catch {
+      setAvatarError('Не удалось загрузить');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validate()) return;
     setSaving(true);
@@ -46,6 +76,9 @@ const CreateMemberProfile: React.FC = () => {
         city: form.city.trim() || null,
         about: form.about.trim() || null,
       });
+      if (avatarUrl) {
+        await api.family.updateMember(member.id, { avatar: avatarUrl });
+      }
       toast({ title: 'Профиль создан' });
       navigate(ROUTES.classic.profile(member.id));
     } catch (err: unknown) {
@@ -92,6 +125,34 @@ const CreateMemberProfile: React.FC = () => {
           <p className="text-sm text-[var(--proto-text-muted)] mb-6">
             Профиль ребёнка или умершего родственника, который не может создать свой. Создавать может только админ семьи.
           </p>
+          <div className="flex justify-center mb-6">
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
+              className="sr-only"
+              onChange={handleAvatarSelect}
+            />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="relative block"
+            >
+              <div className="h-24 w-24 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] flex items-center justify-center overflow-hidden">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-serif text-[var(--proto-text-muted)]">?</span>
+                )}
+              </div>
+              <span className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--proto-active)] text-white">
+                <Camera className="h-3.5 w-3.5" aria-hidden />
+              </span>
+            </button>
+            {avatarError && <p className="text-red-600 text-xs mt-1 text-center">{avatarError}</p>}
+            {avatarUploading && <p className="text-[var(--proto-text-muted)] text-xs mt-1 text-center">Загрузка…</p>}
+          </div>
           <div className="space-y-4">
             {field('lastName', 'Фамилия', true)}
             {field('firstName', 'Имя', true)}
