@@ -33,7 +33,7 @@ const ConfirmCode: React.FC = () => {
       localStorage.setItem('token', res.access_token);
       setDemoMode(false);
       if (mode === 'register') navigate('/onboarding');
-      else navigate(ROUTES.classic.feed);
+      else navigate(ROUTES.classic.tree);
     } catch (e) {
       const msg = e instanceof ApiError
         ? (e.status === 404 || e.status === 502 ? 'Сервер недоступен. Проверьте бэкенд и nginx.' : e.status >= 500 ? `Ошибка сервера ${e.status}. Проверьте логи бэкенда.` : `Ошибка ${e.status}`)

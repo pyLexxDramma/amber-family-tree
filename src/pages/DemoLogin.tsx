@@ -13,7 +13,7 @@ const DemoLogin: React.FC = () => {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 650));
     setDemoMode(true);
-    navigate(ROUTES.classic.feed, { replace: true });
+    navigate(ROUTES.classic.tree, { replace: true });
   };
 
   return (
