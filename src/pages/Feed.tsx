@@ -9,6 +9,7 @@ import { isDemoMode } from '@/lib/demoMode';
 import { getMilestoneIds } from '@/lib/milestones';
 import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown } from 'lucide-react';
+import { TopBar } from '@/components/TopBar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
@@ -201,46 +202,56 @@ const Feed: React.FC = () => {
 
   const gridClass = gridCols === 1 ? 'grid-cols-1' : gridCols === 3 ? 'grid-cols-3' : 'grid-cols-5';
 
+  const hasFilteredView = !!(authorParam || withParam || filterParam === 'with-me');
+  const backTarget = authorParam ? ROUTES.classic.profile(authorParam) : withParam ? ROUTES.classic.profile(withParam) : filterParam === 'with-me' ? ROUTES.classic.myProfile : null;
+  const barTitle = hasFilteredView
+    ? (viewMode === 'media' ? (authorParam ? 'Медиа' : 'Медиа со мной') : (authorParam ? 'Публикации' : 'Публикации со мной'))
+    : 'Лента';
+
   return (
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[#F5F0E8]">
-        <div className="mx-auto max-w-full px-4 pt-4 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div>
-              <h1 className="text-xl font-semibold text-[var(--proto-text)]">Лента</h1>
-              {items.length > 50 && <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">Демо · {items.length} публикаций</p>}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(ROUTES.classic.timeline)}
-                className="h-10 w-10 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] flex items-center justify-center text-[var(--proto-text-muted)] hover:border-[var(--proto-active)]/40 transition-colors"
-                aria-label="Хроника"
-              >
-                <LineChart className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setSearchOpen(v => !v)}
-                className="h-10 w-10 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] flex items-center justify-center text-[var(--proto-text-muted)] hover:border-[var(--proto-active)]/40 transition-colors"
-                aria-label="Поиск"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectionMode(v => !v)}
-                className={`h-10 w-10 rounded-full border flex items-center justify-center transition-colors ${
-                  selectionMode ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]' : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text-muted)] hover:border-[var(--proto-active)]/40'
-                }`}
-                aria-label="Режим выбора"
-              >
-                <CheckSquare className="h-4 w-4" />
-              </button>
-              <BrandLogoCircle className="h-10 w-10 bg-[var(--proto-card)] border-[var(--proto-border)]" />
-            </div>
-          </div>
-
+        <TopBar
+          title={barTitle}
+          onBack={() => (backTarget ? navigate(backTarget) : navigate(-1))}
+          light
+          right={
+            !hasFilteredView ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.classic.timeline)}
+                  className="h-10 w-10 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] flex items-center justify-center text-[var(--proto-text-muted)] hover:border-[var(--proto-active)]/40 transition-colors"
+                  aria-label="Хроника"
+                >
+                  <LineChart className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(v => !v)}
+                  className="h-10 w-10 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] flex items-center justify-center text-[var(--proto-text-muted)] hover:border-[var(--proto-active)]/40 transition-colors"
+                  aria-label="Поиск"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectionMode(v => !v)}
+                  className={`h-10 w-10 rounded-full border flex items-center justify-center transition-colors ${
+                    selectionMode ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]' : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text-muted)] hover:border-[var(--proto-active)]/40'
+                  }`}
+                  aria-label="Режим выбора"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                </button>
+              </div>
+            ) : undefined
+          }
+        />
+        <div className="mx-auto max-w-full px-4 pt-2 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
+          {!hasFilteredView && items.length > 50 && (
+            <p className="text-xs text-[var(--proto-text-muted)] mb-3">Демо · {items.length} публикаций</p>
+          )}
           <div className="flex items-center gap-2 mb-3">
             <div className="flex rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] p-0.5">
               <button
