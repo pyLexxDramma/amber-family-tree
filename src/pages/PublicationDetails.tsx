@@ -12,7 +12,7 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { ChevronLeft, ChevronRight, Heart, MoreVertical, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, MoreVertical, Star, X } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
@@ -90,6 +90,7 @@ const PublicationDetails: React.FC = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [milestone, setMilestone] = useState(false);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'photo' | 'video' | 'audio'; url: string; thumbnail?: string; name?: string } | null>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
   useEffect(() => {
@@ -466,8 +467,8 @@ const PublicationDetails: React.FC = () => {
                                 }}
                               >
                                 {imgs.map((m) => (
-                                  <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
-                                    <img src={m.url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                                  <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)] cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail })}>
+                                    <img src={m.url} alt="" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                                   </div>
                                 ))}
                               </div>
@@ -484,9 +485,9 @@ const PublicationDetails: React.FC = () => {
                         }
                         if (imgs.length === 1) {
                           return (
-                            <div key={bi} className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
-                              <img src={imgs[0].url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
-                            </div>
+                            <button key={bi} type="button" className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full text-left cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', url: imgs[0].url, thumbnail: (imgs[0] as { thumbnail?: string }).thumbnail })}>
+                              <img src={imgs[0].url} alt="" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                            </button>
                           );
                         }
                       }
@@ -495,9 +496,13 @@ const PublicationDetails: React.FC = () => {
                           {slice.map((m) => (
                             <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
                               {m.type === 'video' ? (
-                                <video controls playsInline preload="metadata" className="w-full rounded-lg border border-[var(--proto-border)] bg-black" poster={m.thumbnail || undefined} src={m.url} />
+                                <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-black overflow-hidden cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'video', url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail })}>
+                                  <video playsInline preload="metadata" className="w-full rounded-lg pointer-events-none" poster={(m as { thumbnail?: string }).thumbnail || undefined} src={m.url} />
+                                </button>
                               ) : m.type === 'audio' ? (
-                                <audio controls preload="metadata" className="w-full" src={m.url} />
+                                <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] p-3 cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'audio', url: m.url, name: (m as { name?: string }).name })}>
+                                  <audio preload="metadata" className="w-full pointer-events-none" src={m.url} />
+                                </button>
                               ) : (
                                 <a href={m.url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors">Открыть</a>
                               )}
@@ -517,8 +522,8 @@ const PublicationDetails: React.FC = () => {
                   <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
                     <div ref={photoScrollerRef} className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }} onScroll={() => { const el = photoScrollerRef.current; if (!el) return; if (rafScrollRef.current != null) cancelAnimationFrame(rafScrollRef.current); rafScrollRef.current = requestAnimationFrame(() => { const w = el.clientWidth || 1; const next = Math.max(0, Math.min(photoItems.length - 1, Math.round(el.scrollLeft / w))); setPhotoIdx(next); }); }}>
                       {photoItems.map((m) => (
-                        <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)]">
-                          <img src={m.url} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                        <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)] cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail })}>
+                          <img src={m.url} alt="" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                         </div>
                       ))}
                     </div>
@@ -532,13 +537,13 @@ const PublicationDetails: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
+                  <button type="button" className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full text-left cursor-pointer" onClick={() => mainPhoto.src && setFullscreenMedia({ type: 'photo', url: mainPhoto.src })}>
                     {mainPhoto.src ? (
-                      <img src={mainPhoto.src} alt="" className="w-full h-full object-cover" style={{ objectPosition: mainPhoto.objectPosition }} onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                      <img src={mainPhoto.src} alt="" className="w-full h-full object-cover pointer-events-none" style={{ objectPosition: mainPhoto.objectPosition }} onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
                     ) : (
-                      <img src={getPrototypePublicationPhotoByTopic(pub.topicTag).src} alt="" className="w-full h-full object-cover" />
+                      <img src={getPrototypePublicationPhotoByTopic(pub.topicTag).src} alt="" className="w-full h-full object-cover pointer-events-none" />
                     )}
-                  </div>
+                  </button>
                 )}
                 {otherMedia.length > 0 && (
                   <div>
@@ -548,7 +553,17 @@ const PublicationDetails: React.FC = () => {
                         <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
                           <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
                           <p className="text-xs text-[var(--proto-text-muted)] mb-2">{m.type}</p>
-                          {m.type === 'video' ? <video controls playsInline preload="metadata" className="w-full rounded-lg border border-[var(--proto-border)] bg-black" poster={m.thumbnail || undefined} src={m.url} /> : m.type === 'audio' ? <audio controls preload="metadata" className="w-full" src={m.url} /> : <a href={m.url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors">Открыть</a>}
+                          {m.type === 'video' ? (
+                            <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-black overflow-hidden cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'video', url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail })}>
+                              <video playsInline preload="metadata" className="w-full rounded-lg pointer-events-none" poster={(m as { thumbnail?: string }).thumbnail || undefined} src={m.url} />
+                            </button>
+                          ) : m.type === 'audio' ? (
+                            <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] p-3 cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'audio', url: m.url, name: (m as { name?: string }).name })}>
+                              <audio preload="metadata" className="w-full pointer-events-none" src={m.url} />
+                            </button>
+                          ) : (
+                            <a href={m.url} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center w-full rounded-lg h-10 px-4 text-sm font-medium border border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors">Открыть</a>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -925,6 +940,40 @@ const PublicationDetails: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {fullscreenMedia && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4"
+          onClick={() => setFullscreenMedia(null)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Escape' && setFullscreenMedia(null)}
+          aria-label="Закрыть"
+        >
+          <button
+            type="button"
+            className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30"
+            onClick={(e) => { e.stopPropagation(); setFullscreenMedia(null); }}
+            aria-label="Закрыть"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <div className="w-full max-w-4xl max-h-[calc(100dvh-5rem)] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {fullscreenMedia.type === 'photo' && (
+              <img src={fullscreenMedia.url} alt="" className="max-w-full max-h-full object-contain" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+            )}
+            {fullscreenMedia.type === 'video' && (
+              <video controls playsInline autoPlay className="max-w-full max-h-full w-full rounded-lg bg-black" src={fullscreenMedia.url} poster={fullscreenMedia.thumbnail} />
+            )}
+            {fullscreenMedia.type === 'audio' && (
+              <div className="w-full max-w-md rounded-2xl bg-white/10 p-6">
+                <p className="text-sm text-white/80 mb-4 truncate">{fullscreenMedia.name || 'Аудио'}</p>
+                <audio controls autoPlay className="w-full" src={fullscreenMedia.url} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
