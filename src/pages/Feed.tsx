@@ -465,29 +465,29 @@ const Feed: React.FC = () => {
       </div>
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl bg-white border-gray-200 dark:bg-stone-900 dark:border-stone-700">
+        <SheetContent side="bottom" className="rounded-t-3xl bg-[#F0EDE8] border-[#E5E1DC]">
           <SheetHeader>
-            <SheetTitle className="text-gray-900 dark:text-stone-100 font-semibold">Фильтры</SheetTitle>
+            <SheetTitle className="text-[#333333] font-semibold">Фильтры</SheetTitle>
           </SheetHeader>
           <div className="mt-4 space-y-2">
             <button
               type="button"
               onClick={() => setFilter(null)}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${!filterParam ? 'bg-[var(--proto-active)] text-white' : 'bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-600 text-gray-900 dark:text-stone-100'}`}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${!filterParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
             >
               Все
             </button>
             <button
               type="button"
               onClick={() => setFilter('with-me')}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'with-me' ? 'bg-[var(--proto-active)] text-white' : 'bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-600 text-gray-900 dark:text-stone-100'}`}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'with-me' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
             >
               Со мной
             </button>
             <button
               type="button"
               onClick={() => setFilter('important')}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'important' ? 'bg-[var(--proto-active)] text-white' : 'bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-600 text-gray-900 dark:text-stone-100'}`}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'important' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
             >
               Важные
             </button>

@@ -136,6 +136,7 @@
   --proto-bg: #F8F5F1;
   --proto-card: #F0EDE8;
   --proto-active: #A39B8A;
+  --proto-selected: #5D4B34;
   --proto-text: #333333;
   --proto-text-muted: #6B6560;
   --proto-border: #E5E1DC;
@@ -145,6 +146,7 @@
   --proto-bg: #1C1917;
   --proto-card: #292524;
   --proto-active: #A39B8A;
+  --proto-selected: #78716C;
   --proto-text: #FAFAF9;
   --proto-text-muted: #A8A29E;
   --proto-border: #44403C;

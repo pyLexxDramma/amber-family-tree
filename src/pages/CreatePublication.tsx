@@ -1060,9 +1060,9 @@ const CreatePublication: React.FC = () => {
                 </p>
               </button>
               <Sheet open={visibilityOpen} onOpenChange={setVisibilityOpen}>
-                <SheetContent side="bottom" className="rounded-t-3xl">
+                <SheetContent side="bottom" className="rounded-t-3xl bg-[var(--proto-card)] border-[var(--proto-border)]">
                   <SheetHeader>
-                    <SheetTitle>Видимость публикации</SheetTitle>
+                    <SheetTitle className="text-[var(--proto-text)]">Видимость публикации</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6 flex flex-col gap-2">
                     {[
@@ -1074,9 +1074,9 @@ const CreatePublication: React.FC = () => {
                         key={opt.id}
                         type="button"
                         onClick={() => { setVisibility(opt.id); setVisibilityOpen(false); }}
-                        className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left ${visibility === opt.id ? 'border-[var(--proto-active)] bg-[var(--proto-active)]/10' : 'border-[var(--proto-border)]'}`}
+                        className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left ${visibility === opt.id ? 'border-[var(--proto-selected)] bg-[var(--proto-selected)] text-white' : 'border-[var(--proto-border)] bg-[var(--proto-bg)] text-[var(--proto-text)]'}`}
                       >
-                        <opt.icon className="h-5 w-5 text-[var(--proto-active)]" />
+                        <opt.icon className="h-5 w-5 shrink-0" />
                         <span className="font-medium">{opt.label}</span>
                       </button>
                     ))}
