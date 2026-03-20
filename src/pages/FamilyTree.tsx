@@ -74,7 +74,7 @@ const FamilyTree: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [depth, setDepth] = useState(2);
   const [zoom, setZoom] = useState(100);
-  const [treeMode, setTreeMode] = useState<'ancestors' | 'all'>('ancestors');
+  const [treeMode, setTreeMode] = useState<'ancestors' | 'all'>('all');
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState<SelectMode | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string>('');
