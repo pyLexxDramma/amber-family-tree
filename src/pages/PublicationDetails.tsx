@@ -332,6 +332,8 @@ const PublicationDetails: React.FC = () => {
       const updated = await api.feed.addLike(pub.id);
       setPub(updated);
       setLikesCountUi((updated.likes ?? []).length);
+      try { sessionStorage.setItem('angelo:feed-invalidate', '1'); } catch {}
+      window.dispatchEvent(new CustomEvent('angelo:feed-invalidate'));
       if (effectiveMemberId) {
         const myCount = (updated.likes ?? []).filter(id => id === effectiveMemberId).length;
         setMyLikesCountUi(myCount);
@@ -477,6 +479,8 @@ const PublicationDetails: React.FC = () => {
       }
       const updated = await api.feed.addMediaLike(pub.id, mediaId);
       setPub(updated);
+      try { sessionStorage.setItem('angelo:feed-invalidate', '1'); } catch {}
+      window.dispatchEvent(new CustomEvent('angelo:feed-invalidate'));
       setAnimatedMediaLikeId(mediaId);
       setTimeout(() => setAnimatedMediaLikeId((prev) => (prev === mediaId ? null : prev)), 380);
       setFullscreenMedia(prev => {

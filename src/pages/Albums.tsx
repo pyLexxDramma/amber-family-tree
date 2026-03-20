@@ -31,8 +31,29 @@ const Albums: React.FC = () => {
   const navigate = useNavigate();
   const [pubs, setPubs] = useState<Publication[]>([]);
 
+  const loadPubs = () => api.feed.list().then(setPubs);
+
   useEffect(() => {
-    api.feed.list().then(setPubs);
+    loadPubs();
+  }, []);
+
+  useEffect(() => {
+    const onInvalidate = () => loadPubs();
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) loadPubs();
+    };
+    try {
+      if (sessionStorage.getItem('angelo:feed-invalidate')) {
+        sessionStorage.removeItem('angelo:feed-invalidate');
+        loadPubs();
+      }
+    } catch {}
+    window.addEventListener('angelo:feed-invalidate', onInvalidate);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('angelo:feed-invalidate', onInvalidate);
+      window.removeEventListener('pageshow', onPageShow);
+    };
   }, []);
 
   const defs: AlbumDef[] = useMemo(() => ([

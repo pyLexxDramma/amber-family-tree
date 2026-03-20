@@ -98,6 +98,26 @@ const Feed: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const refetch = () => loadData();
+    const onInvalidate = () => refetch();
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) refetch();
+    };
+    try {
+      if (sessionStorage.getItem('angelo:feed-invalidate')) {
+        sessionStorage.removeItem('angelo:feed-invalidate');
+        refetch();
+      }
+    } catch {}
+    window.addEventListener('angelo:feed-invalidate', onInvalidate);
+    window.addEventListener('pageshow', onPageShow);
+    return () => {
+      window.removeEventListener('angelo:feed-invalidate', onInvalidate);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, []);
+
+  useEffect(() => {
     if (viewParam === 'media' || viewParam === 'posts') setViewMode(viewParam);
   }, [viewParam]);
 
