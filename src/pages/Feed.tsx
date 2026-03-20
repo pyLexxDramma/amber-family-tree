@@ -561,7 +561,7 @@ const Feed: React.FC = () => {
           {(viewMode === 'media' ? mediaTilesWithDemo.length === 0 : list.length === 0) && (
             <div className="text-center py-12">
               <p className="text-[var(--proto-text-muted)] text-sm mb-4">
-                {searchQuery.trim() ? 'Ничего не найдено' : viewMode === 'media' ? 'Нет фото' : 'Нет публикаций'}
+                {searchQuery.trim() ? 'Ничего не найдено' : 'Создайте первую историю'}
               </p>
             </div>
           )}
