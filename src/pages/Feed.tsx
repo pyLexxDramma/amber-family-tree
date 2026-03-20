@@ -163,6 +163,8 @@ const Feed: React.FC = () => {
         url: getPrototypePublicationPhotoBySeed(p.id, i).src,
         thumbnail: undefined as string | undefined,
         photosCount: 0,
+        likesCount: (p.likes ?? []).length,
+        myLikesCount: 0,
       }));
 
   const monthLabel = (iso: string) => {
@@ -449,19 +451,17 @@ const Feed: React.FC = () => {
                       {t.photosCount}
                     </div>
                   )}
-                  {!!(t.likesCount && t.likesCount > 0) && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!selectionMode) toggleTileLike(t);
-                      }}
-                      className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
-                    >
-                      <Heart className={`h-3 w-3 ${(animatedLikeIds.has(t.mediaId) ? 'animate-pulse' : '')}`} fill={(t.myLikesCount ?? 0) > 0 ? 'currentColor' : 'none'} />
-                      {t.likesCount}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!selectionMode) toggleTileLike(t);
+                    }}
+                    className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                  >
+                    <Heart className={`h-3 w-3 ${(animatedLikeIds.has(t.mediaId) ? 'animate-pulse' : '')}`} fill={(t.myLikesCount ?? 0) > 0 ? 'currentColor' : 'none'} />
+                    {t.likesCount ?? 0}
+                  </button>
                   {selectionMode && (
                     <div className="absolute top-2 right-2">
                       {selectedIds.has(t.mediaId) ? (

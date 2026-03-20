@@ -12,7 +12,7 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { ChevronLeft, ChevronRight, Heart, MoreVertical, Star, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Star, X } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
@@ -142,6 +142,7 @@ const PublicationDetails: React.FC = () => {
   const [animatedMediaLikeId, setAnimatedMediaLikeId] = useState<string | null>(null);
   const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'photo' | 'video' | 'audio'; items: { id?: string; url: string; thumbnail?: string; name?: string; likes?: string[] }[]; index: number } | null>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
   const mentionHandleToMemberId = useMemo(() => {
     const map = new Map<string, string>();
@@ -515,11 +516,6 @@ const PublicationDetails: React.FC = () => {
           title={demo && pub.type === 'photo' ? 'Фотография' : 'Публикация'}
           onBack={() => navigate(-1)}
           light
-          right={
-            <button type="button" className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors" aria-label="Ещё">
-              <MoreVertical className="h-5 w-5" />
-            </button>
-          }
         />
 
         <div className="mx-auto max-w-full px-3 pt-2 pb-6 space-y-4 overflow-auto flex-1 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
@@ -1182,10 +1178,19 @@ const PublicationDetails: React.FC = () => {
         const hasNext = index < items.length - 1;
         const goPrev = () => hasPrev && setFullscreenMedia(f => f ? { ...f, index: f.index - 1 } : null);
         const goNext = () => hasNext && setFullscreenMedia(f => f ? { ...f, index: f.index + 1 } : null);
+        const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+        const onTouchEnd = (e: React.TouchEvent) => {
+          const x = touchStartX.current;
+          touchStartX.current = null;
+          if (x == null || items.length <= 1) return;
+          const dx = e.changedTouches[0].clientX - x;
+          if (dx < -50) goNext();
+          else if (dx > 50) goPrev();
+        };
         return (
           <div
             ref={fullscreenRef}
-            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 outline-none"
+            className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 outline-none touch-none"
             onClick={() => setFullscreenMedia(null)}
             role="button"
             tabIndex={0}
@@ -1194,6 +1199,8 @@ const PublicationDetails: React.FC = () => {
               else if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
               else if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
             }}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
             aria-label="Закрыть"
           >
             <button
@@ -1234,20 +1241,6 @@ const PublicationDetails: React.FC = () => {
                 >
                   Скачать
                 </button>
-              </div>
-            )}
-            {canLikeMedia && current?.id && (
-              <div className="mt-4 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => addMediaLike(current.id as string)}
-                  disabled={!myMemberId}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white text-sm hover:bg-white/25 transition-colors disabled:opacity-40"
-                >
-                  <Heart className={`h-4 w-4 ${(animatedMediaLikeId === current.id ? 'animate-pulse' : '')}`} fill={myMediaLikeCount > 0 ? 'currentColor' : 'none'} />
-                  {mediaLikeCount}
-                </button>
-                <span className="text-xs text-white/80">ваш лайк: {myMediaLikeCount}/3</span>
               </div>
             )}
           </div>

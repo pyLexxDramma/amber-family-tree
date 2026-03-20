@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
@@ -16,6 +17,7 @@ type AlbumView = {
   id: string;
   title: string;
   photoCount: number;
+  likesCount: number;
   coverUrl: string | null;
   topicTag: string;
 };
@@ -48,7 +50,9 @@ const Albums: React.FC = () => {
       const photos = matched.flatMap(p => p.media.filter(m => m.type === 'photo'));
       const cover = matched.map(photoCoverOf).find(Boolean) || null;
       const firstPub = matched.find(p => photoCoverOf(p));
-      return { id: d.id, title: d.title, photoCount: photos.length, coverUrl: cover, topicTag: firstPub?.topicTag || '' };
+      const likesCount = matched.reduce((sum, p) => sum + (p.likes ?? []).length, 0)
+        + photos.reduce((sum, m) => sum + ((m as { likes?: string[] }).likes ?? []).length, 0);
+      return { id: d.id, title: d.title, photoCount: photos.length, likesCount, coverUrl: cover, topicTag: firstPub?.topicTag || '' };
     });
   }, [defs, pubs]);
 
@@ -72,9 +76,15 @@ const Albums: React.FC = () => {
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(a.topicTag).src; }}
                   />
-                  <span className="absolute bottom-2 right-2 px-2 py-1 rounded-lg text-xs font-medium bg-black/55 text-white">
-                    {a.photoCount} фото
-                  </span>
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-black/55 text-white">
+                      <Heart className="h-3 w-3" fill="currentColor" />
+                      {a.likesCount}
+                    </span>
+                    <span className="px-2 py-1 rounded-lg text-xs font-medium bg-black/55 text-white">
+                      {a.photoCount} фото
+                    </span>
+                  </div>
                 </div>
                 <p className="mt-2 text-sm font-semibold text-[var(--proto-text)] line-clamp-1">{a.title}</p>
               </button>

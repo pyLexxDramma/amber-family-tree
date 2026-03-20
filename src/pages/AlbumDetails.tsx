@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { AppLayout } from '@/components/AppLayout';
 import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
@@ -76,6 +77,10 @@ const AlbumDetails: React.FC = () => {
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(p.topicTag).src; }}
                   />
+                  <span className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-black/55 text-white">
+                    <Heart className="h-3 w-3" fill="currentColor" />
+                    {(p.likes ?? []).length}
+                  </span>
                 </button>
               );
             })}
