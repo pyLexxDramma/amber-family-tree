@@ -1,23 +1,14 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TreeDeciduous, Image as ImageIcon, Plus, Users, Home, User, Clock, Store } from 'lucide-react';
+import { TreeDeciduous, Image as ImageIcon, Plus, Users, Store } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
-import { isDemoMode } from '@/lib/demoMode';
 
-const classicNavItems = [
+const mainNavItems = [
   { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
   { path: ROUTES.classic.feed, label: 'Лента', icon: ImageIcon },
   { path: ROUTES.classic.create, label: 'Создать', icon: Plus },
   { path: ROUTES.classic.family, label: 'Семья', icon: Users },
   { path: ROUTES.classic.store, label: 'Магазин', icon: Store },
-];
-
-const demoNavItems = [
-  { path: ROUTES.classic.feed, label: 'Главная', icon: Home },
-  { path: ROUTES.classic.timeline, label: 'Таймлайн', icon: Clock },
-  { path: ROUTES.classic.create, label: 'Добавить', icon: Plus },
-  { path: ROUTES.classic.tree, label: 'Дерево', icon: TreeDeciduous },
-  { path: ROUTES.classic.myProfile, label: 'Профиль', icon: User },
 ];
 
 const prototypePaths = [
@@ -37,14 +28,13 @@ export const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isPrototype = prototypePaths.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
-  const navItems = isDemoMode() ? demoNavItems : classicNavItems;
 
   return (
     <nav className={`app-bottom-nav fixed bottom-0 left-0 right-0 z-50 border-t safe-area-pb ${isPrototype ? 'app-bottom-nav--prototype bg-[var(--proto-card)] border-[var(--proto-border)]' : 'bg-card border-border'}`}
       style={isPrototype ? { ['--proto-card' as string]: '#F0EDE8', ['--proto-border' as string]: '#E5E1DC', ['--proto-active' as string]: '#A39B8A', ['--proto-text-muted' as string]: '#6B6560' } : undefined}
     >
       <div className="mx-auto flex max-w-md items-center justify-around py-2 px-2">
-        {navItems.map(item => {
+        {mainNavItems.map(item => {
           const active = location.pathname === item.path || (item.path !== ROUTES.classic.create && location.pathname.startsWith(item.path));
           const isCreate = item.path === ROUTES.classic.create;
           const Icon = item.icon;
