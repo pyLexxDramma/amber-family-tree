@@ -8,7 +8,7 @@ import { api } from '@/integrations/api';
 import { isDemoMode } from '@/lib/demoMode';
 import { getMilestoneIds } from '@/lib/milestones';
 import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
-import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown, Images } from 'lucide-react';
+import { Search, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown, Images } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -471,17 +471,6 @@ const Feed: React.FC = () => {
                       {t.photosCount}
                     </div>
                   )}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!selectionMode) toggleTileLike(t);
-                    }}
-                    className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
-                  >
-                    <Heart className={`h-3 w-3 ${(animatedLikeIds.has(t.mediaId) ? 'animate-pulse' : '')}`} fill={(t.myLikesCount ?? 0) > 0 ? 'currentColor' : 'none'} />
-                    {t.likesCount ?? 0}
-                  </button>
                   {selectionMode && (
                     <div className="absolute top-2 right-2">
                       {selectedIds.has(t.mediaId) ? (
@@ -556,10 +545,6 @@ const Feed: React.FC = () => {
                                 <p className="text-sm font-semibold text-[var(--proto-text)]">{memberDisplayName(author)}</p>
                                 <p className="text-xs text-[var(--proto-text-muted)] mt-0.5">{eventDateOf(pub)}</p>
                                 <div className="flex items-center gap-4 text-sm text-[var(--proto-text-muted)] mt-3">
-                                  <span className="inline-flex items-center gap-1">
-                                    <Heart className="h-4 w-4" />
-                                    {(pub.likes ?? []).length}
-                                  </span>
                                   <span className="inline-flex items-center gap-1">
                                     <MessageCircle className="h-4 w-4" />
                                     {(pub.comments ?? []).length}
