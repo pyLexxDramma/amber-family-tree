@@ -56,6 +56,8 @@ VITE_DEMO_MOCK_DATA=true VITE_USE_MOCK_API=false npm run dev
 
 Для продакшена на Fornex `VITE_DEMO_MOCK_DATA` не задавать (или `false`).
 
+Эталонный вход (`alina.fadeeva@angelo-demo.ru`) на сервере по умолчанию идёт в **реальный API**; лента заполняется с бэкенда. Чтобы после такого входа **локально** снова включать мок-UI: `VITE_REFERENCE_DEMO_UI=true`.
+
 ### Стресс-тест (много фото и членов семьи)
 
 ```bash

@@ -5,6 +5,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
 import { ApiError } from '@/integrations/request';
+import { isReferenceDemoEmail, useMockUiAfterReferenceLogin } from '@/constants/reference-profile';
 import { setDemoMode } from '@/lib/demoMode';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
@@ -31,9 +32,13 @@ const ConfirmCode: React.FC = () => {
     try {
       const res = await api.auth.verify(contact, code);
       localStorage.setItem('token', res.access_token);
-      setDemoMode(false);
-      if (mode === 'register') navigate('/onboarding');
-      else navigate(ROUTES.classic.tree);
+      if (mode === 'register') {
+        setDemoMode(false);
+        navigate('/onboarding');
+      } else {
+        setDemoMode(isReferenceDemoEmail(contact) && useMockUiAfterReferenceLogin());
+        navigate(ROUTES.classic.tree);
+      }
     } catch (e) {
       const msg = e instanceof ApiError
         ? (e.status === 404 || e.status === 502 ? 'Сервер недоступен. Проверьте бэкенд и nginx.' : e.status >= 500 ? `Ошибка сервера ${e.status}. Проверьте логи бэкенда.` : `Ошибка ${e.status}`)

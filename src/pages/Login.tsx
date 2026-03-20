@@ -6,10 +6,8 @@ import { ArrowLeft } from 'lucide-react';
 import { api } from '@/integrations/api';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { ROUTES } from '@/constants/routes';
+import { REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE, useMockUiAfterReferenceLogin } from '@/constants/reference-profile';
 import { setDemoMode } from '@/lib/demoMode';
-
-const REFERENCE_EMAIL = 'alina.fadeeva@angelo-demo.ru';
-const REFERENCE_CODE = '000000';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -41,10 +39,11 @@ const Login: React.FC = () => {
   const handleTestProfileLogin = async () => {
     setIsTestLogin(true);
     setError('');
+    setDemoMode(false);
     try {
-      const res = await api.auth.verify(REFERENCE_EMAIL, REFERENCE_CODE);
+      const res = await api.auth.verify(REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE);
       localStorage.setItem('token', res.access_token);
-      setDemoMode(false);
+      setDemoMode(useMockUiAfterReferenceLogin());
       navigate(ROUTES.classic.feed);
     } catch {
       setError('Не удалось войти в тестовый профиль');

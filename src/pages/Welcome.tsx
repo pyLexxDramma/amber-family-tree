@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE, useMockUiAfterReferenceLogin } from '@/constants/reference-profile';
 import { setDemoMode } from '@/lib/demoMode';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { api } from '@/integrations/api';
@@ -26,9 +27,6 @@ const INTRO_SLIDES = [
     iconSrc: sparklesIcon,
   },
 ] as const;
-
-const REFERENCE_EMAIL = 'alina.fadeeva@angelo-demo.ru';
-const REFERENCE_CODE = '000000';
 
 const Welcome: React.FC = () => {
   const navigate = useNavigate();
@@ -64,11 +62,12 @@ const Welcome: React.FC = () => {
   const handleTestProfileLogin = async () => {
     setDemoMode(false);
     try {
-      const res = await api.auth.verify(REFERENCE_EMAIL, REFERENCE_CODE);
+      const res = await api.auth.verify(REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE);
       localStorage.setItem('token', res.access_token);
+      setDemoMode(useMockUiAfterReferenceLogin());
       navigate(ROUTES.classic.feed);
     } catch {
-      navigate('/login', { state: { prefill: REFERENCE_EMAIL } });
+      navigate('/login', { state: { prefill: REFERENCE_DEMO_EMAIL } });
     }
   };
 
