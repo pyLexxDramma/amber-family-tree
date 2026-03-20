@@ -22,7 +22,7 @@ const publishDateOf = (p: Publication) => (p as { publishDate?: string; publish_
 const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?: string }).eventDate ?? (p as { event_date?: string }).event_date ?? (publishDateOf(p) ? publishDateOf(p).slice(0, 10) : '');
 
 type ViewMode = 'media' | 'posts';
-type SortOrder = 'new' | 'old';
+type SortMode = 'event-new' | 'event-old' | 'publish-new';
 
 type MediaTile = { pubId: string; mediaId: string; url: string; thumbnail?: string; photosCount?: number; likesCount?: number; myLikesCount?: number };
 
@@ -32,6 +32,9 @@ const Feed: React.FC = () => {
   const filterParam = searchParams.get('filter');
   const authorParam = searchParams.get('author');
   const withParam = searchParams.get('with');
+  const tagParam = searchParams.get('tag');
+  const placeParam = searchParams.get('place');
+  const unreadParam = searchParams.get('unread');
   const viewParam = searchParams.get('view');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -39,7 +42,8 @@ const Feed: React.FC = () => {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('media');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('new');
+  const [sortMode, setSortMode] = useState<SortMode>('event-new');
+  const [sortOpen, setSortOpen] = useState(false);
   const [gridCols, setGridCols] = useState<1 | 3 | 5>(3);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -116,14 +120,22 @@ const Feed: React.FC = () => {
   if (filterParam === 'important') filtered = filtered.filter(p => milestoneIds.includes(p.id));
   if (authorParam) filtered = filtered.filter(p => authorIdOf(p) === authorParam);
   if (withParam) filtered = filtered.filter(p => participantIdsOf(p).includes(withParam));
+  if (tagParam) filtered = filtered.filter(p => (p.topicTag || '').trim() === tagParam);
+  if (placeParam) filtered = filtered.filter(p => (p.place || '').trim() === placeParam);
+  if (unreadParam === '1') filtered = filtered.filter(p => !p.isRead);
   const list = searchQuery.trim()
     ? filtered.filter(p => (p.title || p.text).toLowerCase().includes(searchQuery.toLowerCase()))
     : filtered;
 
   const sorted = [...list].sort((a, b) => {
-    const da = publishDateOf(a) || '';
-    const db = publishDateOf(b) || '';
-    return sortOrder === 'new' ? db.localeCompare(da) : da.localeCompare(db);
+    if (sortMode === 'publish-new') {
+      const da = publishDateOf(a) || '';
+      const db = publishDateOf(b) || '';
+      return db.localeCompare(da);
+    }
+    const da = eventDateOf(a) || '';
+    const db = eventDateOf(b) || '';
+    return sortMode === 'event-new' ? db.localeCompare(da) : da.localeCompare(db);
   });
 
   const mediaTiles: MediaTile[] = sorted
@@ -228,6 +240,38 @@ const Feed: React.FC = () => {
     setFiltersOpen(false);
   };
 
+  const clearAllFilters = () => {
+    searchParams.delete('filter');
+    searchParams.delete('author');
+    searchParams.delete('with');
+    searchParams.delete('tag');
+    searchParams.delete('place');
+    searchParams.delete('unread');
+    setSearchParams(searchParams);
+  };
+
+  const setQueryFilter = (key: 'author' | 'with' | 'tag' | 'place' | 'unread', value: string | null) => {
+    if (!value) searchParams.delete(key);
+    else searchParams.set(key, value);
+    setSearchParams(searchParams);
+  };
+
+  const toggleUnread = () => {
+    setQueryFilter('unread', unreadParam === '1' ? null : '1');
+  };
+
+  const sortModeLabel =
+    sortMode === 'event-new'
+      ? 'По дате события: новые'
+      : sortMode === 'event-old'
+        ? 'По дате события: старые'
+        : 'По дате публикации: новые';
+
+  const uniqueAuthorIds = Array.from(new Set(items.map(p => authorIdOf(p)).filter((id): id is string => !!id))).filter(id => memberMap.has(id));
+  const uniqueParticipantIds = Array.from(new Set(items.flatMap(p => participantIdsOf(p)))).filter(id => memberMap.has(id));
+  const uniqueTags = Array.from(new Set(items.map(p => (p.topicTag || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'ru-RU'));
+  const uniquePlaces = Array.from(new Set(items.map(p => (p.place || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'ru-RU'));
+
   const gridClass = gridCols === 1 ? 'grid-cols-1' : gridCols === 3 ? 'grid-cols-3' : 'grid-cols-5';
 
   const hasFilteredView = !!(authorParam || withParam || filterParam === 'with-me');
@@ -300,17 +344,19 @@ const Feed: React.FC = () => {
             <div className="flex items-center gap-2 flex-1 flex-wrap min-w-0">
               <button
                 type="button"
-                onClick={() => setSortOrder(s => s === 'new' ? 'old' : 'new')}
+                onClick={() => setSortOpen(true)}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] text-sm font-medium text-[var(--proto-text)] hover:border-[var(--proto-active)]/40 transition-colors"
               >
-                {sortOrder === 'new' ? 'Сначала новые' : 'Сначала старые'}
-                <ChevronDown className={`h-4 w-4 transition-transform ${sortOrder === 'old' ? 'rotate-180' : ''}`} />
+                {sortModeLabel}
+                <ChevronDown className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setFiltersOpen(true)}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${
-                  filterParam ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]' : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/40'
+                  (filterParam || authorParam || withParam || tagParam || placeParam || unreadParam === '1')
+                    ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]'
+                    : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/40'
                 }`}
               >
                 <Filter className="h-4 w-4" />
@@ -527,7 +573,7 @@ const Feed: React.FC = () => {
           <SheetHeader>
             <SheetTitle className="text-[#333333] font-semibold">Фильтры</SheetTitle>
           </SheetHeader>
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-2 pb-24">
             <button
               type="button"
               onClick={() => setFilter(null)}
@@ -548,6 +594,142 @@ const Feed: React.FC = () => {
               className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'important' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
             >
               Важные
+            </button>
+          </div>
+          <div className="mt-5 space-y-2">
+            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Автор</p>
+            <button
+              type="button"
+              onClick={() => setQueryFilter('author', null)}
+              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!authorParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              Все
+            </button>
+            {uniqueAuthorIds.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setQueryFilter('author', authorParam === id ? null : id)}
+                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${authorParam === id ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+              >
+                {memberDisplayName(memberMap.get(id) ?? null)}
+              </button>
+            ))}
+          </div>
+          <div className="mt-5 space-y-2">
+            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Участник</p>
+            <button
+              type="button"
+              onClick={() => setQueryFilter('with', null)}
+              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!withParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              Все
+            </button>
+            {uniqueParticipantIds.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setQueryFilter('with', withParam === id ? null : id)}
+                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${withParam === id ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+              >
+                {memberDisplayName(memberMap.get(id) ?? null)}
+              </button>
+            ))}
+          </div>
+          <div className="mt-5 space-y-2">
+            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Тег темы</p>
+            <button
+              type="button"
+              onClick={() => setQueryFilter('tag', null)}
+              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!tagParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              Все
+            </button>
+            {uniqueTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setQueryFilter('tag', tagParam === tag ? null : tag)}
+                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${tagParam === tag ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+          <div className="mt-5 space-y-2">
+            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Место</p>
+            <button
+              type="button"
+              onClick={() => setQueryFilter('place', null)}
+              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!placeParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              Все
+            </button>
+            {uniquePlaces.map((place) => (
+              <button
+                key={place}
+                type="button"
+                onClick={() => setQueryFilter('place', placeParam === place ? null : place)}
+                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${placeParam === place ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+              >
+                {place}
+              </button>
+            ))}
+          </div>
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={toggleUnread}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${unreadParam === '1' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              Непрочитанные
+            </button>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 p-4 bg-[#F0EDE8] border-t border-[#E5E1DC] flex items-center gap-2">
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="px-4 py-3 rounded-xl text-sm font-medium bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]"
+            >
+              Сбросить
+            </button>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+              className="flex-1 px-4 py-3 rounded-xl text-sm font-medium bg-[#5D4B34] text-white"
+            >
+              Показать ленту
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={sortOpen} onOpenChange={setSortOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl bg-[#F0EDE8] border-[#E5E1DC]">
+          <SheetHeader>
+            <SheetTitle className="text-[#333333] font-semibold">Сортировка</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-2">
+            <button
+              type="button"
+              onClick={() => { setSortMode('event-new'); setSortOpen(false); }}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${sortMode === 'event-new' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              По дате события: новые
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSortMode('event-old'); setSortOpen(false); }}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${sortMode === 'event-old' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              По дате события: старые
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSortMode('publish-new'); setSortOpen(false); }}
+              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${sortMode === 'publish-new' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+            >
+              По дате публикации: новые
             </button>
           </div>
         </SheetContent>
