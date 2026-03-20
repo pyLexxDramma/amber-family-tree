@@ -44,7 +44,7 @@ const Login: React.FC = () => {
       const res = await api.auth.verify(REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE);
       localStorage.setItem('token', res.access_token);
       setDemoMode(useMockUiAfterReferenceLogin());
-      navigate(ROUTES.classic.feed);
+      navigate(ROUTES.classic.tree);
     } catch {
       setError('Не удалось войти в тестовый профиль');
     } finally {

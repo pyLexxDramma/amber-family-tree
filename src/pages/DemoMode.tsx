@@ -29,7 +29,7 @@ const DemoMode: React.FC = () => {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => { setDemoMode(true); navigate(ROUTES.classic.feed); }}
+                onClick={() => { setDemoMode(true); navigate(ROUTES.classic.tree); }}
                 className="h-11 px-4 rounded-xl bg-[#A39B8A] text-white text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all"
               >
                 Войти в демо

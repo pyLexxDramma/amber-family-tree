@@ -62,7 +62,7 @@ const Onboarding: React.FC = () => {
         about: form.about.trim() || undefined,
         avatar: avatarUrl || undefined,
       });
-      navigate(ROUTES.classic.feed);
+      navigate(ROUTES.classic.tree);
     } catch {
       setErrors({ _save: 'Не удалось сохранить' });
     } finally {
