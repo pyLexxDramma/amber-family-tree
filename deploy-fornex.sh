@@ -8,8 +8,10 @@ PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 WEB_ROOT="${WEB_ROOT:-/var/www/angelo}"
 
 cd "$PROJECT_DIR"
-echo ">>> git pull"
-git pull
+BRANCH="${GIT_BRANCH:-main}"
+echo ">>> git sync origin/$BRANCH (сброс локальных коммитов на сервере)"
+git fetch origin
+git reset --hard "origin/$BRANCH"
 
 echo ">>> backend: docker compose up -d --build"
 cd backend

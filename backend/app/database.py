@@ -19,6 +19,7 @@ from app.models import (  # noqa: F401
     Comment,
     CommentLike,
     Like,
+    MediaLike,
     Invitation,
     Message,
     ContactRequest,

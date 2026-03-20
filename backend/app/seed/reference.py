@@ -1,12 +1,14 @@
 import logging
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.models.contact_request import ContactRequest
 from app.models.family_member import FamilyMember
 from app.models.media_item import MediaItem
+from app.models.message import Message
 from app.models.publication import Publication
 from app.models.user import User
 
@@ -247,6 +249,12 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     existing_members = list(member_result.scalars().all())
 
     if force:
+        await db.execute(
+            delete(ContactRequest).where(ContactRequest.family_id == user.family_id)
+        )
+        await db.execute(
+            delete(Message).where(Message.family_id == user.family_id)
+        )
         for p in pub_list:
             await db.delete(p)
         for m in existing_members:

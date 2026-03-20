@@ -39,6 +39,8 @@ export interface FeedApi {
   removeLike(publicationId: string): Promise<Publication>;
   addCommentLike(publicationId: string, commentId: string): Promise<Comment>;
   removeCommentLike(publicationId: string, commentId: string): Promise<Comment>;
+  addMediaLike(publicationId: string, mediaId: string): Promise<Publication>;
+  removeMediaLike(publicationId: string, mediaId: string): Promise<Publication>;
   updatePublication(
     publicationId: string,
     patch: {

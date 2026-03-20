@@ -74,6 +74,14 @@ export const realApi: AngeloApi = {
       const res = await requestJson<unknown>('DELETE', `/feed/${publicationId}/comments/${commentId}/like`);
       return normalizeComment(res);
     },
+    async addMediaLike(publicationId: string, mediaId: string) {
+      const res = await requestJson<unknown>('POST', `/feed/${publicationId}/media/${mediaId}/like`);
+      return normalizePublication(res);
+    },
+    async removeMediaLike(publicationId: string, mediaId: string) {
+      const res = await requestJson<unknown>('DELETE', `/feed/${publicationId}/media/${mediaId}/like`);
+      return normalizePublication(res);
+    },
     async updatePublication(
       publicationId: string,
       patch: {

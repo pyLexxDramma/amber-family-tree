@@ -42,6 +42,10 @@ export function normalizeFamilyMember(input: unknown): FamilyMember {
 
 export function normalizeMediaItem(input: unknown): MediaItem {
   const m = (input && typeof input === 'object' ? input as AnyRec : {}) as AnyRec;
+  const likesRaw = arr<any>(m.likes ?? []);
+  const likes = likesRaw
+    .map((x) => (typeof x === 'string' ? x : str((x as AnyRec)?.memberId ?? (x as AnyRec)?.member_id ?? (x as AnyRec)?.id ?? '')))
+    .filter(Boolean);
   return {
     id: str(m.id),
     type: str(m.type) as any,
@@ -56,6 +60,7 @@ export function normalizeMediaItem(input: unknown): MediaItem {
     year: optStr(m.year),
     category: optStr(m.category),
     publicationId: optStr(m.publicationId ?? m.publication_id),
+    likes,
   };
 }
 

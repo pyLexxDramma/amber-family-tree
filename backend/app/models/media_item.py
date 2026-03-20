@@ -31,3 +31,6 @@ class MediaItem(Base):
     publication: Mapped["Publication | None"] = relationship(
         "Publication", back_populates="media"
     )
+    media_likes: Mapped[list["MediaLike"]] = relationship(
+        "MediaLike", back_populates="media", cascade="all, delete-orphan"
+    )

@@ -65,6 +65,7 @@ const PublicationDetails: React.FC = () => {
   const [myMemberId, setMyMemberId] = useState<string | null>(null);
   const [likedUi, setLikedUi] = useState(false);
   const [likesCountUi, setLikesCountUi] = useState(0);
+  const [myLikesCountUi, setMyLikesCountUi] = useState(0);
   const likePendingRef = useRef(false);
   const photoScrollerRef = useRef<HTMLDivElement | null>(null);
   const rafScrollRef = useRef<number | null>(null);
@@ -90,7 +91,8 @@ const PublicationDetails: React.FC = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [milestone, setMilestone] = useState(false);
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'photo' | 'video' | 'audio'; items: { url: string; thumbnail?: string; name?: string }[]; index: number } | null>(null);
+  const [animatedMediaLikeId, setAnimatedMediaLikeId] = useState<string | null>(null);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'photo' | 'video' | 'audio'; items: { id?: string; url: string; thumbnail?: string; name?: string; likes?: string[] }[]; index: number } | null>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
@@ -119,8 +121,14 @@ const PublicationDetails: React.FC = () => {
     if (!pub) return;
     if (likePendingRef.current) return;
     setLikesCountUi((pub.likes ?? []).length);
-    if (!myMemberId) return;
-    setLikedUi((pub.likes ?? []).includes(myMemberId));
+    if (!myMemberId) {
+      setMyLikesCountUi(0);
+      setLikedUi(false);
+      return;
+    }
+    const myCount = (pub.likes ?? []).filter(id => id === myMemberId).length;
+    setMyLikesCountUi(myCount);
+    setLikedUi(myCount > 0);
   }, [myMemberId, pub]);
 
   useEffect(() => {
@@ -215,14 +223,22 @@ const PublicationDetails: React.FC = () => {
         toast({ title: 'Нужно войти, чтобы поставить лайк' });
         return;
       }
-      const nextLiked = !likedUi;
-      setLikedUi(nextLiked);
-      setLikesCountUi((c) => Math.max(0, c + (nextLiked ? 1 : -1)));
+      if (myLikesCountUi >= 3) {
+        toast({ title: 'Можно поставить не более 3 лайков' });
+        return;
+      }
+      setLikedUi(true);
+      setMyLikesCountUi((c) => Math.min(3, c + 1));
+      setLikesCountUi((c) => c + 1);
 
-      const updated = nextLiked ? await api.feed.addLike(pub.id) : await api.feed.removeLike(pub.id);
+      const updated = await api.feed.addLike(pub.id);
       setPub(updated);
       setLikesCountUi((updated.likes ?? []).length);
-      if (effectiveMemberId) setLikedUi((updated.likes ?? []).includes(effectiveMemberId));
+      if (effectiveMemberId) {
+        const myCount = (updated.likes ?? []).filter(id => id === effectiveMemberId).length;
+        setMyLikesCountUi(myCount);
+        setLikedUi(myCount > 0);
+      }
       platform.hapticFeedback('light');
     } catch {
       try {
@@ -352,6 +368,34 @@ const PublicationDetails: React.FC = () => {
     }
   };
 
+  const addMediaLike = async (mediaId: string) => {
+    if (!pub || !myMemberId) return;
+    try {
+      const media = (pub.media ?? []).find(m => m.id === mediaId);
+      const myLikesCount = (media?.likes ?? []).filter(id => id === myMemberId).length;
+      if (myLikesCount >= 3) {
+        toast({ title: 'Можно поставить не более 3 лайков' });
+        return;
+      }
+      const updated = await api.feed.addMediaLike(pub.id, mediaId);
+      setPub(updated);
+      setAnimatedMediaLikeId(mediaId);
+      setTimeout(() => setAnimatedMediaLikeId((prev) => (prev === mediaId ? null : prev)), 380);
+      setFullscreenMedia(prev => {
+        if (!prev) return prev;
+        const items = prev.items.map(it => {
+          if (it.id !== mediaId) return it;
+          const likes = (updated.media.find(m => m.id === mediaId)?.likes ?? []);
+          return { ...it, likes };
+        });
+        return { ...prev, items };
+      });
+      platform.hapticFeedback('light');
+    } catch {
+      toast({ title: 'Не удалось поставить лайк' });
+    }
+  };
+
   const scrollToPhoto = (idx: number) => {
     const el = photoScrollerRef.current;
     if (!el) return;
@@ -472,8 +516,21 @@ const PublicationDetails: React.FC = () => {
                                 }}
                               >
                                 {imgs.map((m, idx) => (
-                                  <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)] cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', items: imgs.map(x => ({ url: x.url, thumbnail: (x as { thumbnail?: string }).thumbnail })), index: idx })}>
+                                  <div key={m.id} className="relative w-full h-full shrink-0 snap-center bg-[var(--proto-border)] cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', items: imgs.map(x => ({ id: x.id, url: x.url, thumbnail: (x as { thumbnail?: string }).thumbnail, likes: x.likes ?? [] })), index: idx })}>
                                     <img src={m.url} alt="" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                                    {!!(m.likes && m.likes.length > 0) && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          addMediaLike(m.id);
+                                        }}
+                                        className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                                      >
+                                        <Heart className={`h-3.5 w-3.5 ${(animatedMediaLikeId === m.id ? 'animate-pulse' : '')}`} fill={myMemberId && m.likes.includes(myMemberId) ? 'currentColor' : 'none'} />
+                                        {m.likes.length}
+                                      </button>
+                                    )}
                                   </div>
                                 ))}
                               </div>
@@ -490,8 +547,21 @@ const PublicationDetails: React.FC = () => {
                         }
                         if (imgs.length === 1) {
                           return (
-                            <button key={bi} type="button" className="rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full text-left cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', items: [{ url: imgs[0].url, thumbnail: (imgs[0] as { thumbnail?: string }).thumbnail }], index: 0 })}>
+                            <button key={bi} type="button" className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full text-left cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', items: [{ id: imgs[0].id, url: imgs[0].url, thumbnail: (imgs[0] as { thumbnail?: string }).thumbnail, likes: imgs[0].likes ?? [] }], index: 0 })}>
                               <img src={imgs[0].url} alt="" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                              {!!(imgs[0].likes && imgs[0].likes.length > 0) && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    addMediaLike(imgs[0].id);
+                                  }}
+                                  className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                                >
+                                  <Heart className={`h-3.5 w-3.5 ${(animatedMediaLikeId === imgs[0].id ? 'animate-pulse' : '')}`} fill={myMemberId && imgs[0].likes?.includes(myMemberId) ? 'currentColor' : 'none'} />
+                                  {imgs[0].likes.length}
+                                </button>
+                              )}
                             </button>
                           );
                         }
@@ -501,8 +571,21 @@ const PublicationDetails: React.FC = () => {
                           {slice.map((m) => (
                             <div key={m.id} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
                               {m.type === 'video' ? (
-                                <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-black overflow-hidden cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'video', items: [{ url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail }], index: 0 })}>
+                                <button type="button" className="relative w-full rounded-lg border border-[var(--proto-border)] bg-black overflow-hidden cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'video', items: [{ id: m.id, url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail, likes: m.likes ?? [] }], index: 0 })}>
                                   <video playsInline preload="metadata" className="w-full rounded-lg pointer-events-none" poster={(m as { thumbnail?: string }).thumbnail || undefined} src={m.url} />
+                                  {!!(m.likes && m.likes.length > 0) && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        addMediaLike(m.id);
+                                      }}
+                                      className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                                    >
+                                      <Heart className={`h-3.5 w-3.5 ${(animatedMediaLikeId === m.id ? 'animate-pulse' : '')}`} fill={myMemberId && m.likes.includes(myMemberId) ? 'currentColor' : 'none'} />
+                                      {m.likes.length}
+                                    </button>
+                                  )}
                                 </button>
                               ) : m.type === 'audio' ? (
                                 <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] p-3 cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'audio', items: [{ url: m.url, name: (m as { name?: string }).name }], index: 0 })}>
@@ -527,8 +610,21 @@ const PublicationDetails: React.FC = () => {
                   <div className="relative rounded-lg overflow-hidden bg-[var(--proto-card)] border border-[var(--proto-border)] aspect-[4/3] w-full">
                     <div ref={photoScrollerRef} className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }} onScroll={() => { const el = photoScrollerRef.current; if (!el) return; if (rafScrollRef.current != null) cancelAnimationFrame(rafScrollRef.current); rafScrollRef.current = requestAnimationFrame(() => { const w = el.clientWidth || 1; const next = Math.max(0, Math.min(photoItems.length - 1, Math.round(el.scrollLeft / w))); setPhotoIdx(next); }); }}>
                       {photoItems.map((m, idx) => (
-                        <div key={m.id} className="w-full h-full shrink-0 snap-center bg-[var(--proto-border)] cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', items: photoItems.map(x => ({ url: x.url, thumbnail: (x as { thumbnail?: string }).thumbnail })), index: idx })}>
+                        <div key={m.id} className="relative w-full h-full shrink-0 snap-center bg-[var(--proto-border)] cursor-pointer" onClick={() => setFullscreenMedia({ type: 'photo', items: photoItems.map(x => ({ id: x.id, url: x.url, thumbnail: (x as { thumbnail?: string }).thumbnail, likes: x.likes ?? [] })), index: idx })}>
                           <img src={m.url} alt="" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(pub.topicTag).src; }} />
+                          {!!(m.likes && m.likes.length > 0) && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addMediaLike(m.id);
+                              }}
+                              className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                            >
+                              <Heart className={`h-3.5 w-3.5 ${(animatedMediaLikeId === m.id ? 'animate-pulse' : '')}`} fill={myMemberId && m.likes.includes(myMemberId) ? 'currentColor' : 'none'} />
+                              {m.likes.length}
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -559,8 +655,21 @@ const PublicationDetails: React.FC = () => {
                           <p className="text-sm font-semibold text-[var(--proto-text)] truncate">{m.name || 'Файл'}</p>
                           <p className="text-xs text-[var(--proto-text-muted)] mb-2">{m.type}</p>
                           {m.type === 'video' ? (
-                            <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-black overflow-hidden cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'video', items: [{ url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail }], index: 0 })}>
+                            <button type="button" className="relative w-full rounded-lg border border-[var(--proto-border)] bg-black overflow-hidden cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'video', items: [{ id: m.id, url: m.url, thumbnail: (m as { thumbnail?: string }).thumbnail, likes: m.likes ?? [] }], index: 0 })}>
                               <video playsInline preload="metadata" className="w-full rounded-lg pointer-events-none" poster={(m as { thumbnail?: string }).thumbnail || undefined} src={m.url} />
+                              {!!(m.likes && m.likes.length > 0) && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    addMediaLike(m.id);
+                                  }}
+                                  className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                                >
+                                  <Heart className={`h-3.5 w-3.5 ${(animatedMediaLikeId === m.id ? 'animate-pulse' : '')}`} fill={myMemberId && m.likes.includes(myMemberId) ? 'currentColor' : 'none'} />
+                                  {m.likes.length}
+                                </button>
+                              )}
                             </button>
                           ) : m.type === 'audio' ? (
                             <button type="button" className="w-full rounded-lg border border-[var(--proto-border)] bg-[var(--proto-card)] p-3 cursor-pointer text-left" onClick={() => setFullscreenMedia({ type: 'audio', items: [{ url: m.url, name: (m as { name?: string }).name }], index: 0 })}>
@@ -615,6 +724,11 @@ const PublicationDetails: React.FC = () => {
               <Heart className="h-4 w-4" fill={isLiked ? 'currentColor' : 'none'} />
               {likesCountUi}
             </button>
+            {myLikesCountUi > 0 && (
+              <span className="text-xs text-[var(--proto-text-muted)]">
+                ваш лайк: {myLikesCountUi}/3
+              </span>
+            )}
             <button
               type="button"
               onClick={() => setMilestone(toggleMilestone(pub.id))}
@@ -949,6 +1063,10 @@ const PublicationDetails: React.FC = () => {
       {fullscreenMedia && (() => {
         const { type, items, index } = fullscreenMedia;
         const current = items[index];
+        const currentLikes = current?.likes ?? [];
+        const mediaLikeCount = currentLikes.length;
+        const myMediaLikeCount = myMemberId ? currentLikes.filter(id => id === myMemberId).length : 0;
+        const canLikeMedia = !!current?.id && (type === 'photo' || type === 'video');
         const hasPrev = index > 0;
         const hasNext = index < items.length - 1;
         const goPrev = () => hasPrev && setFullscreenMedia(f => f ? { ...f, index: f.index - 1 } : null);
@@ -996,6 +1114,20 @@ const PublicationDetails: React.FC = () => {
                 </div>
               )}
             </div>
+            {canLikeMedia && current?.id && (
+              <div className="mt-4 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => addMediaLike(current.id as string)}
+                  disabled={!myMemberId}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 border border-white/30 text-white text-sm hover:bg-white/25 transition-colors disabled:opacity-40"
+                >
+                  <Heart className={`h-4 w-4 ${(animatedMediaLikeId === current.id ? 'animate-pulse' : '')}`} fill={myMediaLikeCount > 0 ? 'currentColor' : 'none'} />
+                  {mediaLikeCount}
+                </button>
+                <span className="text-xs text-white/80">ваш лайк: {myMediaLikeCount}/3</span>
+              </div>
+            )}
           </div>
         );
       })()}

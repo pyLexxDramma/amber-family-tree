@@ -15,6 +15,7 @@ class MediaItemResponse(BaseModel):
     year: str | None = None
     category: str | None = None
     publicationId: str | None = Field(None, alias="publication_id")
+    likes: list[str] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}
 

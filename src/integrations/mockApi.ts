@@ -62,13 +62,38 @@ export const mockApi: AngeloApi = {
       const pub = mockPublications.find(p => p.id === publicationId);
       if (!pub) throw new Error('Publication not found');
       const likes = pub.likes ?? [];
-      pub.likes = likes.includes(currentUserId) ? likes : [...likes, currentUserId];
+      const myLikesCount = likes.filter(id => id === currentUserId).length;
+      pub.likes = myLikesCount >= 3 ? likes : [...likes, currentUserId];
       return pub;
     },
     async removeLike(publicationId) {
       const pub = mockPublications.find(p => p.id === publicationId);
       if (!pub) throw new Error('Publication not found');
-      pub.likes = (pub.likes ?? []).filter(id => id !== currentUserId);
+      const likes = pub.likes ?? [];
+      const idx = likes.findIndex(id => id === currentUserId);
+      if (idx === -1) return pub;
+      pub.likes = [...likes.slice(0, idx), ...likes.slice(idx + 1)];
+      return pub;
+    },
+    async addMediaLike(publicationId, mediaId) {
+      const pub = mockPublications.find(p => p.id === publicationId);
+      if (!pub) throw new Error('Publication not found');
+      const media = (pub.media ?? []).find(m => m.id === mediaId);
+      if (!media || (media.type !== 'photo' && media.type !== 'video')) throw new Error('Media not found');
+      const likes = media.likes ?? [];
+      const myLikesCount = likes.filter(id => id === currentUserId).length;
+      media.likes = myLikesCount >= 3 ? likes : [...likes, currentUserId];
+      return pub;
+    },
+    async removeMediaLike(publicationId, mediaId) {
+      const pub = mockPublications.find(p => p.id === publicationId);
+      if (!pub) throw new Error('Publication not found');
+      const media = (pub.media ?? []).find(m => m.id === mediaId);
+      if (!media || (media.type !== 'photo' && media.type !== 'video')) throw new Error('Media not found');
+      const likes = media.likes ?? [];
+      const idx = likes.findIndex(id => id === currentUserId);
+      if (idx === -1) return pub;
+      media.likes = [...likes.slice(0, idx), ...likes.slice(idx + 1)];
       return pub;
     },
     async addCommentLike(publicationId, commentId) {

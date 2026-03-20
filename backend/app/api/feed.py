@@ -13,6 +13,7 @@ from app.database import get_db
 from app.models.comment import Comment
 from app.models.comment_like import CommentLike
 from app.models.like import Like
+from app.models.media_like import MediaLike
 from app.models.media_item import MediaItem
 from app.models.publication import Publication
 from app.models.user import User
@@ -49,9 +50,22 @@ def _to_public_media_url(raw: str) -> str:
     return f"{base}/{settings.s3_bucket}/{raw}"
 
 
+def _expand_strength(member_id: str, strength: int) -> list[str]:
+    s = int(strength or 1)
+    if s < 1:
+        s = 1
+    if s > 3:
+        s = 3
+    return [member_id] * s
+
+
 def _media_to_response(m: MediaItem) -> dict:
     url = _to_public_media_url(m.url)
     thumb = m.thumbnail if (m.thumbnail and (m.thumbnail.startswith("http://") or m.thumbnail.startswith("https://"))) else url
+    media_likes = getattr(m, "__dict__", {}).get("media_likes") or []
+    like_ids: list[str] = []
+    for like in media_likes:
+        like_ids.extend(_expand_strength(str(like.member_id), int(getattr(like, "strength", 1) or 1)))
     return MediaItemResponse(
         id=str(m.id),
         type=m.type,
@@ -66,6 +80,7 @@ def _media_to_response(m: MediaItem) -> dict:
         year=m.year,
         category=m.category,
         publication_id=str(m.publication_id) if m.publication_id else None,
+        likes=like_ids,
     ).model_dump(by_alias=False)
 
 
@@ -79,6 +94,19 @@ def _comment_to_response(c: Comment) -> dict:
         created_at=c.created_at.isoformat() if c.created_at else "",
         likes=like_ids,
     ).model_dump(by_alias=False)
+
+
+def _expand_like_ids_from_rel(likes: list[Like]) -> list[str]:
+    expanded: list[str] = []
+    for like in likes:
+        member_id = str(like.member_id)
+        strength = int(getattr(like, "strength", 1) or 1)
+        if strength < 1:
+            strength = 1
+        if strength > 3:
+            strength = 3
+        expanded.extend([member_id] * strength)
+    return expanded
 
 
 def _publication_to_response(
@@ -117,7 +145,7 @@ async def _load_publication_for_response(
         select(Publication)
         .execution_options(populate_existing=True)
         .options(
-            selectinload(Publication.media),
+            selectinload(Publication.media).selectinload(MediaItem.media_likes),
             selectinload(Publication.comments).selectinload(Comment.likes),
             selectinload(Publication.likes),
         )
@@ -130,8 +158,13 @@ async def _load_publication_for_response(
 
 
 async def _get_like_ids(*, db: AsyncSession, publication_id: UUID) -> list[str]:
-    result = await db.execute(select(Like.member_id).where(Like.publication_id == publication_id))
-    return [str(x) for x in result.scalars().all()]
+    result = await db.execute(
+        select(Like.member_id, Like.strength).where(Like.publication_id == publication_id)
+    )
+    expanded: list[str] = []
+    for member_id, strength in result.all():
+        expanded.extend(_expand_strength(str(member_id), int(strength or 1)))
+    return expanded
 
 
 @router.get("")
@@ -158,7 +191,7 @@ async def list_feed(
     if limit is not None:
         q = q.limit(limit)
     q = q.options(
-        selectinload(Publication.media),
+        selectinload(Publication.media).selectinload(MediaItem.media_likes),
         selectinload(Publication.comments).selectinload(Comment.likes),
         selectinload(Publication.likes),
     )
@@ -166,7 +199,7 @@ async def list_feed(
     publications = result.scalars().all()
     out = []
     for p in publications:
-        like_ids = [str(l.member_id) for l in p.likes]
+        like_ids = _expand_like_ids_from_rel(p.likes)
         out.append(_publication_to_response(p, like_ids))
     return out
 
@@ -185,7 +218,7 @@ async def get_publication(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
         )
-    like_ids = [str(l.member_id) for l in pub.likes]
+    like_ids = _expand_like_ids_from_rel(pub.likes)
     return _publication_to_response(pub, like_ids)
 
 
@@ -236,14 +269,14 @@ async def create_publication(
     result = await db.execute(
         select(Publication)
         .options(
-            selectinload(Publication.media),
+            selectinload(Publication.media).selectinload(MediaItem.media_likes),
             selectinload(Publication.comments).selectinload(Comment.likes),
             selectinload(Publication.likes),
         )
         .where(Publication.id == pub.id)
     )
     pub_loaded = result.scalar_one()
-    like_ids = [str(l.member_id) for l in pub_loaded.likes]
+    like_ids = _expand_like_ids_from_rel(pub_loaded.likes)
     return _publication_to_response(pub_loaded, like_ids)
 
 
@@ -338,7 +371,7 @@ async def update_publication(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
         )
-    like_ids = [str(l.member_id) for l in pub.likes]
+    like_ids = _expand_like_ids_from_rel(pub.likes)
     return _publication_to_response(pub, like_ids)
 
 
@@ -399,7 +432,20 @@ async def add_like(
             Like.member_id == current_user.member_id,
         )
     )
-    if existing.scalar_one_or_none():
+    existing_like = existing.scalar_one_or_none()
+    if existing_like:
+        current_strength = int(getattr(existing_like, "strength", 1) or 1)
+        if current_strength < 3:
+            existing_like.strength = current_strength + 1
+            await db.commit()
+            pub = await _load_publication_for_response(
+                db=db, publication_id=publication_id, family_id=current_user.family_id
+            )
+            if pub is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Publication not found",
+                )
         like_ids = await _get_like_ids(db=db, publication_id=publication_id)
         return _publication_to_response(pub, like_ids)
     like = Like(
@@ -540,12 +586,16 @@ async def remove_like(
     )
     like = result.scalar_one_or_none()
     if like:
-        await db.delete(like)
+        current_strength = int(getattr(like, "strength", 1) or 1)
+        if current_strength > 1:
+            like.strength = current_strength - 1
+        else:
+            await db.delete(like)
     await db.commit()
     result = await db.execute(
         select(Publication)
         .options(
-            selectinload(Publication.media),
+            selectinload(Publication.media).selectinload(MediaItem.media_likes),
             selectinload(Publication.comments),
             selectinload(Publication.likes),
         )
@@ -558,5 +608,68 @@ async def remove_like(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
         )
+    like_ids = await _get_like_ids(db=db, publication_id=publication_id)
+    return _publication_to_response(pub, like_ids)
+
+
+@router.post("/{publication_id}/media/{media_id}/like")
+async def add_media_like(
+    publication_id: UUID,
+    media_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User has no member profile")
+    pub = await _load_publication_for_response(db=db, publication_id=publication_id, family_id=current_user.family_id)
+    if pub is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Publication not found")
+    media = next((m for m in pub.media if m.id == media_id and m.type in ("photo", "video")), None)
+    if media is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media not found")
+    existing = await db.execute(select(MediaLike).where(MediaLike.media_id == media_id, MediaLike.member_id == current_user.member_id))
+    media_like = existing.scalar_one_or_none()
+    if media_like:
+        current_strength = int(getattr(media_like, "strength", 1) or 1)
+        if current_strength < 3:
+            media_like.strength = current_strength + 1
+            await db.commit()
+    else:
+        db.add(MediaLike(id=uuid4(), media_id=media_id, member_id=current_user.member_id))
+        await db.commit()
+    pub = await _load_publication_for_response(db=db, publication_id=publication_id, family_id=current_user.family_id)
+    if pub is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Publication not found")
+    like_ids = await _get_like_ids(db=db, publication_id=publication_id)
+    return _publication_to_response(pub, like_ids)
+
+
+@router.delete("/{publication_id}/media/{media_id}/like")
+async def remove_media_like(
+    publication_id: UUID,
+    media_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User has no member profile")
+    pub = await _load_publication_for_response(db=db, publication_id=publication_id, family_id=current_user.family_id)
+    if pub is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Publication not found")
+    media = next((m for m in pub.media if m.id == media_id and m.type in ("photo", "video")), None)
+    if media is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media not found")
+    existing = await db.execute(select(MediaLike).where(MediaLike.media_id == media_id, MediaLike.member_id == current_user.member_id))
+    media_like = existing.scalar_one_or_none()
+    if media_like:
+        current_strength = int(getattr(media_like, "strength", 1) or 1)
+        if current_strength > 1:
+            media_like.strength = current_strength - 1
+        else:
+            await db.delete(media_like)
+        await db.commit()
+    pub = await _load_publication_for_response(db=db, publication_id=publication_id, family_id=current_user.family_id)
+    if pub is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Publication not found")
     like_ids = await _get_like_ids(db=db, publication_id=publication_id)
     return _publication_to_response(pub, like_ids)

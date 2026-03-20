@@ -33,6 +33,8 @@ const Welcome: React.FC = () => {
   const [phase, setPhase] = useState<'splash' | 'intro' | 'landing'>('splash');
   const [splashDone, setSplashDone] = useState(false);
   const [introStep, setIntroStep] = useState(0);
+  const [isTestLogin, setIsTestLogin] = useState(false);
+  const [testLoginError, setTestLoginError] = useState('');
 
   useEffect(() => {
     const shown = sessionStorage.getItem('angelo-splash-shown');
@@ -60,6 +62,8 @@ const Welcome: React.FC = () => {
   }, [splashDone, phase]);
 
   const handleTestProfileLogin = async () => {
+    setIsTestLogin(true);
+    setTestLoginError('');
     setDemoMode(false);
     try {
       const res = await api.auth.verify(REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE);
@@ -67,7 +71,9 @@ const Welcome: React.FC = () => {
       setDemoMode(useMockUiAfterReferenceLogin());
       navigate(ROUTES.classic.feed);
     } catch {
-      navigate('/login', { state: { prefill: REFERENCE_DEMO_EMAIL } });
+      setTestLoginError('Не удалось выполнить быстрый вход. Проверьте, что backend запущен.');
+    } finally {
+      setIsTestLogin(false);
     }
   };
 
@@ -183,10 +189,12 @@ const Welcome: React.FC = () => {
           <button
             type="button"
             onClick={handleTestProfileLogin}
-            className="w-full py-2 text-sm text-[#A39B8A] font-medium hover:underline"
+            disabled={isTestLogin}
+            className="w-full py-2 text-sm text-[#A39B8A] font-medium hover:underline disabled:opacity-60"
           >
-            Войти в тестовый профиль
+            {isTestLogin ? 'Вход...' : 'Войти в тестовый профиль'}
           </button>
+          {testLoginError && <p className="text-xs text-red-600">{testLoginError}</p>}
         </div>
       </div>
 

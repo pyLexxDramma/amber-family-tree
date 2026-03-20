@@ -37,6 +37,7 @@ export interface MediaItem {
   year?: string;
   category?: string;
   publicationId?: string;
+  likes?: string[];
 }
 
 export interface Comment {

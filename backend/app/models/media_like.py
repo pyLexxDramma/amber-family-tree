@@ -7,26 +7,21 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 
-class Like(Base):
-    __tablename__ = "likes"
+class MediaLike(Base):
+    __tablename__ = "media_likes"
     __table_args__ = (
-        UniqueConstraint("publication_id", "member_id", name="uq_like_publication_member"),
+        UniqueConstraint("media_id", "member_id", name="uq_media_like_media_member"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    publication_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("publications.id"), nullable=False
+    media_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media_items.id"), nullable=False
     )
     member_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("family_members.id"), nullable=False
     )
     strength: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=1, server_default="1")
 
-    publication: Mapped["Publication"] = relationship(
-        "Publication", back_populates="likes"
-    )
-    member: Mapped["FamilyMember"] = relationship(
-        "FamilyMember", back_populates="likes"
-    )
+    media: Mapped["MediaItem"] = relationship("MediaItem", back_populates="media_likes")

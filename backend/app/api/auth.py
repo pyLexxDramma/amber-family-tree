@@ -90,7 +90,7 @@ async def verify(
         await db.refresh(user)
         if seed:
             try:
-                await seed_reference_user(db, user, member)
+                await seed_reference_user(db, user, member, force=True)
             except Exception as e:
                 logger.exception("seed_reference_user failed for new user: %s", e)
     else:
@@ -105,7 +105,7 @@ async def verify(
                 await db.refresh(member)
             if member and body.identifier.strip().lower() == REFERENCE_EMAIL:
                 try:
-                    await seed_reference_user(db, user, member)
+                    await seed_reference_user(db, user, member, force=True)
                     await db.refresh(member)
                 except Exception as e:
                     logger.exception("seed_reference_user failed for existing user: %s", e)

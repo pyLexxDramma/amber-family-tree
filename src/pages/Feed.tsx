@@ -24,7 +24,7 @@ const eventDateOf = (p: Publication) => (p as { eventDate?: string; event_date?:
 type ViewMode = 'media' | 'posts';
 type SortOrder = 'new' | 'old';
 
-type MediaTile = { pubId: string; mediaId: string; url: string; thumbnail?: string; photosCount?: number };
+type MediaTile = { pubId: string; mediaId: string; url: string; thumbnail?: string; photosCount?: number; likesCount?: number; myLikesCount?: number };
 
 const Feed: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ const Feed: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seedLoading, setSeedLoading] = useState(false);
   const [milestoneVer, setMilestoneVer] = useState(0);
+  const [animatedLikeIds, setAnimatedLikeIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const h = () => setMilestoneVer(v => v + 1);
@@ -131,7 +132,9 @@ const Feed: React.FC = () => {
       const first = (p.media ?? []).find(m => m.type === 'photo');
       const url = first ? ((first as { thumbnail?: string }).thumbnail || first.url || '') : '';
       const photosCount = (p.media ?? []).filter(m => m.type === 'photo').length;
-      return url ? { pubId: p.id, mediaId: p.id, url, thumbnail: (first as { thumbnail?: string }).thumbnail, photosCount } : null;
+      const likes = first?.likes ?? [];
+      const myLikesCount = currentId ? likes.filter(id => id === currentId).length : 0;
+      return url && first ? { pubId: p.id, mediaId: first.id, url, thumbnail: (first as { thumbnail?: string }).thumbnail, photosCount, likesCount: likes.length, myLikesCount } : null;
     })
     .filter((x): x is MediaTile => x !== null);
 
@@ -187,6 +190,32 @@ const Feed: React.FC = () => {
   const clearSelection = () => {
     setSelectedIds(new Set());
     setSelectionMode(false);
+  };
+
+  const toggleTileLike = async (tile: MediaTile) => {
+    if (!myMemberId) {
+      toast({ title: 'Нужно войти, чтобы поставить лайк' });
+      return;
+    }
+    try {
+      const isLiked = (tile.myLikesCount ?? 0) > 0;
+      const updated = isLiked
+        ? await api.feed.removeMediaLike(tile.pubId, tile.mediaId)
+        : await api.feed.addMediaLike(tile.pubId, tile.mediaId);
+      setItems(prev => prev.map(p => p.id === updated.id ? updated : p));
+      if (!isLiked) {
+        setAnimatedLikeIds(prev => new Set(prev).add(tile.mediaId));
+        setTimeout(() => {
+          setAnimatedLikeIds(prev => {
+            const next = new Set(prev);
+            next.delete(tile.mediaId);
+            return next;
+          });
+        }, 380);
+      }
+    } catch {
+      toast({ title: 'Не удалось поставить лайк' });
+    }
   };
 
   const setFilter = (value: string | null) => {
@@ -368,6 +397,19 @@ const Feed: React.FC = () => {
                       <Images className="h-3 w-3" />
                       {t.photosCount}
                     </div>
+                  )}
+                  {!!(t.likesCount && t.likesCount > 0) && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!selectionMode) toggleTileLike(t);
+                      }}
+                      className="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white hover:bg-black/60 transition-colors"
+                    >
+                      <Heart className={`h-3 w-3 ${(animatedLikeIds.has(t.mediaId) ? 'animate-pulse' : '')}`} fill={(t.myLikesCount ?? 0) > 0 ? 'currentColor' : 'none'} />
+                      {t.likesCount}
+                    </button>
                   )}
                   {selectionMode && (
                     <div className="absolute top-2 right-2">
