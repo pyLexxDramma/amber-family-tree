@@ -60,6 +60,72 @@ async def init_db() -> None:
                 await conn.run_sync(Base.metadata.create_all)
                 await conn.execute(text("ALTER TABLE publications ADD COLUMN IF NOT EXISTS content_blocks JSONB"))
                 await conn.execute(text("ALTER TABLE family_members ADD COLUMN IF NOT EXISTS managed_by_id UUID REFERENCES users(id)"))
+                await conn.execute(text("""
+                    WITH ranked AS (
+                        SELECT
+                            id,
+                            publication_id,
+                            member_id,
+                            COALESCE(strength, 1) AS strength,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY publication_id, member_id
+                                ORDER BY id
+                            ) AS rn,
+                            SUM(COALESCE(strength, 1)) OVER (
+                                PARTITION BY publication_id, member_id
+                            ) AS total_strength
+                        FROM likes
+                    ),
+                    updated AS (
+                        UPDATE likes l
+                        SET strength = LEAST(3, GREATEST(1, ranked.total_strength))
+                        FROM ranked
+                        WHERE ranked.rn = 1
+                          AND l.id = ranked.id
+                        RETURNING l.id
+                    )
+                    DELETE FROM likes l
+                    USING ranked
+                    WHERE ranked.rn > 1
+                      AND l.id = ranked.id
+                """))
+                await conn.execute(text("""
+                    WITH ranked AS (
+                        SELECT
+                            id,
+                            media_id,
+                            member_id,
+                            COALESCE(strength, 1) AS strength,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY media_id, member_id
+                                ORDER BY id
+                            ) AS rn,
+                            SUM(COALESCE(strength, 1)) OVER (
+                                PARTITION BY media_id, member_id
+                            ) AS total_strength
+                        FROM media_likes
+                    ),
+                    updated AS (
+                        UPDATE media_likes ml
+                        SET strength = LEAST(3, GREATEST(1, ranked.total_strength))
+                        FROM ranked
+                        WHERE ranked.rn = 1
+                          AND ml.id = ranked.id
+                        RETURNING ml.id
+                    )
+                    DELETE FROM media_likes ml
+                    USING ranked
+                    WHERE ranked.rn > 1
+                      AND ml.id = ranked.id
+                """))
+                await conn.execute(text("""
+                    CREATE UNIQUE INDEX IF NOT EXISTS uq_like_publication_member_idx
+                    ON likes (publication_id, member_id)
+                """))
+                await conn.execute(text("""
+                    CREATE UNIQUE INDEX IF NOT EXISTS uq_media_like_media_member_idx
+                    ON media_likes (media_id, member_id)
+                """))
             return
         except Exception as exc:
             last_exc = exc

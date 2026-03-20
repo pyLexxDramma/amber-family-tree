@@ -6,8 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.contact_request import ContactRequest
+from app.models.comment import Comment
+from app.models.comment_like import CommentLike
 from app.models.family_member import FamilyMember
+from app.models.like import Like
 from app.models.media_item import MediaItem
+from app.models.media_like import MediaLike
 from app.models.message import Message
 from app.models.publication import Publication
 from app.models.user import User
@@ -249,6 +253,22 @@ async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember
     existing_members = list(member_result.scalars().all())
 
     if force:
+        pub_ids = [p.id for p in pub_list]
+        if pub_ids:
+            media_result = await db.execute(
+                select(MediaItem.id).where(MediaItem.publication_id.in_(pub_ids))
+            )
+            media_ids = [r[0] for r in media_result.all()]
+            comment_result = await db.execute(
+                select(Comment.id).where(Comment.publication_id.in_(pub_ids))
+            )
+            comment_ids = [r[0] for r in comment_result.all()]
+            await db.execute(delete(Like).where(Like.publication_id.in_(pub_ids)))
+            if media_ids:
+                await db.execute(delete(MediaLike).where(MediaLike.media_id.in_(media_ids)))
+            if comment_ids:
+                await db.execute(delete(CommentLike).where(CommentLike.comment_id.in_(comment_ids)))
+            await db.execute(delete(Comment).where(Comment.publication_id.in_(pub_ids)))
         await db.execute(
             delete(ContactRequest).where(ContactRequest.family_id == user.family_id)
         )

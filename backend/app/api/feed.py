@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import UUID, uuid4
+from collections import defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import and_, select
@@ -112,15 +113,17 @@ def _comment_to_response(c: Comment) -> dict:
 
 
 def _expand_like_ids_from_rel(likes: list[Like]) -> list[str]:
-    expanded: list[str] = []
+    totals: dict[str, int] = defaultdict(int)
     for like in likes:
         member_id = str(like.member_id)
         strength = int(getattr(like, "strength", 1) or 1)
         if strength < 1:
             strength = 1
-        if strength > 3:
-            strength = 3
-        expanded.extend([member_id] * strength)
+        totals[member_id] += strength
+    expanded: list[str] = []
+    for member_id, total in totals.items():
+        capped = min(total, 3)
+        expanded.extend([member_id] * capped)
     return expanded
 
 
@@ -176,10 +179,73 @@ async def _get_like_ids(*, db: AsyncSession, publication_id: UUID) -> list[str]:
     result = await db.execute(
         select(Like.member_id, Like.strength).where(Like.publication_id == publication_id)
     )
-    expanded: list[str] = []
+    totals: dict[str, int] = defaultdict(int)
     for member_id, strength in result.all():
-        expanded.extend(_expand_strength(str(member_id), int(strength or 1)))
+        member_id_str = str(member_id)
+        s = int(strength or 1)
+        if s < 1:
+            s = 1
+        totals[member_id_str] += s
+    expanded: list[str] = []
+    for member_id, total in totals.items():
+        expanded.extend(_expand_strength(member_id, min(total, 3)))
     return expanded
+
+
+async def _normalize_publication_like_rows(
+    *,
+    db: AsyncSession,
+    publication_id: UUID,
+    member_id: UUID,
+) -> Like | None:
+    result = await db.execute(
+        select(Like).where(
+            Like.publication_id == publication_id,
+            Like.member_id == member_id,
+        )
+    )
+    rows = list(result.scalars().all())
+    if not rows:
+        return None
+    base = rows[0]
+    total = 0
+    for row in rows:
+        s = int(getattr(row, "strength", 1) or 1)
+        if s < 1:
+            s = 1
+        total += s
+    base.strength = min(total, 3)
+    for extra in rows[1:]:
+        await db.delete(extra)
+    return base
+
+
+async def _normalize_media_like_rows(
+    *,
+    db: AsyncSession,
+    media_id: UUID,
+    member_id: UUID,
+) -> MediaLike | None:
+    result = await db.execute(
+        select(MediaLike).where(
+            MediaLike.media_id == media_id,
+            MediaLike.member_id == member_id,
+        )
+    )
+    rows = list(result.scalars().all())
+    if not rows:
+        return None
+    base = rows[0]
+    total = 0
+    for row in rows:
+        s = int(getattr(row, "strength", 1) or 1)
+        if s < 1:
+            s = 1
+        total += s
+    base.strength = min(total, 3)
+    for extra in rows[1:]:
+        await db.delete(extra)
+    return base
 
 
 @router.get("")
@@ -511,13 +577,11 @@ async def add_like(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Publication not found",
         )
-    existing = await db.execute(
-        select(Like).where(
-            Like.publication_id == publication_id,
-            Like.member_id == current_user.member_id,
-        )
+    existing_like = await _normalize_publication_like_rows(
+        db=db,
+        publication_id=publication_id,
+        member_id=current_user.member_id,
     )
-    existing_like = existing.scalar_one_or_none()
     if existing_like:
         current_strength = int(getattr(existing_like, "strength", 1) or 1)
         if current_strength < 3:
@@ -663,13 +727,11 @@ async def remove_like(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User has no member profile",
         )
-    result = await db.execute(
-        select(Like).where(
-            Like.publication_id == publication_id,
-            Like.member_id == current_user.member_id,
-        )
+    like = await _normalize_publication_like_rows(
+        db=db,
+        publication_id=publication_id,
+        member_id=current_user.member_id,
     )
-    like = result.scalar_one_or_none()
     if like:
         current_strength = int(getattr(like, "strength", 1) or 1)
         if current_strength > 1:
@@ -712,8 +774,11 @@ async def add_media_like(
     media = next((m for m in pub.media if m.id == media_id and m.type in ("photo", "video")), None)
     if media is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media not found")
-    existing = await db.execute(select(MediaLike).where(MediaLike.media_id == media_id, MediaLike.member_id == current_user.member_id))
-    media_like = existing.scalar_one_or_none()
+    media_like = await _normalize_media_like_rows(
+        db=db,
+        media_id=media_id,
+        member_id=current_user.member_id,
+    )
     if media_like:
         current_strength = int(getattr(media_like, "strength", 1) or 1)
         if current_strength < 3:
@@ -744,8 +809,11 @@ async def remove_media_like(
     media = next((m for m in pub.media if m.id == media_id and m.type in ("photo", "video")), None)
     if media is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Media not found")
-    existing = await db.execute(select(MediaLike).where(MediaLike.media_id == media_id, MediaLike.member_id == current_user.member_id))
-    media_like = existing.scalar_one_or_none()
+    media_like = await _normalize_media_like_rows(
+        db=db,
+        media_id=media_id,
+        member_id=current_user.member_id,
+    )
     if media_like:
         current_strength = int(getattr(media_like, "strength", 1) or 1)
         if current_strength > 1:

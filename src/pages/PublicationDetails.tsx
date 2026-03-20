@@ -311,8 +311,9 @@ const PublicationDetails: React.FC = () => {
   const toggleLike = async () => {
     if (!pub) return;
     if (isTogglingLike) return;
-    setIsTogglingLike(true);
+    if (likePendingRef.current) return;
     likePendingRef.current = true;
+    setIsTogglingLike(true);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       if (!token) {
