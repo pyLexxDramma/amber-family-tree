@@ -33,6 +33,15 @@ class Settings(BaseSettings):
     otp_expiry_seconds: int = Field(600, alias="OTP_EXPIRY_SECONDS")
     otp_debug_log_code: bool = Field(False, alias="OTP_DEBUG_LOG_CODE")
     frontend_url: str = Field("https://angelo-test.ru", alias="FRONTEND_URL")
+    smtp_enabled: bool = Field(False, alias="SMTP_ENABLED")
+    smtp_host: str = Field("localhost", alias="SMTP_HOST")
+    smtp_port: int = Field(587, alias="SMTP_PORT")
+    smtp_username: str | None = Field(None, alias="SMTP_USERNAME")
+    smtp_password: str | None = Field(None, alias="SMTP_PASSWORD")
+    smtp_use_tls: bool = Field(True, alias="SMTP_USE_TLS")
+    smtp_use_ssl: bool = Field(False, alias="SMTP_USE_SSL")
+    smtp_from_email: str = Field("no-reply@angelo.local", alias="SMTP_FROM_EMAIL")
+    smtp_from_name: str = Field("Angelo", alias="SMTP_FROM_NAME")
 
 
 @lru_cache(maxsize=1)

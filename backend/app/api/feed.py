@@ -17,6 +17,7 @@ from app.models.media_like import MediaLike
 from app.models.media_item import MediaItem
 from app.models.publication import Publication
 from app.models.user import User
+from app.services.email_notifications import notify_participants_about_publication
 from app.config import get_settings
 from app.schemas.feed import (
     CommentCreate,
@@ -266,6 +267,14 @@ async def create_publication(
         )
         db.add(media_item)
     await db.commit()
+    await notify_participants_about_publication(
+        db=db,
+        participant_ids=body.participant_ids,
+        family_id=current_user.family_id,
+        author_id=current_user.member_id,
+        publication_id=pub.id,
+        publication_title=body.title,
+    )
     result = await db.execute(
         select(Publication)
         .options(
@@ -340,9 +349,11 @@ async def update_publication(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only author can edit publication",
         )
+    previous_participant_ids = set(pub.participant_ids or [])
     data = body.model_dump(exclude_unset=True)
     add_media_keys = data.pop("add_media_keys", None) or []
     remove_media_ids = set(data.pop("remove_media_ids", None) or [])
+    incoming_participant_ids = data.get("participant_ids")
     for k, v in data.items():
         setattr(pub, k, v)
     if remove_media_ids:
@@ -363,6 +374,16 @@ async def update_publication(
             )
             db.add(media_item)
     await db.commit()
+    if incoming_participant_ids is not None:
+        new_participant_ids = set(incoming_participant_ids) - previous_participant_ids
+        await notify_participants_about_publication(
+            db=db,
+            participant_ids=new_participant_ids,
+            family_id=current_user.family_id,
+            author_id=current_user.member_id,
+            publication_id=pub.id,
+            publication_title=pub.title,
+        )
     pub = await _load_publication_for_response(
         db=db, publication_id=publication_id, family_id=current_user.family_id
     )
