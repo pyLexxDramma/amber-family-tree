@@ -525,6 +525,8 @@ const FamilyTree: React.FC = () => {
                           <TreeCard key={member.id} member={member} nodeRef={`sibling:${member.id}`} small relationLabel="Брат/сестра" />
                         ))}
                       </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

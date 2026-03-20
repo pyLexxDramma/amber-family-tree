@@ -11,6 +11,10 @@ import { getPrototypePublicationPhotoBySeed } from '@/lib/prototype-assets';
 import { Search, Heart, MessageCircle, LineChart, Filter, CheckSquare, Square, ChevronDown, Images } from 'lucide-react';
 import { TopBar } from '@/components/TopBar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
+import { useAvatarFallback } from '@/lib/demoMode';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -51,6 +55,7 @@ const Feed: React.FC = () => {
   const [seedLoading, setSeedLoading] = useState(false);
   const [milestoneVer, setMilestoneVer] = useState(0);
   const [animatedLikeIds, setAnimatedLikeIds] = useState<Set<string>>(new Set());
+  const useAvatar = useAvatarFallback();
 
   useEffect(() => {
     const h = () => setMilestoneVer(v => v + 1);
@@ -568,124 +573,133 @@ const Feed: React.FC = () => {
         </div>
       </div>
 
-      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl bg-[#F0EDE8] border-[#E5E1DC]">
-          <SheetHeader>
-            <SheetTitle className="text-[#333333] font-semibold">Фильтры</SheetTitle>
-          </SheetHeader>
-          <div className="mt-4 space-y-2 pb-24">
-            <button
-              type="button"
-              onClick={() => setFilter(null)}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${!filterParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Все
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('with-me')}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'with-me' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Со мной
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('important')}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${filterParam === 'important' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Важные
-            </button>
-          </div>
-          <div className="mt-5 space-y-2">
-            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Автор</p>
-            <button
-              type="button"
-              onClick={() => setQueryFilter('author', null)}
-              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!authorParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Все
-            </button>
-            {uniqueAuthorIds.map((id) => (
+      <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <DialogContent className="bg-[#F0EDE8] border-[#E5E1DC] rounded-3xl w-[92vw] max-w-md max-h-[85dvh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-5 pt-5 pb-2 shrink-0">
+            <DialogTitle className="text-[#333333] font-semibold">Фильтры</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-5 pb-4">
+            <p className="text-xs font-semibold text-[#8D846F] uppercase tracking-wide mb-2">Быстрые</p>
+            <div className="grid grid-cols-2 gap-2 mb-5">
+              {[
+                { key: null, label: 'Все', onClick: () => setFilter(null) },
+                { key: 'with-me', label: 'Со мной', onClick: () => setFilter('with-me') },
+                { key: 'important', label: 'Важные', onClick: () => setFilter('important') },
+                { key: 'unread', label: 'Непрочитанные', onClick: toggleUnread },
+              ].map(({ key, label, onClick }) => {
+                const active = (key === null && !filterParam) || (key === 'with-me' && filterParam === 'with-me') || (key === 'important' && filterParam === 'important') || (key === 'unread' && unreadParam === '1');
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={onClick}
+                    className={`rounded-2xl border px-4 py-4 text-center text-sm font-medium transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 shadow-sm ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs font-semibold text-[#8D846F] uppercase tracking-wide mb-2">Автор</p>
+            <div className="grid grid-cols-3 gap-2 mb-5">
               <button
-                key={id}
                 type="button"
-                onClick={() => setQueryFilter('author', authorParam === id ? null : id)}
-                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${authorParam === id ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+                onClick={() => setQueryFilter('author', null)}
+                className={`rounded-2xl border px-2 py-3 text-center text-xs font-medium transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${!authorParam ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
               >
-                {memberDisplayName(memberMap.get(id) ?? null)}
+                Все
               </button>
-            ))}
-          </div>
-          <div className="mt-5 space-y-2">
-            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Участник</p>
-            <button
-              type="button"
-              onClick={() => setQueryFilter('with', null)}
-              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!withParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Все
-            </button>
-            {uniqueParticipantIds.map((id) => (
+              {uniqueAuthorIds.map((id) => {
+                const m = memberMap.get(id);
+                const avSrc = (m as { avatar?: string })?.avatar ?? (useAvatar ? getPrototypeAvatarUrl(id, currentId) : '');
+                const active = authorParam === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setQueryFilter('author', authorParam === id ? null : id)}
+                    className={`rounded-2xl border px-2 py-3 text-center transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                  >
+                    <Avatar className="h-8 w-8 shrink-0">
+                      {avSrc ? <AvatarImage src={avSrc} /> : null}
+                      <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-[10px]">{memberDisplayName(m ?? null).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[10px] font-medium truncate w-full">{memberDisplayName(m ?? null)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs font-semibold text-[#8D846F] uppercase tracking-wide mb-2">Участник</p>
+            <div className="grid grid-cols-3 gap-2 mb-5">
               <button
-                key={id}
                 type="button"
-                onClick={() => setQueryFilter('with', withParam === id ? null : id)}
-                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${withParam === id ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+                onClick={() => setQueryFilter('with', null)}
+                className={`rounded-2xl border px-2 py-3 text-center text-xs font-medium transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${!withParam ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
               >
-                {memberDisplayName(memberMap.get(id) ?? null)}
+                Все
               </button>
-            ))}
-          </div>
-          <div className="mt-5 space-y-2">
-            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Тег темы</p>
-            <button
-              type="button"
-              onClick={() => setQueryFilter('tag', null)}
-              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!tagParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Все
-            </button>
-            {uniqueTags.map((tag) => (
+              {uniqueParticipantIds.map((id) => {
+                const m = memberMap.get(id);
+                const avSrc = (m as { avatar?: string })?.avatar ?? (useAvatar ? getPrototypeAvatarUrl(id, currentId) : '');
+                const active = withParam === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setQueryFilter('with', withParam === id ? null : id)}
+                    className={`rounded-2xl border px-2 py-3 text-center transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                  >
+                    <Avatar className="h-8 w-8 shrink-0">
+                      {avSrc ? <AvatarImage src={avSrc} /> : null}
+                      <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-[10px]">{memberDisplayName(m ?? null).slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-[10px] font-medium truncate w-full">{memberDisplayName(m ?? null)}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs font-semibold text-[#8D846F] uppercase tracking-wide mb-2">Тег темы</p>
+            <div className="flex flex-wrap gap-2 mb-5">
               <button
-                key={tag}
                 type="button"
-                onClick={() => setQueryFilter('tag', tagParam === tag ? null : tag)}
-                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${tagParam === tag ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+                onClick={() => setQueryFilter('tag', null)}
+                className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${!tagParam ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
               >
-                {tag}
+                Все
               </button>
-            ))}
-          </div>
-          <div className="mt-5 space-y-2">
-            <p className="px-1 text-xs font-semibold text-[#8D846F] uppercase tracking-wide">Место</p>
-            <button
-              type="button"
-              onClick={() => setQueryFilter('place', null)}
-              className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${!placeParam ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Все
-            </button>
-            {uniquePlaces.map((place) => (
+              {uniqueTags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setQueryFilter('tag', tagParam === tag ? null : tag)}
+                  className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${tagParam === tag ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs font-semibold text-[#8D846F] uppercase tracking-wide mb-2">Место</p>
+            <div className="flex flex-wrap gap-2 mb-4">
               <button
-                key={place}
                 type="button"
-                onClick={() => setQueryFilter('place', placeParam === place ? null : place)}
-                className={`w-full px-4 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${placeParam === place ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
+                onClick={() => setQueryFilter('place', null)}
+                className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${!placeParam ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
               >
-                {place}
+                Все
               </button>
-            ))}
+              {uniquePlaces.map((place) => (
+                <button
+                  key={place}
+                  type="button"
+                  onClick={() => setQueryFilter('place', placeParam === place ? null : place)}
+                  className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${placeParam === place ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
+                >
+                  {place}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="mt-5">
-            <button
-              type="button"
-              onClick={toggleUnread}
-              className={`w-full px-4 py-3 rounded-xl text-left text-sm font-medium transition-colors ${unreadParam === '1' ? 'bg-[#5D4B34] text-white' : 'bg-[#F8F5F1] border border-[#E5E1DC] text-[#333333]'}`}
-            >
-              Непрочитанные
-            </button>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 p-4 bg-[#F0EDE8] border-t border-[#E5E1DC] flex items-center gap-2">
+          <div className="shrink-0 p-4 bg-[#F0EDE8] border-t border-[#E5E1DC] flex items-center gap-2">
             <button
               type="button"
               onClick={clearAllFilters}
@@ -701,8 +715,8 @@ const Feed: React.FC = () => {
               Показать ленту
             </button>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       <Sheet open={sortOpen} onOpenChange={setSortOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl bg-[#F0EDE8] border-[#E5E1DC]">

@@ -56,6 +56,15 @@ const mentionHandleForMember = (m: FamilyMember) => {
   return (first || last || 'member').replace(/\s+/g, '_');
 };
 
+const commentCountLabel = (n: number) => {
+  const m = n % 100;
+  if (m >= 11 && m <= 14) return `${n} комментариев`;
+  const d = n % 10;
+  if (d === 1) return `${n} комментарий`;
+  if (d >= 2 && d <= 4) return `${n} комментария`;
+  return `${n} комментариев`;
+};
+
 const initialsOf = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const a = parts[0]?.[0] ?? '';
@@ -261,26 +270,12 @@ const PublicationDetails: React.FC = () => {
     : (demo ? getPrototypePublicationPhotoByTopic(pub.topicTag) : { src: '', objectPosition: 'center center' as const });
   const pids = participantIdsOf(pub).slice(0, 6);
   const participants = pids.map(pid => memberMap.get(pid) ?? getMember(pid)).filter(Boolean);
-  const tags = [pub.topicTag].filter(Boolean);
   const publicationDescription = pub.text || '';
   const publishDateFormatted = format(new Date(pub.publishDate), 'dd MMM, yyyy', { locale: ru });
   const comments = [...(pub.comments ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const effectiveMemberId = myMemberId ?? myMemberIdRef.current;
   const isLiked = likedUi;
   const isAuthor = !!effectiveMemberId && effectiveMemberId === aid;
-  const demoEmotionsByTopic: Record<string, string[]> = {
-    'День рождения': ['Радость', 'Счастье', 'Восторг'],
-    'Праздники': ['Радость', 'Тепло', 'Любовь'],
-    'Путешествия': ['Восторг', 'Счастье', 'Радость'],
-    'Будни': ['Покой', 'Спокойствие', 'Уют'],
-    'Истории': ['Гордость', 'Благодарность', 'Тепло'],
-  };
-  const emotions = demo ? (demoEmotionsByTopic[pub.topicTag] ?? ['Тепло', 'Уют']) : [];
-  const aiTags = demo ? ([
-    pub.place ? `PLACE: ${pub.place}` : null,
-    emotions[0] ? `EMOTION: ${emotions[0]}` : null,
-    pub.topicTag ? `TOPIC: ${pub.topicTag}` : null,
-  ].filter(Boolean) as string[]) : tags;
 
   const submitComment = async () => {
     const text = commentText.trim();
@@ -289,7 +284,12 @@ const PublicationDetails: React.FC = () => {
     setIsSubmittingComment(true);
     try {
       const created = await api.feed.addComment(pub.id, text);
-      setPub(prev => prev ? { ...prev, comments: [...(prev.comments ?? []), created] } : prev);
+      setPub(prev => {
+        if (!prev) return prev;
+        const exists = (prev.comments ?? []).some(c => c.id === created.id);
+        if (exists) return prev;
+        return { ...prev, comments: [...(prev.comments ?? []), created] };
+      });
       setCommentText('');
       setCommentMentionQuery('');
       platform.hapticFeedback('light');
@@ -800,19 +800,6 @@ const PublicationDetails: React.FC = () => {
             );
           })()}
 
-          {demo && emotions.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">Эмоции</p>
-              <div className="flex flex-wrap gap-2">
-                {emotions.map((e) => (
-                  <span key={e} className="px-3 py-1.5 rounded-full bg-[#DDE7DB] text-[#2E3A2F] text-xs font-medium border border-[#D1DBCF]">
-                    {e}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
           {isAuthor && (
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" className="flex-1 min-w-[120px] rounded-2xl h-11 border-2 bg-white" onClick={openEdit}>
@@ -852,19 +839,8 @@ const PublicationDetails: React.FC = () => {
               Важное
             </button>
             <span className="text-sm text-[var(--proto-text-muted)]">
-              {(pub.comments ?? []).length} комментариев
+              {commentCountLabel((pub.comments ?? []).length)}
             </span>
-          </div>
-
-          <div>
-            <p className="text-sm font-semibold text-[var(--proto-text)] mb-2">{demo ? 'AI‑теги' : 'Теги:'}</p>
-            <div className="flex flex-wrap gap-2">
-              {aiTags.map(tag => (
-                <span key={tag} className={`px-3 py-1.5 rounded-full text-xs font-medium border ${demo ? 'bg-[#E5D2B8] text-[#5D4B34] border-[#DCC7AA]' : 'bg-[var(--proto-card)] text-[var(--proto-text-muted)] border-[var(--proto-border)]'}`}>
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
           {participants.length > 0 && (
