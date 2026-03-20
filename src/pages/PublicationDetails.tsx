@@ -28,6 +28,33 @@ const authorIdOf = (p: Publication) => (p as { authorId?: string; author_id?: st
 const participantIdsOf = (p: Publication) => (p as { participantIds?: string[]; participant_ids?: string[] }).participantIds ?? (p as { participant_ids?: string[] }).participant_ids ?? [];
 const memberDisplayName = (m: { firstName?: string; first_name?: string; lastName?: string; last_name?: string } | null) =>
   m ? `${(m as { firstName?: string }).firstName ?? (m as { first_name?: string }).first_name ?? ''} ${(m as { lastName?: string }).lastName ?? (m as { last_name?: string }).last_name ?? ''}`.trim() || 'Автор' : 'Автор';
+const mentionRegex = /@([A-Za-z0-9_\-А-Яа-яЁё]{2,64})/g;
+const mentionQueryRegex = /(?:^|\s)@([A-Za-z0-9_\-А-Яа-яЁё]{0,64})$/;
+
+const mentionHandlesForMember = (m: FamilyMember | null | undefined) => {
+  if (!m) return [];
+  const first = (m.firstName ?? '').trim();
+  const last = (m.lastName ?? '').trim();
+  const nickname = (m.nickname ?? '').trim();
+  const out: string[] = [];
+  if (nickname) out.push(nickname.toLowerCase());
+  if (first) out.push(first.toLowerCase());
+  if (first && last) {
+    out.push(`${first}_${last}`.toLowerCase());
+    out.push(`${first}-${last}`.toLowerCase());
+    out.push(`${first}${last}`.toLowerCase());
+  }
+  return out;
+};
+
+const mentionHandleForMember = (m: FamilyMember) => {
+  const nickname = (m.nickname ?? '').trim();
+  if (nickname) return nickname.replace(/\s+/g, '_');
+  const first = (m.firstName ?? '').trim();
+  const last = (m.lastName ?? '').trim();
+  if (first && last) return `${first}_${last}`.replace(/\s+/g, '_');
+  return (first || last || 'member').replace(/\s+/g, '_');
+};
 
 const initialsOf = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -86,6 +113,7 @@ const PublicationDetails: React.FC = () => {
   const [blockPhotoIndices, setBlockPhotoIndices] = useState<Record<number, number>>({});
   const [isTogglingLike, setIsTogglingLike] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [commentMentionQuery, setCommentMentionQuery] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const commentInputRef = useRef<HTMLInputElement | null>(null);
   const myMemberIdRef = useRef<string | null>(null);
@@ -106,6 +134,56 @@ const PublicationDetails: React.FC = () => {
   const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'photo' | 'video' | 'audio'; items: { id?: string; url: string; thumbnail?: string; name?: string; likes?: string[] }[]; index: number } | null>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
+  const mentionHandleToMemberId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const m of members) {
+      for (const handle of mentionHandlesForMember(m)) {
+        if (!map.has(handle)) map.set(handle, m.id);
+      }
+    }
+    return map;
+  }, [members]);
+  const commentMentionSuggestions = useMemo(() => {
+    const q = commentMentionQuery.trim().toLowerCase();
+    if (!q && commentMentionQuery !== '') return members.slice(0, 6);
+    if (!q) return [];
+    return members
+      .filter((m) => {
+        const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim().toLowerCase();
+        const nick = (m.nickname ?? '').toLowerCase();
+        const handle = mentionHandleForMember(m).toLowerCase();
+        return name.includes(q) || nick.includes(q) || handle.includes(q);
+      })
+      .slice(0, 6);
+  }, [members, commentMentionQuery]);
+  const renderMentionedText = (text: string, className?: string) => {
+    const nodes: React.ReactNode[] = [];
+    let lastIndex = 0;
+    for (const match of text.matchAll(mentionRegex)) {
+      const full = match[0];
+      const handle = (match[1] || '').toLowerCase();
+      const idx = match.index ?? 0;
+      if (idx > lastIndex) nodes.push(text.slice(lastIndex, idx));
+      const memberId = mentionHandleToMemberId.get(handle);
+      if (memberId) {
+        nodes.push(
+          <button
+            key={`${idx}_${handle}`}
+            type="button"
+            onClick={() => navigate(ROUTES.classic.profile(memberId))}
+            className="text-[var(--proto-active)] font-semibold hover:underline"
+          >
+            {full}
+          </button>,
+        );
+      } else {
+        nodes.push(full);
+      }
+      lastIndex = idx + full.length;
+    }
+    if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+    return <span className={className}>{nodes}</span>;
+  };
 
   useEffect(() => {
     if (!id) {
@@ -213,6 +291,7 @@ const PublicationDetails: React.FC = () => {
       const created = await api.feed.addComment(pub.id, text);
       setPub(prev => prev ? { ...prev, comments: [...(prev.comments ?? []), created] } : prev);
       setCommentText('');
+      setCommentMentionQuery('');
       platform.hapticFeedback('light');
     } catch (e) {
       let desc: string | undefined;
@@ -221,6 +300,12 @@ const PublicationDetails: React.FC = () => {
     } finally {
       setIsSubmittingComment(false);
     }
+  };
+  const applyMentionToComment = (member: FamilyMember) => {
+    const handle = mentionHandleForMember(member);
+    setCommentText((prev) => prev.replace(mentionQueryRegex, (full) => full.replace(/@([A-Za-z0-9_\-А-Яа-яЁё]{0,64})$/, `@${handle} `)));
+    setCommentMentionQuery('');
+    commentInputRef.current?.focus();
   };
 
   const toggleLike = async () => {
@@ -474,13 +559,13 @@ const PublicationDetails: React.FC = () => {
                   <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Без названия'}</h1>
                   {blocks.map((blk, bi) => {
                     if (blk.type === 'text' && blk.text) {
-                      return <p key={bi} className="text-base text-[var(--proto-text)] leading-relaxed whitespace-pre-wrap">{blk.text}</p>;
+                      return <p key={bi} className="text-base text-[var(--proto-text)] leading-relaxed whitespace-pre-wrap">{renderMentionedText(blk.text)}</p>;
                     }
                     if (blk.type === 'life_lesson' && blk.text) {
                       return (
                         <div key={bi} className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
                           <p className="text-xs font-semibold text-[var(--proto-text-muted)]">Жизненный урок</p>
-                          <p className="mt-2 text-sm text-[var(--proto-text)] whitespace-pre-wrap">{blk.text}</p>
+                          <p className="mt-2 text-sm text-[var(--proto-text)] whitespace-pre-wrap">{renderMentionedText(blk.text)}</p>
                         </div>
                       );
                     }
@@ -709,7 +794,7 @@ const PublicationDetails: React.FC = () => {
                   </div>
                 )}
                 <h1 className="font-serif font-semibold text-xl text-[var(--proto-text)]">{pub.title || 'Без названия'}</h1>
-                {publicationDescription ? <p className="text-base text-[var(--proto-text)] leading-relaxed">{publicationDescription}</p> : null}
+                {publicationDescription ? <p className="text-base text-[var(--proto-text)] leading-relaxed whitespace-pre-wrap">{renderMentionedText(publicationDescription)}</p> : null}
               </>
             );
           })()}
@@ -857,7 +942,7 @@ const PublicationDetails: React.FC = () => {
                             {memberDisplayName(author ?? null)}
                             {timeAgo && <span className="text-[var(--proto-text-muted)] font-normal ml-1">· {timeAgo}</span>}
                           </p>
-                          <p className="text-sm text-[var(--proto-text)] mt-0.5 leading-relaxed">{c.text}</p>
+                          <p className="text-sm text-[var(--proto-text)] mt-0.5 leading-relaxed whitespace-pre-wrap">{renderMentionedText(c.text)}</p>
                           <div className="mt-2">
                             <button
                               type="button"
@@ -889,7 +974,12 @@ const PublicationDetails: React.FC = () => {
                   <input
                     ref={commentInputRef}
                     value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCommentText(value);
+                      const m = value.match(mentionQueryRegex);
+                      setCommentMentionQuery(m ? (m[1] || '') : '');
+                    }}
                     placeholder="Оставить комментарий…"
                     className="flex-1 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] h-10 px-3 text-sm text-[var(--proto-text)] placeholder:text-[var(--proto-text-muted)] focus:outline-none focus:border-[var(--proto-active)]/50"
                   />
@@ -901,6 +991,25 @@ const PublicationDetails: React.FC = () => {
                     Отправить
                   </button>
                 </form>
+                {commentMentionSuggestions.length > 0 && (
+                  <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-[var(--proto-border)] bg-white">
+                    {commentMentionSuggestions.map((m) => {
+                      const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Участник';
+                      const handle = mentionHandleForMember(m);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => applyMentionToComment(m)}
+                          className="w-full px-3 py-2 text-left hover:bg-[var(--proto-card)] transition-colors"
+                        >
+                          <p className="text-sm font-semibold text-[var(--proto-text)]">{name}</p>
+                          <p className="text-xs text-[var(--proto-text-muted)]">@{handle}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

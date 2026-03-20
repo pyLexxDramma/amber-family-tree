@@ -53,6 +53,17 @@ type PickMediaTarget =
   | { kind: 'photos' | 'video' | 'audio' | 'attachment'; blockId?: string }
   | null;
 
+const mentionQueryRegex = /(?:^|\s)@([A-Za-z0-9_\-А-Яа-яЁё]{0,64})$/;
+
+const mentionHandleForMember = (m: FamilyMember) => {
+  const nickname = (m.nickname ?? '').trim();
+  if (nickname) return nickname.replace(/\s+/g, '_');
+  const first = (m.firstName ?? '').trim();
+  const last = (m.lastName ?? '').trim();
+  if (first && last) return `${first}_${last}`.replace(/\s+/g, '_');
+  return (first || last || 'member').replace(/\s+/g, '_');
+};
+
 const CreatePublication: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,6 +89,7 @@ const CreatePublication: React.FC = () => {
   const [textEditorBlockId, setTextEditorBlockId] = useState<string | null>(null);
   const [textEditorValue, setTextEditorValue] = useState('');
   const [textEditorKind, setTextEditorKind] = useState<'text' | 'life_lesson'>('text');
+  const [textMentionQuery, setTextMentionQuery] = useState('');
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
@@ -267,6 +279,33 @@ const CreatePublication: React.FC = () => {
   useEffect(() => {
     api.family.listMembers().then(setMembers).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const m = textEditorValue.match(mentionQueryRegex);
+    setTextMentionQuery(m ? (m[1] || '').toLowerCase() : '');
+  }, [textEditorValue]);
+
+  const textMentionSuggestions = useMemo(() => {
+    const q = textMentionQuery.trim();
+    if (!q && textMentionQuery !== '') {
+      return members.slice(0, 6);
+    }
+    if (!q) return [];
+    return members
+      .filter((m) => {
+        const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim().toLowerCase();
+        const nick = (m.nickname ?? '').toLowerCase();
+        const handle = mentionHandleForMember(m).toLowerCase();
+        return name.includes(q) || nick.includes(q) || handle.includes(q);
+      })
+      .slice(0, 6);
+  }, [members, textMentionQuery]);
+
+  const applyMentionToTextEditor = (member: FamilyMember) => {
+    const handle = mentionHandleForMember(member);
+    setTextEditorValue((prev) => prev.replace(mentionQueryRegex, (full, _q) => full.replace(/@([A-Za-z0-9_\-А-Яа-яЁё]{0,64})$/, `@${handle} `)));
+    setTextMentionQuery('');
+  };
 
   useEffect(() => {
     if (access === 'private') setVisibility('only_me');
@@ -1320,6 +1359,25 @@ const CreatePublication: React.FC = () => {
                 className="mt-3 rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] min-h-[160px]"
                 placeholder="Добавьте текст..."
               />
+              {textMentionSuggestions.length > 0 && (
+                <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-[var(--proto-border)] bg-white">
+                  {textMentionSuggestions.map((m) => {
+                    const name = `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Участник';
+                    const handle = mentionHandleForMember(m);
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => applyMentionToTextEditor(m)}
+                        className="w-full px-3 py-2 text-left hover:bg-[var(--proto-card)] transition-colors"
+                      >
+                        <p className="text-sm font-semibold text-[var(--proto-text)]">{name}</p>
+                        <p className="text-xs text-[var(--proto-text-muted)]">@{handle}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <Button
                 type="button"
                 className="mt-4 w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"

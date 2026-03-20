@@ -17,7 +17,11 @@ from app.models.media_like import MediaLike
 from app.models.media_item import MediaItem
 from app.models.publication import Publication
 from app.models.user import User
-from app.services.email_notifications import notify_participants_about_publication
+from app.services.email_notifications import (
+    notify_mentioned_members,
+    notify_participants_about_publication,
+)
+from app.services.mentions import resolve_mentioned_member_ids
 from app.config import get_settings
 from app.schemas.feed import (
     CommentCreate,
@@ -29,6 +33,16 @@ from app.schemas.feed import (
 )
 
 router = APIRouter(prefix="/feed", tags=["feed"])
+
+
+def _collect_mention_text(text: str | None, content_blocks: list[dict] | None) -> str:
+    parts = [text or ""]
+    for block in content_blocks or []:
+        if not isinstance(block, dict):
+            continue
+        if block.get("type") in ("text", "life_lesson"):
+            parts.append(str(block.get("text") or ""))
+    return "\n".join(parts)
 
 def _infer_media_type_from_key(key: str) -> str | None:
     try:
@@ -267,6 +281,11 @@ async def create_publication(
         )
         db.add(media_item)
     await db.commit()
+    mentioned_member_ids = await resolve_mentioned_member_ids(
+        db=db,
+        family_id=current_user.family_id,
+        text=_collect_mention_text(body.text, body.content_blocks),
+    )
     await notify_participants_about_publication(
         db=db,
         participant_ids=body.participant_ids,
@@ -274,6 +293,15 @@ async def create_publication(
         author_id=current_user.member_id,
         publication_id=pub.id,
         publication_title=body.title,
+    )
+    await notify_mentioned_members(
+        db=db,
+        mentioned_member_ids=mentioned_member_ids,
+        family_id=current_user.family_id,
+        author_id=current_user.member_id,
+        publication_id=pub.id,
+        publication_title=body.title,
+        source="publication",
     )
     result = await db.execute(
         select(Publication)
@@ -321,6 +349,20 @@ async def add_comment(
     db.add(comment)
     await db.commit()
     await db.refresh(comment)
+    mentioned_member_ids = await resolve_mentioned_member_ids(
+        db=db,
+        family_id=current_user.family_id,
+        text=body.text,
+    )
+    await notify_mentioned_members(
+        db=db,
+        mentioned_member_ids=mentioned_member_ids,
+        family_id=current_user.family_id,
+        author_id=current_user.member_id,
+        publication_id=publication_id,
+        publication_title=pub.title,
+        source="comment",
+    )
     return _comment_to_response(comment)
 
 
@@ -350,6 +392,11 @@ async def update_publication(
             detail="Only author can edit publication",
         )
     previous_participant_ids = set(pub.participant_ids or [])
+    previous_mentioned_member_ids = await resolve_mentioned_member_ids(
+        db=db,
+        family_id=current_user.family_id,
+        text=_collect_mention_text(pub.text, getattr(pub, "content_blocks", None)),
+    )
     data = body.model_dump(exclude_unset=True)
     add_media_keys = data.pop("add_media_keys", None) or []
     remove_media_ids = set(data.pop("remove_media_ids", None) or [])
@@ -383,6 +430,23 @@ async def update_publication(
             author_id=current_user.member_id,
             publication_id=pub.id,
             publication_title=pub.title,
+        )
+    if "text" in data or "content_blocks" in data:
+        next_text = data["text"] if "text" in data else pub.text
+        next_blocks = data["content_blocks"] if "content_blocks" in data else getattr(pub, "content_blocks", None)
+        new_mentioned_member_ids = await resolve_mentioned_member_ids(
+            db=db,
+            family_id=current_user.family_id,
+            text=_collect_mention_text(next_text, next_blocks),
+        )
+        await notify_mentioned_members(
+            db=db,
+            mentioned_member_ids=new_mentioned_member_ids - previous_mentioned_member_ids,
+            family_id=current_user.family_id,
+            author_id=current_user.member_id,
+            publication_id=pub.id,
+            publication_title=pub.title,
+            source="publication",
         )
     pub = await _load_publication_for_response(
         db=db, publication_id=publication_id, family_id=current_user.family_id

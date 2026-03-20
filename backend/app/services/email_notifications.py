@@ -107,3 +107,57 @@ async def notify_participants_about_publication(
             await asyncio.to_thread(_send_email_sync, email, subject, body, html_body)
         except Exception:
             logger.exception("Failed to send mention email to %s", email)
+
+
+async def notify_mentioned_members(
+    *,
+    db: AsyncSession,
+    mentioned_member_ids: Iterable[str],
+    family_id: UUID,
+    author_id: UUID,
+    publication_id: UUID,
+    publication_title: str | None,
+    source: str,
+) -> None:
+    settings = get_settings()
+    if not settings.smtp_enabled:
+        return
+    ids = {pid for pid in mentioned_member_ids if pid}
+    if not ids:
+        return
+    author = await db.get(FamilyMember, author_id)
+    author_name = _member_name(author)
+    publication_link = f"{settings.frontend_url.rstrip('/')}/classic/publication/{publication_id}"
+    title = (publication_title or "").strip() or "Публикация"
+    source_label = "в комментарии" if source == "comment" else "в публикации"
+    subject = "Вас упомянули в Angelo"
+    body = (
+        f"{author_name} упомянул(а) вас {source_label}.\n\n"
+        f"Название: {title}\n"
+        f"Ссылка: {publication_link}\n"
+    )
+    html_body = (
+        "<html><body>"
+        f"<p>{escape(author_name)} упомянул(а) вас {escape(source_label)}.</p>"
+        f"<p><b>Название:</b> {escape(title)}</p>"
+        f"<p><a href=\"{escape(publication_link)}\">Открыть публикацию</a></p>"
+        "</body></html>"
+    )
+    try:
+        parsed_ids = [UUID(pid) for pid in ids]
+    except ValueError:
+        parsed_ids = []
+    if not parsed_ids:
+        return
+    result = await db.execute(
+        select(User.identifier)
+        .where(User.family_id == family_id)
+        .where(User.member_id.in_(parsed_ids))
+        .where(User.member_id != author_id)
+    )
+    recipients = [identifier for (identifier,) in result.all() if identifier and _is_email(identifier)]
+    for email in recipients:
+        try:
+            await asyncio.to_thread(_send_email_sync, email, subject, body, html_body)
+        except Exception:
+            logger.exception("Failed to send mention email to %s", email)
