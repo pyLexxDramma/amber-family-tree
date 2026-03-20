@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, MessageCircle, Clock, Image, Users, Send } from 'lucide-react';
+import { Minus, Plus, Send } from 'lucide-react';
 import type { FamilyMember } from '@/types';
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
@@ -9,12 +9,11 @@ import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
 import { getPrototypeAvatarUrl } from '@/lib/prototype-assets';
-import { getFamilyRole } from '@/lib/family-role';
-
-type TreeTab = 'stories' | 'timeline' | 'media' | 'connections';
-type BranchFilter = 'all' | 'paternal' | 'partners';
+import { toast } from '@/hooks/use-toast';
 
 type Rel = { type: string; memberId: string };
+type RelationKind = 'parent' | 'child' | 'sibling' | 'spouse';
+type SelectMode = 'empty-parent' | 'add-relation';
 
 function normalizeRelations(relations: unknown): Rel[] {
   if (!Array.isArray(relations)) return [];
@@ -56,18 +55,30 @@ function roleFor(member: FamilyMember, focusId: string): string {
   return 'Родственник';
 }
 
+function fullName(member: FamilyMember): string {
+  const base = `${member.firstName} ${member.lastName}`.trim();
+  return member.nickname?.trim() || base || 'Без имени';
+}
+
+function reciprocal(kind: RelationKind): RelationKind {
+  if (kind === 'parent') return 'child';
+  if (kind === 'child') return 'parent';
+  return kind;
+}
+
 const FamilyTree: React.FC = () => {
   const navigate = useNavigate();
   const [me, setMe] = useState<FamilyMember | null>(null);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [tab, setTab] = useState<TreeTab>('stories');
-  const [branchFilter, setBranchFilter] = useState<BranchFilter>('all');
-  const [maternal, setMaternal] = useState(true);
-  const [paternal, setPaternal] = useState(true);
-  const [byMarriage, setByMarriage] = useState(true);
-  const [depth, setDepth] = useState(4);
+  const [depth, setDepth] = useState(2);
+  const [zoom, setZoom] = useState(100);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState<SelectMode | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('');
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const [pendingKind, setPendingKind] = useState<RelationKind>('parent');
 
   useEffect(() => {
     let cancelled = false;
@@ -112,43 +123,19 @@ const FamilyTree: React.FC = () => {
     .filter(m => normalizeRelations(m.relations).some(r => r.type === 'parent' && parentIds.includes(r.memberId)))
     .map(m => m.id);
   const siblings = siblingIds.map(id => members.find(m => m.id === id)).filter(Boolean) as FamilyMember[];
-
-  const showParents = parents.filter(p => {
-    if (branchFilter === 'paternal') return parentIds[0] === p.id;
-    if (branchFilter === 'partners') return false;
-    return true;
-  });
-  const showChildren = branchFilter === 'partners' ? [] : children;
-  const showSiblings = branchFilter === 'partners' ? [] : siblings;
-  const showSpouse = (branchFilter === 'all' || branchFilter === 'partners') && byMarriage ? spouse : null;
+  const showParents = parents.slice(0, 2);
+  const showChildren = children;
+  const showSiblings = siblings;
+  const showSpouse = spouse;
 
   const connectionsList = useMemo(() => {
     if (!focus) return [];
     const list = members
       .filter(m => m.id !== focus.id)
       .filter(m => Math.abs(m.generation - focus.generation) <= depth)
-      .map(m => ({ member: m, role: roleFor(m, focus.id) }))
-      .filter(({ role }) => {
-        if (!maternal && role === 'Родитель') return false;
-        if (!paternal && role === 'Родитель') return false;
-        if (!byMarriage && role === 'Партнёр') return false;
-        return true;
-      });
+      .map(m => ({ member: m, role: roleFor(m, focus.id) }));
     return list.sort((a, b) => a.role.localeCompare(b.role) || a.member.generation - b.member.generation);
-  }, [byMarriage, depth, focus, maternal, members, paternal]);
-
-  const ordered = useMemo(() => {
-    return [...members].sort((a, b) => (a.generation - b.generation) || a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName));
-  }, [members]);
-
-  const focusIndex = ordered.findIndex(m => m.id === focus?.id);
-  const prevRelative = focusIndex > 0 ? ordered[focusIndex - 1] : null;
-  const nextRelative = focusIndex >= 0 && focusIndex < ordered.length - 1 ? ordered[focusIndex + 1] : null;
-
-  const storiesForFocus = useMemo(() =>
-    [],
-    [focus?.id]
-  );
+  }, [depth, focus, members]);
 
   const linksWrapRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef(new Map<string, HTMLElement>());
@@ -164,8 +151,8 @@ const FamilyTree: React.FC = () => {
     const c = showChildren.map(m => m.id).join(',');
     const f = focus?.id ?? '';
     const sp = showSpouse?.id ?? '';
-    return `${branchFilter}|${byMarriage ? '1' : '0'}|${f}|${sp}|${p}|${s}|${c}`;
-  }, [branchFilter, byMarriage, focus?.id, showChildren, showParents, showSiblings, showSpouse?.id]);
+    return `${f}|${sp}|${p}|${s}|${c}|${zoom}`;
+  }, [focus?.id, showChildren, showParents, showSiblings, showSpouse?.id, zoom]);
 
   useLayoutEffect(() => {
     const wrap = linksWrapRef.current;
@@ -194,10 +181,10 @@ const FamilyTree: React.FC = () => {
         return `M ${pts[0].x} ${pts[0].y} ` + pts.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ');
       };
 
-      const R_PARENT = 28;
-      const R_FOCUS = 40;
+      const R_PARENT = 30;
+      const R_FOCUS = 30;
       const R_SMALL = 24;
-      const R_SPOUSE = 28;
+      const R_SPOUSE = 30;
 
       if (focusC && parents.length > 0) {
         const parentBottomY = Math.max(...parents.map(p => p.y + R_PARENT));
@@ -272,87 +259,101 @@ const FamilyTree: React.FC = () => {
     };
   }, [linksKey]);
 
-  const tabs = [
-    { id: 'stories' as TreeTab, label: 'Истории', icon: MessageCircle },
-    { id: 'timeline' as TreeTab, label: 'Таймлайн', icon: Clock },
-    { id: 'media' as TreeTab, label: 'Медиа', icon: Image },
-    { id: 'connections' as TreeTab, label: 'Связи', icon: Users },
-  ];
-
   const openProfile = (id: string) => {
     navigate(id === currentUserId ? ROUTES.classic.myProfile : ROUTES.classic.profile(id));
   };
 
-  const branchPills = [
-    { id: 'all' as BranchFilter, label: 'Ветки' },
-    { id: 'paternal' as BranchFilter, label: 'Отцовская' },
-    { id: 'partners' as BranchFilter, label: 'Партнёры' },
-  ];
+  const upsertRelation = (memberId: string, relation: Rel): FamilyMember[] => members.map((m) => {
+    if (m.id !== memberId) return m;
+    const rels = normalizeRelations(m.relations);
+    if (rels.some((r) => r.type === relation.type && r.memberId === relation.memberId)) return m;
+    return { ...m, relations: [...rels, relation] };
+  });
 
-  if (isDemoMode()) {
-    const byGen = new Map<number, FamilyMember[]>();
-    for (const m of members) {
-      if (!byGen.has(m.generation)) byGen.set(m.generation, []);
-      byGen.get(m.generation)!.push(m);
+  const savePairRelation = async (sourceId: string, otherId: string, kind: RelationKind) => {
+    const source = members.find((m) => m.id === sourceId);
+    const other = members.find((m) => m.id === otherId);
+    if (!source || !other) return;
+    const sourceRel = { type: kind, memberId: otherId };
+    const backRel = { type: reciprocal(kind), memberId: sourceId };
+    const sourceNext = upsertRelation(source.id, sourceRel).find((m) => m.id === source.id);
+    const otherNext = upsertRelation(other.id, backRel).find((m) => m.id === other.id);
+    if (!sourceNext || !otherNext) return;
+    await api.family.updateMember(source.id, { relations: sourceNext.relations });
+    await api.family.updateMember(other.id, { relations: otherNext.relations });
+    setMembers((prev) => {
+      const withSource = prev.map((m) => (m.id === source.id ? sourceNext : m));
+      return withSource.map((m) => (m.id === other.id ? otherNext : m));
+    });
+  };
+
+  const parentSlots = useMemo(() => {
+    const labels = ['Папа', 'Мама'];
+    const slots: Array<{ key: string; member: FamilyMember | null; label: string }> = [];
+    for (let i = 0; i < 2; i += 1) {
+      slots.push({
+        key: showParents[i]?.id ?? `empty-parent-${i}`,
+        member: showParents[i] ?? null,
+        label: labels[i],
+      });
     }
-    const gen1 = (byGen.get(1) ?? []).sort((a, b) => a.firstName.localeCompare(b.firstName));
-    const gen2 = (byGen.get(2) ?? []).sort((a, b) => a.firstName.localeCompare(b.firstName));
-    const gen3 = (byGen.get(3) ?? []).sort((a, b) => a.firstName.localeCompare(b.firstName));
+    return slots;
+  }, [showParents]);
 
-    const card = (m: FamilyMember) => (
-      <button
-        key={m.id}
-        type="button"
-        onClick={() => openProfile(m.id)}
-        className={`w-full rounded-2xl border border-[var(--proto-border)] p-4 text-center hover:border-[var(--proto-active)]/40 transition-colors ${hasDeathDate(m) ? 'bg-[#E5E2DD]' : 'bg-white'}`}
-      >
-        <div className="mx-auto h-14 w-14 rounded-2xl bg-[var(--proto-border)] overflow-hidden flex items-center justify-center">
-          {avatarSrcFor(m, currentUserId) ? (
-            <img src={avatarSrcFor(m, currentUserId)} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-sm font-semibold text-[var(--proto-text)]">{initialsFor(m)}</span>
-          )}
-        </div>
-        <p className="mt-3 text-sm font-semibold text-[var(--proto-text)] leading-tight">
-          {m.firstName} {m.lastName}
-        </p>
-        <p className="text-xs font-semibold text-[#A39B8A]">{focusId ? getFamilyRole(m, focusId) : (m.nickname || 'Член семьи')}</p>
-        {m.birthDate ? <p className="text-xs text-[var(--proto-text-muted)] mt-1">{m.birthDate}</p> : null}
+  const selectableMembers = useMemo(
+    () => members.filter((m) => m.id !== targetId),
+    [members, targetId]
+  );
+
+  const openAddRelation = (sourceId: string, kind: RelationKind) => {
+    setActiveMenuId(null);
+    setTargetId(sourceId);
+    setPendingKind(kind);
+    setSelectMode('add-relation');
+    setSelectedMemberId('');
+  };
+
+  const openEmptyParent = () => {
+    if (!focus) return;
+    setTargetId(focus.id);
+    setPendingKind('parent');
+    setSelectMode('empty-parent');
+    setSelectedMemberId('');
+  };
+
+  const TreeCard = ({ member, nodeRef, small = false, relationLabel }: { member: FamilyMember; nodeRef: string; small?: boolean; relationLabel?: string }) => (
+    <div ref={(el) => setNodeRef(nodeRef)(el)} className={`relative rounded-2xl border border-[var(--proto-border)] bg-white p-3 text-center shadow-sm ${small ? 'w-[170px]' : 'w-[200px]'}`}>
+      <button type="button" onClick={() => setActiveMenuId((prev) => (prev === member.id ? null : member.id))} className="absolute right-2 top-2 rounded-lg border border-[var(--proto-border)] px-2 text-xs text-[var(--proto-text-muted)] hover:bg-[var(--proto-bg)]">
+        +
       </button>
-    );
+      <button type="button" onClick={() => openProfile(member.id)} className="w-full">
+        <div className="mx-auto h-14 w-14 overflow-hidden rounded-xl border border-[var(--proto-border)] bg-[var(--proto-border)]">
+          <Avatar className="h-14 w-14 rounded-xl">
+            {avatarSrcFor(member, currentUserId) ? <AvatarImage src={avatarSrcFor(member, currentUserId)} /> : null}
+            <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold">{initialsFor(member)}</AvatarFallback>
+          </Avatar>
+        </div>
+        <p className="mt-2 text-sm font-semibold text-[var(--proto-text)] leading-tight">{fullName(member)}</p>
+        <p className="text-xs text-[var(--proto-text-muted)]">{relationLabel ?? 'Профиль'}</p>
+      </button>
+      {activeMenuId === member.id && (
+        <div className="absolute left-2 right-2 top-12 z-20 rounded-xl border border-[var(--proto-border)] bg-white p-2 text-left shadow-lg">
+          <button type="button" onClick={() => openAddRelation(member.id, 'parent')} className="block w-full rounded-lg px-2 py-1.5 text-xs hover:bg-[var(--proto-bg)]">Добавить родителя</button>
+          <button type="button" onClick={() => openAddRelation(member.id, 'child')} className="block w-full rounded-lg px-2 py-1.5 text-xs hover:bg-[var(--proto-bg)]">Добавить ребёнка</button>
+          <button type="button" onClick={() => openAddRelation(member.id, 'sibling')} className="block w-full rounded-lg px-2 py-1.5 text-xs hover:bg-[var(--proto-bg)]">Добавить брата/сестру</button>
+          <button type="button" onClick={() => openAddRelation(member.id, 'spouse')} className="block w-full rounded-lg px-2 py-1.5 text-xs hover:bg-[var(--proto-bg)]">Добавить супруга/партнёра</button>
+        </div>
+      )}
+    </div>
+  );
 
+  if (false && isDemoMode()) {
     return (
       <AppLayout>
         <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
           <div className="mx-auto max-w-full px-4 pt-8 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
             <h1 className="text-2xl font-semibold text-[var(--proto-text)] mb-6">Семейное древо</h1>
-
-            {loadError ? (
-              <p className="text-sm text-red-600">Ошибка: {loadError}</p>
-            ) : null}
-
-            <div className="space-y-6">
-              <div>
-                <p className="text-sm font-semibold text-[var(--proto-text-muted)] text-center mb-3">Бабушка и дедушка</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {gen1.map(card)}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-[var(--proto-text-muted)] text-center mb-3">Родители</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {gen2.map(card)}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-[var(--proto-text-muted)] text-center mb-3">Дети</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {gen3.length ? gen3.map(card) : <p className="col-span-2 text-sm text-[var(--proto-text-muted)] text-center py-8">Нет данных</p>}
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-[var(--proto-text-muted)]">В демо-режиме доступен упрощённый экран дерева. Для полного режима откройте приложение без демо-режима.</p>
           </div>
         </div>
       </AppLayout>
@@ -384,78 +385,28 @@ const FamilyTree: React.FC = () => {
             </div>
           }
         />
-        <div className="flex gap-2 px-3 sm:px-4 pb-2 border-b border-[var(--proto-border)]">
-          <button
-            type="button"
-            onClick={() => navigate(ROUTES.classic.tree)}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-[var(--proto-active)] text-white"
-          >
-            Дерево
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate(ROUTES.classic.timeline)}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]"
-          >
-            Таймлайн
-          </button>
-        </div>
-        <div className="flex gap-2 px-3 sm:px-4 py-3 border-b border-[var(--proto-border)] flex-wrap">
-          {branchPills.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setBranchFilter(p.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                branchFilter === p.id ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-card)] border border-[var(--proto-border)] text-[var(--proto-text)]'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-col lg:flex-row gap-4 p-3 sm:p-4 max-w-6xl mx-auto overflow-x-hidden">
-          <aside className="w-full lg:w-56 shrink-0 space-y-4">
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
-              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">Карточка поколения</p>
-              {loadError && <p className="text-sm text-red-600">Ошибка: {loadError}</p>}
-              {!focus && !loadError && <p className="text-sm text-[var(--proto-text-muted)]">Загрузка…</p>}
-              {focus && (
-                <>
-                  <p className="text-sm text-[var(--proto-text)]">{focus.nickname || focus.firstName} — поколение {focus.generation}</p>
-                  <p className="text-xs text-[var(--proto-text-muted)] mt-1">{focus.birthDate}</p>
-                </>
-              )}
+        <div className="mx-auto max-w-6xl p-3 sm:p-4">
+          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--proto-border)] bg-[var(--proto-card)] p-3">
+            <label className="text-sm text-[var(--proto-text)]">
+              Глубина дерева
+              <input type="range" min={1} max={6} value={depth} onChange={(e) => setDepth(Number(e.target.value))} className="mt-1 block w-48 accent-[var(--proto-active)]" />
+            </label>
+            <span className="text-xs text-[var(--proto-text-muted)]">Поколений: {depth}</span>
+            <div className="ml-auto flex items-center gap-2">
+              <button type="button" onClick={() => setZoom((z) => Math.max(70, z - 10))} className="rounded-xl border border-[var(--proto-border)] p-2 hover:bg-[var(--proto-bg)]" aria-label="Уменьшить">
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="min-w-12 text-center text-sm text-[var(--proto-text)]">{zoom}%</span>
+              <button type="button" onClick={() => setZoom((z) => Math.min(140, z + 10))} className="rounded-xl border border-[var(--proto-border)] p-2 hover:bg-[var(--proto-bg)]" aria-label="Увеличить">
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => parentIds[0] && setFocusId(parentIds[0])}
-              className="w-full rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3 flex items-center justify-between hover:border-[var(--proto-active)]/40 transition-colors"
-            >
-              <span className="text-sm font-medium text-[var(--proto-text)]">Родитель</span>
-              <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)]" />
-            </button>
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-3">
-              <p className="text-xs font-semibold text-[var(--proto-text-muted)] mb-2">Фильтры веток</p>
-              <div className="flex flex-wrap gap-2">
-                {branchPills.map(p => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setBranchFilter(p.id)}
-                    className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${branchFilter === p.id ? 'bg-[var(--proto-active)] text-white' : 'bg-[var(--proto-border)] text-[var(--proto-text)]'}`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          <main className="flex-1 min-w-0">
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 sm:p-6">
-              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-4">Фокус на человеке</p>
-              <div ref={linksWrapRef} className="relative">
+          </div>
+          <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4 sm:p-6">
+            {loadError && <p className="mb-3 text-sm text-red-600">Ошибка: {loadError}</p>}
+            {!focus && !loadError && <p className="mb-3 text-sm text-[var(--proto-text-muted)]">Загрузка…</p>}
+            <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }} className="transition-transform">
+              <div ref={linksWrapRef} className="relative min-h-[420px]">
                 <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
                   {linkPaths.map((d, idx) => (
                     <path
@@ -469,222 +420,123 @@ const FamilyTree: React.FC = () => {
                     />
                   ))}
                 </svg>
-
-                {showParents.length > 0 && (
-                  <div className="flex justify-center gap-4 mb-4">
-                    <p className="text-xs text-[var(--proto-text-muted)] self-center">Родители</p>
-                    {showParents.map(p => (
+                <div className="mb-6 flex flex-wrap justify-center gap-4">
+                  {parentSlots.map((slot, index) => (
+                    slot.member ? (
+                      <TreeCard
+                        key={slot.key}
+                        member={slot.member}
+                        nodeRef={`parent:${slot.member.id}`}
+                        relationLabel={slot.label}
+                      />
+                    ) : (
                       <button
-                        key={p.id}
-                        ref={(el) => setNodeRef(`parent:${p.id}`)(el)}
-                        onClick={() => openProfile(p.id)}
-                        className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(p) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
+                        key={slot.key}
+                        type="button"
+                        onClick={openEmptyParent}
+                        className="w-[200px] rounded-2xl border border-dashed border-[var(--proto-border)] bg-white p-4 text-center hover:border-[var(--proto-active)]"
                       >
-                        <Avatar className="h-14 w-14">
-                          {avatarSrcFor(p, currentUserId) ? <AvatarImage src={avatarSrcFor(p, currentUserId)} /> : null}
-                          <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold">{initialsFor(p)}</AvatarFallback>
-                        </Avatar>
+                        <div className="mx-auto h-14 w-14 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-bg)]" />
+                        <p className="mt-2 text-sm font-semibold text-[var(--proto-text)]">{slot.label}</p>
+                        <p className="text-xs text-[var(--proto-text-muted)]">Пустой профиль</p>
                       </button>
+                    )
+                  ))}
+                </div>
+                {focus && (
+                  <div className="mb-6 flex items-center justify-center gap-4">
+                    <TreeCard member={focus} nodeRef={`focus:${focus.id}`} relationLabel="Я" />
+                    {showSpouse ? <TreeCard member={showSpouse} nodeRef={`spouse:${showSpouse.id}`} relationLabel="Партнёр" /> : null}
+                  </div>
+                )}
+                {(showChildren.length > 0 || showSiblings.length > 0) && (
+                  <div className="flex flex-wrap justify-center gap-4">
+                    {showChildren.map((member) => (
+                      <TreeCard key={member.id} member={member} nodeRef={`child:${member.id}`} small relationLabel="Ребёнок" />
+                    ))}
+                    {showSiblings.map((member) => (
+                      <TreeCard key={member.id} member={member} nodeRef={`sibling:${member.id}`} small relationLabel="Брат/сестра" />
                     ))}
                   </div>
                 )}
-
-                <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
-                  <div className="text-center">
-                    {focus && (
-                      <>
-                        <button
-                          ref={(el) => setNodeRef(`focus:${focus.id}`)(el)}
-                          onClick={() => openProfile(focus.id)}
-                          className={`rounded-full border-2 ring-2 transition-all ${hasDeathDate(focus) ? 'border-[var(--proto-border)] ring-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-active)] ring-[var(--proto-active)]/20 hover:ring-[var(--proto-active)]/40'}`}
-                        >
-                          <Avatar className="h-20 w-20">
-                            {avatarSrcFor(focus, currentUserId) ? <AvatarImage src={avatarSrcFor(focus, currentUserId)} /> : null}
-                            <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-lg font-semibold">{initialsFor(focus)}</AvatarFallback>
-                          </Avatar>
-                        </button>
-                        <p className="text-sm font-semibold text-[var(--proto-text)] mt-2">{focus.nickname || focus.firstName} {focus.lastName}</p>
-                      </>
-                    )}
-                  </div>
-                  {showSpouse && (
-                    <>
-                      <div className="h-px w-6 bg-[var(--proto-border)]" />
-                      <div className="text-center">
-                        <button
-                          ref={(el) => setNodeRef(`spouse:${showSpouse.id}`)(el)}
-                          onClick={() => openProfile(showSpouse.id)}
-                          className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(showSpouse) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
-                        >
-                          <Avatar className="h-14 w-14">
-                            {avatarSrcFor(showSpouse, currentUserId) ? <AvatarImage src={avatarSrcFor(showSpouse, currentUserId)} /> : null}
-                            <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-sm font-semibold">{initialsFor(showSpouse)}</AvatarFallback>
-                          </Avatar>
-                        </button>
-                        <p className="text-xs text-[var(--proto-text-muted)] mt-1">Партнёр</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {(showChildren.length > 0 || showSiblings.length > 0) && (
-                  <div className="flex flex-wrap justify-center gap-6">
-                    {showChildren.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-[var(--proto-text-muted)]">Дети</p>
-                        {showChildren.map(c => (
-                          <button
-                            key={c!.id}
-                            ref={(el) => setNodeRef(`child:${c!.id}`)(el)}
-                            onClick={() => openProfile(c!.id)}
-                            className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(c!) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
-                          >
-                            <Avatar className="h-12 w-12">
-                              {avatarSrcFor(c!, currentUserId) ? <AvatarImage src={avatarSrcFor(c!, currentUserId)} /> : null}
-                              <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(c!)}</AvatarFallback>
-                            </Avatar>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {showSiblings.length > 0 && (
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-[var(--proto-text-muted)]">Братья/сёстры</p>
-                        {showSiblings.map(s => (
-                          <button
-                            key={s!.id}
-                            ref={(el) => setNodeRef(`sibling:${s!.id}`)(el)}
-                            onClick={() => openProfile(s!.id)}
-                            className={`rounded-full border-2 hover:border-[var(--proto-active)] transition-colors ${hasDeathDate(s!) ? 'border-[var(--proto-border)] bg-[#E5E2DD]' : 'border-[var(--proto-border)]'}`}
-                          >
-                            <Avatar className="h-12 w-12">
-                              {avatarSrcFor(s!, currentUserId) ? <AvatarImage src={avatarSrcFor(s!, currentUserId)} /> : null}
-                              <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(s!)}</AvatarFallback>
-                            </Avatar>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
-              <div className="flex border-b border-[var(--proto-border)] mt-6 gap-4 overflow-x-auto scrollbar-hide">
-                {tabs.map(t => (
+            </div>
+            <div className="mt-6 border-t border-[var(--proto-border)] pt-4">
+              <p className="mb-2 text-sm font-medium text-[var(--proto-text)]">Связанные профили (с учётом глубины)</p>
+              <div className="max-h-52 space-y-2 overflow-y-auto">
+                {connectionsList.length === 0 ? (
+                  <p className="text-sm text-[var(--proto-text-muted)]">Нет связей для выбранной глубины</p>
+                ) : connectionsList.map(({ member, role }) => (
                   <button
-                    key={t.id}
+                    key={member.id}
                     type="button"
-                    onClick={() => {
-                      if (t.id === 'timeline') {
-                        navigate(ROUTES.classic.timeline);
-                        return;
-                      }
-                      if (t.id === 'media') {
-                        navigate(ROUTES.classic.myMedia);
-                        return;
-                      }
-                      setTab(t.id);
-                    }}
-                    className={`pb-2 text-sm font-medium transition-colors border-b-2 flex items-center gap-1.5 shrink-0 ${
-                      tab === t.id ? 'text-[var(--proto-text)] border-[var(--proto-active)]' : 'text-[var(--proto-text-muted)] border-transparent'
-                    }`}
+                    onClick={() => setFocusId(member.id)}
+                    className="flex w-full items-center justify-between rounded-xl border border-[var(--proto-border)] bg-white px-3 py-2 text-left hover:border-[var(--proto-active)]"
                   >
-                    <t.icon className="h-4 w-4" />
-                    {t.label}
+                    <span className="text-sm text-[var(--proto-text)]">{fullName(member)}</span>
+                    <span className="text-xs text-[var(--proto-text-muted)]">{role}</span>
                   </button>
                 ))}
               </div>
-              <div className="mt-4 min-h-[120px]">
-                {tab === 'stories' && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-[var(--proto-text-muted)]">Истории отображаются в ленте. Нажмите «Создать», чтобы добавить новую.</p>
-                  </div>
-                )}
-                {tab === 'connections' && (
-                  <div className="space-y-2 max-h-[280px] overflow-y-auto">
-                    {connectionsList.length === 0 ? (
-                      <p className="text-sm text-[var(--proto-text-muted)]">Нет связей в выбранных фильтрах</p>
-                    ) : (
-                      connectionsList.map(({ member, role }) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-3 p-2 rounded-lg bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors"
-                        >
-                          <button type="button" onClick={() => setFocusId(member.id)} className="flex items-center gap-3 min-w-0 flex-1 text-left">
-                            <Avatar className="h-10 w-10 shrink-0">
-                              {avatarSrcFor(member, currentUserId) ? <AvatarImage src={avatarSrcFor(member, currentUserId)} /> : null}
-                              <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-xs font-semibold">{initialsFor(member)}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-[var(--proto-text)] truncate">{member.nickname || member.firstName} {member.lastName}</p>
-                              <p className="text-xs text-[var(--proto-text-muted)]">{role}</p>
-                            </div>
-                            <ChevronRight className="h-4 w-4 text-[var(--proto-text-muted)] shrink-0" />
-                          </button>
-                          <button type="button" onClick={() => openProfile(member.id)} className="text-xs font-medium text-[var(--proto-active)] hover:underline shrink-0">Профиль</button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-between mt-6 pt-4 border-t border-[var(--proto-border)]">
-                <button
-                  type="button"
-                  onClick={() => prevRelative && setFocusId(prevRelative.id)}
-                  disabled={!prevRelative}
-                  className="text-sm font-medium text-[var(--proto-text-muted)] hover:text-[var(--proto-text)] disabled:opacity-40 flex items-center gap-1"
+            </div>
+          </div>
+          {selectMode && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+              <div className="w-full max-w-md rounded-2xl bg-white p-4">
+                <p className="mb-2 text-base font-semibold text-[var(--proto-text)]">
+                  {selectMode === 'empty-parent' ? 'Добавить родителя' : 'Добавить связь'}
+                </p>
+                <p className="mb-3 text-sm text-[var(--proto-text-muted)]">
+                  Выберите профиль из семьи или создайте новый.
+                </p>
+                <select
+                  value={selectedMemberId}
+                  onChange={(e) => setSelectedMemberId(e.target.value)}
+                  className="mb-4 h-10 w-full rounded-xl border border-[var(--proto-border)] px-3 text-sm"
                 >
-                  <ChevronLeft className="h-4 w-4" /> Предыдущий родственник
-                </button>
-                <button
-                  type="button"
-                  onClick={() => nextRelative && setFocusId(nextRelative.id)}
-                  disabled={!nextRelative}
-                  className="text-sm font-medium text-[var(--proto-text-muted)] hover:text-[var(--proto-text)] disabled:opacity-40 flex items-center gap-1"
-                >
-                  Следующий родственник <ChevronRight className="h-4 w-4" />
-                </button>
+                  <option value="">Выберите профиль</option>
+                  {selectableMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {fullName(member)}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!targetId || !selectedMemberId) return;
+                      try {
+                        await savePairRelation(targetId, selectedMemberId, pendingKind);
+                        setSelectMode(null);
+                        toast({ title: 'Связь добавлена' });
+                      } catch (e) {
+                        const msg = e instanceof Error ? e.message : 'Не удалось добавить связь';
+                        toast({ title: msg, variant: 'destructive' });
+                      }
+                    }}
+                    className="rounded-xl bg-[var(--proto-active)] px-4 py-2 text-sm text-white"
+                  >
+                    Выбрать из профилей
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(ROUTES.classic.createMemberProfile)}
+                    className="rounded-xl border border-[var(--proto-border)] px-4 py-2 text-sm"
+                  >
+                    Создать новый
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectMode(null)}
+                    className="ml-auto rounded-xl px-4 py-2 text-sm text-[var(--proto-text-muted)]"
+                  >
+                    Отмена
+                  </button>
+                </div>
               </div>
             </div>
-          </main>
-
-          <aside className="w-full lg:w-52 shrink-0 space-y-4">
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
-              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">Фильтры веток и глубины</p>
-              <label className="flex items-center gap-2 text-sm text-[var(--proto-text)] mb-2 cursor-pointer">
-                <input type="checkbox" checked={maternal} onChange={e => setMaternal(e.target.checked)} className="rounded border-[var(--proto-border)] accent-[var(--proto-active)]" />
-                Материнская ветка
-              </label>
-              <label className="flex items-center gap-2 text-sm text-[var(--proto-text)] mb-2 cursor-pointer">
-                <input type="checkbox" checked={paternal} onChange={e => setPaternal(e.target.checked)} className="rounded border-[var(--proto-border)] accent-[var(--proto-active)]" />
-                Отцовская ветка
-              </label>
-              <label className="flex items-center gap-2 text-sm text-[var(--proto-text)] mb-4 cursor-pointer">
-                <input type="checkbox" checked={byMarriage} onChange={e => setByMarriage(e.target.checked)} className="rounded border-[var(--proto-border)] accent-[var(--proto-active)]" />
-                По браку
-              </label>
-              <p className="text-xs text-[var(--proto-text-muted)] mb-1">Глубина поколений</p>
-              <input type="range" min={1} max={6} value={depth} onChange={e => setDepth(Number(e.target.value))} className="w-full accent-[var(--proto-active)]" />
-              <p className="text-xs text-[var(--proto-text-muted)] mt-1">напр. {depth}</p>
-            </div>
-            <div className="rounded-xl bg-[var(--proto-card)] border border-[var(--proto-border)] p-4">
-              <p className="text-xs font-semibold text-[var(--proto-text-muted)] uppercase tracking-wider mb-3">AI поверх дерева</p>
-              <div className="space-y-2">
-                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
-                  Спросить Angelo о дереве
-                </button>
-                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
-                  Найти пропуски
-                </button>
-                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
-                  Подсветить важные даты
-                </button>
-                <button type="button" className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-[var(--proto-text)] bg-[var(--proto-bg)] border border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 transition-colors">
-                  Показать ветку 1900-х
-                </button>
-              </div>
-            </div>
-          </aside>
+          )}
         </div>
       </div>
     </AppLayout>

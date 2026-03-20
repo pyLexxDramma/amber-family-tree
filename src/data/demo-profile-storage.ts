@@ -18,12 +18,21 @@ export type DemoProfilePatch = {
   about?: string;
 };
 
+type StoredDemoProfilePatch = DemoProfilePatch & {
+  memberId?: string;
+};
+
 export function getDemoProfilePatch(): DemoProfilePatch | null {
   if (typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as DemoProfilePatch;
+    const parsed = JSON.parse(raw) as StoredDemoProfilePatch;
+    const current = getCurrentUser();
+    if (parsed.memberId && parsed.memberId !== current.id) return null;
+    if (!parsed.memberId) return null;
+    const { memberId: _memberId, ...patch } = parsed;
+    return patch;
   } catch {
     return null;
   }
@@ -31,7 +40,9 @@ export function getDemoProfilePatch(): DemoProfilePatch | null {
 
 export function setDemoProfilePatch(patch: DemoProfilePatch): void {
   if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(patch));
+  const current = getCurrentUser();
+  const next: StoredDemoProfilePatch = { ...patch, memberId: current.id };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }
 
 /** Текущий пользователь с учётом демо-правок (для отображения на «О себе» / Профиль). */

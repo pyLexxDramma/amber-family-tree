@@ -6,5 +6,6 @@ export function isReferenceDemoEmail(identifier: string): boolean {
 }
 
 export function useMockUiAfterReferenceLogin(): boolean {
-  return String(import.meta.env.VITE_REFERENCE_DEMO_UI ?? '').toLowerCase() === 'true';
+  const value = String(import.meta.env.VITE_REFERENCE_DEMO_UI ?? '').toLowerCase();
+  return value !== 'false';
 }

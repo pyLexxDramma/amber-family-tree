@@ -230,6 +230,7 @@ export const mockApi: AngeloApi = {
       if (patch.city !== undefined) member.city = patch.city;
       if (patch.about !== undefined) member.about = patch.about;
       if (patch.avatar !== undefined) (member as any).avatar = patch.avatar;
+      if (patch.relations !== undefined) member.relations = patch.relations;
       return member;
     },
     async transferMember(memberId, toMemberId) {
