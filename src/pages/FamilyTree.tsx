@@ -74,6 +74,7 @@ const FamilyTree: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [depth, setDepth] = useState(2);
   const [zoom, setZoom] = useState(100);
+  const [treeMode, setTreeMode] = useState<'ancestors' | 'all'>('ancestors');
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState<SelectMode | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState<string>('');
@@ -128,6 +129,21 @@ const FamilyTree: React.FC = () => {
   const showSiblings = siblings;
   const showSpouse = spouse;
 
+  const grandparentSlots = useMemo(() => {
+    const slots: Array<{ key: string; member: FamilyMember | null; label: string; parentIndex: number }> = [];
+    for (let i = 0; i < 2; i += 1) {
+      const parent = showParents[i];
+      const parentRels = parent ? normalizeRelations(parent.relations) : [];
+      const gpIds = parentRels.filter(r => r.type === 'parent').map(r => r.memberId);
+      const gp1 = gpIds[0] ? members.find(m => m.id === gpIds[0]) ?? null : null;
+      const gp2 = gpIds[1] ? members.find(m => m.id === gpIds[1]) ?? null : null;
+      const labels = ['Дедушка', 'Бабушка'];
+      slots.push({ key: `gp-${i}-0`, member: gp1, label: labels[0], parentIndex: i });
+      slots.push({ key: `gp-${i}-1`, member: gp2, label: labels[1], parentIndex: i });
+    }
+    return slots;
+  }, [showParents, members]);
+
   const connectionsList = useMemo(() => {
     if (!focus) return [];
     const list = members
@@ -149,10 +165,11 @@ const FamilyTree: React.FC = () => {
     const p = showParents.map(m => m.id).join(',');
     const s = showSiblings.map(m => m.id).join(',');
     const c = showChildren.map(m => m.id).join(',');
+    const g = grandparentSlots.map(s => s.member?.id ?? 'e').join(',');
     const f = focus?.id ?? '';
     const sp = showSpouse?.id ?? '';
-    return `${f}|${sp}|${p}|${s}|${c}|${zoom}`;
-  }, [focus?.id, showChildren, showParents, showSiblings, showSpouse?.id, zoom]);
+    return `${treeMode}|${f}|${sp}|${p}|${s}|${c}|${g}|${zoom}`;
+  }, [treeMode, focus?.id, showChildren, showParents, showSiblings, showSpouse?.id, grandparentSlots, zoom]);
 
   useLayoutEffect(() => {
     const wrap = linksWrapRef.current;
@@ -167,11 +184,12 @@ const FamilyTree: React.FC = () => {
         return { x: r.left - wrapRect.left + r.width / 2, y: r.top - wrapRect.top + r.height / 2 };
       };
 
-      const parents = showParents.map((p) => centerOf(`parent:${p.id}`)).filter(Boolean) as { x: number; y: number }[];
+      const parentsC = showParents.map((p) => centerOf(`parent:${p.id}`)).filter(Boolean) as { x: number; y: number }[];
       const focusC = focus ? centerOf(`focus:${focus.id}`) : null;
       const spouseC = showSpouse ? centerOf(`spouse:${showSpouse.id}`) : null;
       const siblingsC = showSiblings.map((s) => centerOf(`sibling:${s.id}`)).filter(Boolean) as { x: number; y: number }[];
       const childrenC = showChildren.map((c) => centerOf(`child:${c.id}`)).filter(Boolean) as { x: number; y: number }[];
+      const grandparentsC = grandparentSlots.map((s) => centerOf(`grandparent:${s.key}`)).filter(Boolean) as { x: number; y: number }[];
 
       const paths: string[] = [];
 
@@ -186,10 +204,28 @@ const FamilyTree: React.FC = () => {
       const R_SMALL = 24;
       const R_SPOUSE = 30;
 
-      if (focusC && parents.length > 0) {
-        const parentBottomY = Math.max(...parents.map(p => p.y + R_PARENT));
+      if (treeMode === 'ancestors' && focusC && grandparentsC.length >= 4 && parentsC.length >= 1) {
+        const gp0 = grandparentsC[0];
+        const gp1 = grandparentsC[1];
+        const gp2 = grandparentsC[2];
+        const gp3 = grandparentsC[3];
+        const p0 = parentsC[0];
+        const p1 = parentsC[1];
+        const yBusP = p1 ? (p0.y + p1.y) / 2 + R_PARENT : p0.y + R_PARENT + 14;
+        const yBusGp0 = Math.min(gp0.y, gp1.y) + R_SMALL + 14;
+        const yBusGp1 = p1 ? Math.min(gp2.y, gp3.y) + R_SMALL + 14 : yBusGp0;
+        paths.push(poly({ x: gp0.x, y: gp0.y + R_SMALL }, { x: gp0.x, y: yBusGp0 }, { x: p0.x, y: yBusGp0 }, { x: p0.x, y: p0.y + R_PARENT }));
+        paths.push(poly({ x: gp1.x, y: gp1.y + R_SMALL }, { x: gp1.x, y: yBusGp0 }, { x: p0.x, y: yBusGp0 }, { x: p0.x, y: p0.y + R_PARENT }));
+        if (p1) {
+          paths.push(poly({ x: gp2.x, y: gp2.y + R_SMALL }, { x: gp2.x, y: yBusGp1 }, { x: p1.x, y: yBusGp1 }, { x: p1.x, y: p1.y + R_PARENT }));
+          paths.push(poly({ x: gp3.x, y: gp3.y + R_SMALL }, { x: gp3.x, y: yBusGp1 }, { x: p1.x, y: yBusGp1 }, { x: p1.x, y: p1.y + R_PARENT }));
+          paths.push(poly({ x: p1.x, y: p1.y + R_PARENT }, { x: p1.x, y: yBusP }, { x: focusC.x, y: yBusP }, { x: focusC.x, y: focusC.y - R_FOCUS }));
+        }
+        paths.push(poly({ x: p0.x, y: p0.y + R_PARENT }, { x: p0.x, y: yBusP }, { x: focusC.x, y: yBusP }, { x: focusC.x, y: focusC.y - R_FOCUS }));
+      } else if (focusC && parentsC.length > 0) {
+        const parentBottomY = Math.max(...parentsC.map(p => p.y + R_PARENT));
         const yBus = parentBottomY + 14;
-        for (const p of parents) {
+        for (const p of parentsC) {
           paths.push(poly(
             { x: p.x, y: p.y + R_PARENT },
             { x: p.x, y: yBus },
@@ -387,6 +423,11 @@ const FamilyTree: React.FC = () => {
         />
         <div className="mx-auto max-w-6xl p-3 sm:p-4">
           <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--proto-border)] bg-[var(--proto-card)] p-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[var(--proto-text)]">Режим:</span>
+              <button type="button" onClick={() => setTreeMode('ancestors')} className={`rounded-xl px-3 py-1.5 text-sm ${treeMode === 'ancestors' ? 'bg-[var(--proto-active)] text-white' : 'border border-[var(--proto-border)] hover:bg-[var(--proto-bg)]'}`}>1→2→4</button>
+              <button type="button" onClick={() => setTreeMode('all')} className={`rounded-xl px-3 py-1.5 text-sm ${treeMode === 'all' ? 'bg-[var(--proto-active)] text-white' : 'border border-[var(--proto-border)] hover:bg-[var(--proto-bg)]'}`}>Полное</button>
+            </div>
             <label className="text-sm text-[var(--proto-text)]">
               Глубина дерева
               <input type="range" min={1} max={6} value={depth} onChange={(e) => setDepth(Number(e.target.value))} className="mt-1 block w-48 accent-[var(--proto-active)]" />
@@ -420,44 +461,70 @@ const FamilyTree: React.FC = () => {
                     />
                   ))}
                 </svg>
-                <div className="mb-6 flex flex-wrap justify-center gap-4">
-                  {parentSlots.map((slot, index) => (
-                    slot.member ? (
-                      <TreeCard
-                        key={slot.key}
-                        member={slot.member}
-                        nodeRef={`parent:${slot.member.id}`}
-                        relationLabel={slot.label}
-                      />
-                    ) : (
-                      <button
-                        key={slot.key}
-                        type="button"
-                        onClick={openEmptyParent}
-                        className="w-[200px] rounded-2xl border border-dashed border-[var(--proto-border)] bg-white p-4 text-center hover:border-[var(--proto-active)]"
-                      >
-                        <div className="mx-auto h-14 w-14 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-bg)]" />
-                        <p className="mt-2 text-sm font-semibold text-[var(--proto-text)]">{slot.label}</p>
-                        <p className="text-xs text-[var(--proto-text-muted)]">Пустой профиль</p>
-                      </button>
-                    )
-                  ))}
-                </div>
-                {focus && (
-                  <div className="mb-6 flex items-center justify-center gap-4">
-                    <TreeCard member={focus} nodeRef={`focus:${focus.id}`} relationLabel="Я" />
-                    {showSpouse ? <TreeCard member={showSpouse} nodeRef={`spouse:${showSpouse.id}`} relationLabel="Партнёр" /> : null}
-                  </div>
-                )}
-                {(showChildren.length > 0 || showSiblings.length > 0) && (
-                  <div className="flex flex-wrap justify-center gap-4">
-                    {showChildren.map((member) => (
-                      <TreeCard key={member.id} member={member} nodeRef={`child:${member.id}`} small relationLabel="Ребёнок" />
-                    ))}
-                    {showSiblings.map((member) => (
-                      <TreeCard key={member.id} member={member} nodeRef={`sibling:${member.id}`} small relationLabel="Брат/сестра" />
-                    ))}
-                  </div>
+                {treeMode === 'ancestors' ? (
+                  <>
+                    <div className="mb-6 flex flex-wrap justify-center gap-4">
+                      {grandparentSlots.map((slot) => (
+                        slot.member ? (
+                          <TreeCard key={slot.key} member={slot.member} nodeRef={`grandparent:${slot.key}`} small relationLabel={slot.label} />
+                        ) : (
+                          <div key={slot.key} ref={(el) => setNodeRef(`grandparent:${slot.key}`)(el)} className="w-[170px] rounded-2xl border border-dashed border-[var(--proto-border)] bg-white p-3 text-center">
+                            <div className="mx-auto h-12 w-12 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-bg)]" />
+                            <p className="mt-2 text-sm font-semibold text-[var(--proto-text)]">{slot.label}</p>
+                            <button type="button" onClick={() => { const p = showParents[slot.parentIndex]; if (p) { setTargetId(p.id); setPendingKind('parent'); setSelectMode('add-relation'); setSelectedMemberId(''); } }} className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--proto-active)] text-white">+</button>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                    <div className="mb-6 flex flex-wrap justify-center gap-4">
+                      {parentSlots.map((slot) => (
+                        slot.member ? (
+                          <TreeCard key={slot.key} member={slot.member} nodeRef={`parent:${slot.member.id}`} relationLabel={slot.label} />
+                        ) : (
+                          <button key={slot.key} type="button" onClick={openEmptyParent} ref={(el) => setNodeRef(`parent:${slot.key}`)(el)} className="w-[200px] rounded-2xl border border-dashed border-[var(--proto-border)] bg-white p-4 text-center hover:border-[var(--proto-active)]">
+                            <div className="mx-auto h-14 w-14 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-bg)]" />
+                            <p className="mt-2 text-sm font-semibold text-[var(--proto-text)]">{slot.label}</p>
+                            <p className="text-xs text-[var(--proto-text-muted)]">Пустой профиль</p>
+                          </button>
+                        )
+                      ))}
+                    </div>
+                    {focus && (
+                      <div className="flex justify-center">
+                        <TreeCard member={focus} nodeRef={`focus:${focus.id}`} relationLabel="Я" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-6 flex flex-wrap justify-center gap-4">
+                      {parentSlots.map((slot) => (
+                        slot.member ? (
+                          <TreeCard key={slot.key} member={slot.member} nodeRef={`parent:${slot.member.id}`} relationLabel={slot.label} />
+                        ) : (
+                          <button key={slot.key} type="button" onClick={openEmptyParent} className="w-[200px] rounded-2xl border border-dashed border-[var(--proto-border)] bg-white p-4 text-center hover:border-[var(--proto-active)]">
+                            <div className="mx-auto h-14 w-14 rounded-xl border border-[var(--proto-border)] bg-[var(--proto-bg)]" />
+                            <p className="mt-2 text-sm font-semibold text-[var(--proto-text)]">{slot.label}</p>
+                            <p className="text-xs text-[var(--proto-text-muted)]">Пустой профиль</p>
+                          </button>
+                        )
+                      ))}
+                    </div>
+                    {focus && (
+                      <div className="mb-6 flex items-center justify-center gap-4">
+                        <TreeCard member={focus} nodeRef={`focus:${focus.id}`} relationLabel="Я" />
+                        {showSpouse ? <TreeCard member={showSpouse} nodeRef={`spouse:${showSpouse.id}`} relationLabel="Партнёр" /> : null}
+                      </div>
+                    )}
+                    {(showChildren.length > 0 || showSiblings.length > 0) && (
+                      <div className="flex flex-wrap justify-center gap-4">
+                        {showChildren.map((member) => (
+                          <TreeCard key={member.id} member={member} nodeRef={`child:${member.id}`} small relationLabel="Ребёнок" />
+                        ))}
+                        {showSiblings.map((member) => (
+                          <TreeCard key={member.id} member={member} nodeRef={`sibling:${member.id}`} small relationLabel="Брат/сестра" />
+                        ))}
+                      </div>
                 )}
               </div>
             </div>
