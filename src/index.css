@@ -142,7 +142,8 @@
   --proto-border: #E5E1DC;
 }
 
-.dark .prototype-screen {
+.dark .prototype-screen,
+.dark {
   --proto-bg: #1C1917;
   --proto-card: #292524;
   --proto-active: #A39B8A;

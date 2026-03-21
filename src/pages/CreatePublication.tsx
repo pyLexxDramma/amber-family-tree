@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { topicTags } from '@/data/mock-publications';
-import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, ChevronRight, Menu, Trash2, MoreHorizontal } from 'lucide-react';
+import { Video, Mic, Upload, X, AlertTriangle, Users, Lock, Globe, Plus, Code, Link2, AlignLeft, Camera, Check, Pencil, ChevronRight, Trash2, MoreHorizontal } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/integrations/api';
@@ -536,18 +536,6 @@ const CreatePublication: React.FC = () => {
           title="Создать"
           onBack={() => navigate(-1)}
           light
-          right={
-            <button
-              type="button"
-              className="relative h-10 w-10 rounded-full flex items-center justify-center text-[var(--proto-text-muted)] hover:bg-[var(--proto-border)] transition-colors"
-              aria-label="Меню"
-            >
-              <Menu className="h-5 w-5" />
-              <span className="absolute -top-0.5 -right-0.5 h-5 min-w-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center">
-                1
-              </span>
-            </button>
-          }
         />
         <input
           ref={fileInputRef}
@@ -849,9 +837,11 @@ const CreatePublication: React.FC = () => {
                 </div>
               )}
 
-              <p className="text-[11px] text-center text-[var(--proto-text-muted)]">
-                build {clientBuild}{pickDebug ? ` · ${pickDebug}` : ''}
-              </p>
+              {!import.meta.env.PROD && (
+                <p className="text-[11px] text-center text-[var(--proto-text-muted)]">
+                  build {clientBuild}{pickDebug ? ` · ${pickDebug}` : ''}
+                </p>
+              )}
             </div>
           )}
 

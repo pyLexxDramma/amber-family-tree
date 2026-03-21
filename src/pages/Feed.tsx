@@ -598,7 +598,8 @@ const Feed: React.FC = () => {
                     key={label}
                     type="button"
                     onClick={onClick}
-                    className={`rounded-2xl border px-4 py-4 text-center text-sm font-medium transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 shadow-sm ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                    className={`rounded-2xl border px-4 py-4 text-center text-sm font-medium transition-colors flex flex-col items-center justify-center gap-1 border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 shadow-sm ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : 'bg-white text-[#333333]'}`}
+                    style={{ color: active ? '#ffffff' : '#333333' }}
                   >
                     {label}
                   </button>
@@ -610,7 +611,8 @@ const Feed: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setQueryFilter('author', null)}
-                className={`rounded-2xl border px-2 py-3 text-center text-xs font-medium transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${!authorParam ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                className={`rounded-2xl border px-2 py-3 text-center text-xs font-medium transition-colors flex flex-col items-center justify-center gap-1 border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${!authorParam ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : 'bg-white text-[#333333]'}`}
+                style={{ color: !authorParam ? '#ffffff' : '#333333' }}
               >
                 Все
               </button>
@@ -623,13 +625,14 @@ const Feed: React.FC = () => {
                     key={id}
                     type="button"
                     onClick={() => setQueryFilter('author', authorParam === id ? null : id)}
-                    className={`rounded-2xl border px-2 py-3 text-center transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                    className={`rounded-2xl border px-2 py-3 text-center transition-colors flex flex-col items-center justify-center gap-1 border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : 'bg-white text-[#333333]'}`}
+                    style={{ color: active ? '#ffffff' : '#333333' }}
                   >
                     <Avatar className="h-8 w-8 shrink-0">
                       {avSrc ? <AvatarImage src={avSrc} /> : null}
-                      <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-[10px]">{memberDisplayName(m ?? null).slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="bg-[var(--proto-border)] text-[10px]" style={{ color: '#333333' }}>{memberDisplayName(m ?? null).slice(0, 2).toUpperCase() || '?'}</AvatarFallback>
                     </Avatar>
-                    <span className="text-[10px] font-medium truncate w-full">{memberDisplayName(m ?? null)}</span>
+                    <span className="text-[10px] font-medium truncate w-full" style={{ color: active ? '#ffffff' : '#333333' }}>{memberDisplayName(m ?? null) || 'Автор'}</span>
                   </button>
                 );
               })}
@@ -639,7 +642,8 @@ const Feed: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setQueryFilter('with', null)}
-                className={`rounded-2xl border px-2 py-3 text-center text-xs font-medium transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${!withParam ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                className={`rounded-2xl border px-2 py-3 text-center text-xs font-medium transition-colors flex flex-col items-center justify-center gap-1 border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${!withParam ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : 'bg-white text-[#333333]'}`}
+                style={{ color: !withParam ? '#ffffff' : '#333333' }}
               >
                 Все
               </button>
@@ -652,13 +656,14 @@ const Feed: React.FC = () => {
                     key={id}
                     type="button"
                     onClick={() => setQueryFilter('with', withParam === id ? null : id)}
-                    className={`rounded-2xl border px-2 py-3 text-center transition-colors flex flex-col items-center justify-center gap-1 bg-white border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : ''}`}
+                    className={`rounded-2xl border px-2 py-3 text-center transition-colors flex flex-col items-center justify-center gap-1 border-[var(--proto-border)] hover:border-[var(--proto-active)]/40 ${active ? 'bg-[#5D4B34] text-white border-[#5D4B34]' : 'bg-white text-[#333333]'}`}
+                    style={{ color: active ? '#ffffff' : '#333333' }}
                   >
                     <Avatar className="h-8 w-8 shrink-0">
                       {avSrc ? <AvatarImage src={avSrc} /> : null}
-                      <AvatarFallback className="bg-[var(--proto-border)] text-[var(--proto-text)] text-[10px]">{memberDisplayName(m ?? null).slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="bg-[var(--proto-border)] text-[10px]" style={{ color: '#333333' }}>{memberDisplayName(m ?? null).slice(0, 2).toUpperCase() || '?'}</AvatarFallback>
                     </Avatar>
-                    <span className="text-[10px] font-medium truncate w-full">{memberDisplayName(m ?? null)}</span>
+                    <span className="text-[10px] font-medium truncate w-full" style={{ color: active ? '#ffffff' : '#333333' }}>{memberDisplayName(m ?? null) || 'Участник'}</span>
                   </button>
                 );
               })}
@@ -669,6 +674,7 @@ const Feed: React.FC = () => {
                 type="button"
                 onClick={() => setQueryFilter('tag', null)}
                 className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${!tagParam ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
+                style={{ color: !tagParam ? '#ffffff' : '#333333' }}
               >
                 Все
               </button>
@@ -678,6 +684,7 @@ const Feed: React.FC = () => {
                   type="button"
                   onClick={() => setQueryFilter('tag', tagParam === tag ? null : tag)}
                   className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${tagParam === tag ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
+                  style={{ color: tagParam === tag ? '#ffffff' : '#333333' }}
                 >
                   {tag}
                 </button>
@@ -689,6 +696,7 @@ const Feed: React.FC = () => {
                 type="button"
                 onClick={() => setQueryFilter('place', null)}
                 className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${!placeParam ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
+                style={{ color: !placeParam ? '#ffffff' : '#333333' }}
               >
                 Все
               </button>
@@ -698,6 +706,7 @@ const Feed: React.FC = () => {
                   type="button"
                   onClick={() => setQueryFilter('place', placeParam === place ? null : place)}
                   className={`rounded-xl px-3 py-2 text-xs font-medium transition-colors ${placeParam === place ? 'bg-[#5D4B34] text-white' : 'bg-white border border-[var(--proto-border)] text-[#333333] hover:border-[var(--proto-active)]/40'}`}
+                  style={{ color: placeParam === place ? '#ffffff' : '#333333' }}
                 >
                   {place}
                 </button>

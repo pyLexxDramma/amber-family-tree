@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angelo — сопоставление КП Яндекс с требованиями</title>
+  <style>
+    :root { --accent: #5D4B34; --bg: #F5F0E8; --card: #fff; --border: #E5E1DC; --muted: #6B6560; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #333; line-height: 1.6; margin: 0; padding: 2rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    h3 { font-size: 1rem; margin-top: 1.25rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    th, td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--accent); color: #fff; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .ok { color: #0a7; }
+    .warn { color: #c60; }
+    .gap { color: #c33; }
+    .card { background: var(--card); border-radius: 8px; padding: 1.25rem; margin: 1rem 0; border: 1px solid var(--border); }
+    ul { margin: 0.5rem 0; padding-left: 1.25rem; }
+    .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .questions { background: #fef9e7; border-left: 4px solid #c60; padding: 1rem 1.25rem; margin: 1rem 0; }
+    .questions h3 { margin-top: 0; }
+    .total-row { font-weight: 600; background: #f8f6f2; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Angelo — сопоставление КП Яндекс с требованиями</h1>
+    <p class="meta">Документ для согласования с Яндекс.Облако при миграции с Fornex. Дата: март 2026.</p>
+
+    <h2>1. Коммерческое предложение Яндекс (кратко)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Ресурсы</th>
+          <th>₽/мес</th>
+          <th>₽/год</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>VM (Compute Cloud)</td>
+          <td>4 vCPU, 8 GB RAM, 120 GB SSD</td>
+          <td>6 895.86</td>
+          <td>83 899.58</td>
+        </tr>
+        <tr>
+          <td>Managed PostgreSQL</td>
+          <td>2 vCPU, 4 GB RAM, 100 GB storage</td>
+          <td>5 397.11</td>
+          <td>65 664.82</td>
+        </tr>
+        <tr>
+          <td>Object Storage (S3)</td>
+          <td>4 096 GB (4 TB)</td>
+          <td>9 039.73</td>
+          <td>109 983.40</td>
+        </tr>
+        <tr>
+          <td>Публичный IP</td>
+          <td>1 адрес</td>
+          <td>189.73</td>
+          <td>2 308.44</td>
+        </tr>
+        <tr>
+          <td>Load Balancer</td>
+          <td>1 балансировщик</td>
+          <td>616.64</td>
+          <td>7 502.41</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2"><strong>Итого</strong></td>
+          <td><strong>22 139.07</strong></td>
+          <td><strong>269 358.65</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. Требования Angelo (MVP)</h2>
+    <p><strong>Оценка:</strong> 100 семей (~500 человек), медиахранилище ~3 TB.</p>
+    <p><strong>Схема:</strong> 1 VM + Managed DB + Object Storage.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Наши требования</th>
+          <th>В КП Яндекс</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>VM</td>
+          <td>4 vCPU, 8 GB RAM, SSD 80–120 GB</td>
+          <td>4 vCPU, 8 GB RAM, 120 GB SSD</td>
+          <td class="ok">✓ Совпадает</td>
+        </tr>
+        <tr>
+          <td>PostgreSQL</td>
+          <td>2 vCPU, 4–8 GB RAM, SSD 50–100 GB</td>
+          <td>2 vCPU, 4 GB RAM, 100 GB</td>
+          <td class="warn">~ 4 GB — нижняя граница</td>
+        </tr>
+        <tr>
+          <td>Object Storage</td>
+          <td>4 TB (3 TB + запас)</td>
+          <td>4 096 GB</td>
+          <td class="ok">✓ Совпадает</td>
+        </tr>
+        <tr>
+          <td>Load Balancer</td>
+          <td>Не указывали явно</td>
+          <td>Включён</td>
+          <td class="ok">✓ Полезно для HTTPS/HA</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Что не учтено в Предложении</h2>
+    <div class="card">
+      <h3>3.1. SSL/HTTPS</h3>
+      <p>Приложение требует HTTPS (angelo-test.ru). В КП не указано:</p>
+      <ul>
+        <li>Сертификат (Let's Encrypt / Yandex Certificate Manager)</li>
+        <li>Терминация SSL на Load Balancer или на VM</li>
+      </ul>
+
+      <h3>3.2. Бэкапы PostgreSQL</h3>
+      <p>Требуем retention 7–14 дней. Нужно уточнить:</p>
+      <ul>
+        <li>Включены ли автоматические бэкапы в Managed PostgreSQL?</li>
+        <li>Стоимость retention 7–14 дней</li>
+      </ul>
+
+      <h3>3.3. Мониторинг и алерты</h3>
+      <p>В MVP нужны: 5xx, latency, диск > 80%, недоступность /api.</p>
+      <ul>
+        <li>Monitoring (Yandex Monitoring) — входит ли в базовый тариф?</li>
+        <li>Алерты в Telegram/Email</li>
+      </ul>
+
+      <h3>3.4. SMTP / отправка писем</h3>
+      <p>Приложение отправляет OTP-коды по email (вход по коду). В .env:</p>
+      <ul>
+        <li>SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD — нужен отдельный сервис или Yandex предоставляет?</li>
+      </ul>
+
+      <h3>3.5. Поддержка</h3>
+      <p>В сноске КП указано: тариф «Бизнес» — 3 050 ₽/мес + 5% от потребления. Нужно уточнить, включена ли поддержка в расчёт или это дополнительно.</p>
+
+      <h3>3.6. Миграция данных</h3>
+      <p>Перенос с Fornex:</p>
+      <ul>
+        <li>Дамп PostgreSQL + восстановление</li>
+        <li>Копирование медиа в Object Storage (S3 API)</li>
+        <li>Нужна ли помощь в миграции или консультация?</li>
+      </ul>
+    </div>
+
+    <h2>4. Дополнительные вопросы для Яндекс</h2>
+    <div class="questions">
+      <ul>
+        <li><strong>PostgreSQL:</strong> Достаточно ли 4 GB RAM для 100 семей, или лучше сразу 8 GB? Разница в стоимости?</li>
+        <li><strong>PostgreSQL:</strong> Версия PostgreSQL в Managed Service? (Приложение рассчитано на 15.x)</li>
+        <li><strong>Object Storage:</strong> S3-совместимый API? Endpoint для подключения из приложения (boto3)?</li>
+        <li><strong>Object Storage:</strong> Публичный доступ к объектам через URL (presigned URLs) — поддерживается?</li>
+        <li><strong>SSL:</strong> Рекомендуемый способ получения и обновления сертификата для angelo-test.ru?</li>
+        <li><strong>Load Balancer:</strong> Как связать с VM и доменом? Нужна ли отдельная настройка для HTTPS?</li>
+        <li><strong>Зона доступности:</strong> КП указывает на РФ. Нужно подтвердить, что данные размещаются в РФ.</li>
+        <li><strong>Срок действия:</strong> КП от 18.04.2026. До какого числа актуальны цены?</li>
+      </ul>
+    </div>
+
+    <h2>5. Стек Angelo (для справки)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Технология</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Фронтенд</td><td>React 18, Vite 5, TypeScript</td></tr>
+        <tr><td>Бэкенд</td><td>FastAPI, Python 3.11</td></tr>
+        <tr><td>БД</td><td>PostgreSQL 15</td></tr>
+        <tr><td>Хранилище</td><td>S3-совместимое (boto3), на Fornex — MinIO</td></tr>
+        <tr><td>Веб-сервер</td><td>Nginx (на VM)</td></tr>
+      </tbody>
+    </table>
+
+    <p class="meta" style="margin-top: 2rem;">Документ подготовлен на основе КП Яндекс и docs/yandex-migration-stack.md</p>
+  </div>
+</body>
+</html>
