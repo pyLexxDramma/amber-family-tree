@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE, useMockUiAfterReferenceLogin } from '@/constants/reference-profile';
 import { setDemoMode } from '@/lib/demoMode';
+import { visionDefaultClassicPath } from '@/lib/visionIa';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { api } from '@/integrations/api';
 
@@ -69,7 +70,7 @@ const Welcome: React.FC = () => {
       const res = await api.auth.verify(REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE);
       localStorage.setItem('token', res.access_token);
       setDemoMode(useMockUiAfterReferenceLogin());
-      navigate(ROUTES.classic.tree);
+      navigate(visionDefaultClassicPath());
     } catch {
       setTestLoginError('Не удалось выполнить быстрый вход. Проверьте, что backend запущен.');
     } finally {

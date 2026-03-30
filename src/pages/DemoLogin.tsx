@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { setDemoMode } from '@/lib/demoMode';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
+import { visionDefaultClassicPath } from '@/lib/visionIa';
 
 const DemoLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const DemoLogin: React.FC = () => {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 650));
     setDemoMode(true);
-    navigate(ROUTES.classic.tree, { replace: true });
+    navigate(visionDefaultClassicPath(), { replace: true });
   };
 
   return (

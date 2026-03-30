@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Camera } from 'lucide-react';
 import { api } from '@/integrations/api';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
+import { visionDefaultClassicPath } from '@/lib/visionIa';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const Onboarding: React.FC = () => {
         about: form.about.trim() || undefined,
         avatar: avatarUrl || undefined,
       });
-      navigate(ROUTES.classic.tree);
+      navigate(visionDefaultClassicPath());
     } catch {
       setErrors({ _save: 'Не удалось сохранить' });
     } finally {

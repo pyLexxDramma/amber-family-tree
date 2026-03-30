@@ -8,6 +8,7 @@ import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 import { ROUTES } from '@/constants/routes';
 import { REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE, useMockUiAfterReferenceLogin } from '@/constants/reference-profile';
 import { setDemoMode } from '@/lib/demoMode';
+import { visionDefaultClassicPath } from '@/lib/visionIa';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const Login: React.FC = () => {
       const res = await api.auth.verify(REFERENCE_DEMO_EMAIL, REFERENCE_DEMO_CODE);
       localStorage.setItem('token', res.access_token);
       setDemoMode(useMockUiAfterReferenceLogin());
-      navigate(ROUTES.classic.tree);
+      navigate(visionDefaultClassicPath());
     } catch {
       setError('Не удалось войти в тестовый профиль');
     } finally {

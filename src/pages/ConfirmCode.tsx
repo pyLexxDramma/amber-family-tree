@@ -7,6 +7,7 @@ import { api } from '@/integrations/api';
 import { ApiError } from '@/integrations/request';
 import { isReferenceDemoEmail, useMockUiAfterReferenceLogin } from '@/constants/reference-profile';
 import { setDemoMode } from '@/lib/demoMode';
+import { visionDefaultClassicPath } from '@/lib/visionIa';
 import { BrandLogoCircle } from '@/components/BrandLogoCircle';
 
 const ConfirmCode: React.FC = () => {
@@ -37,7 +38,7 @@ const ConfirmCode: React.FC = () => {
         navigate('/onboarding');
       } else {
         setDemoMode(isReferenceDemoEmail(contact) && useMockUiAfterReferenceLogin());
-        navigate(ROUTES.classic.tree);
+        navigate(visionDefaultClassicPath());
       }
     } catch (e) {
       const msg = e instanceof ApiError
