@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.storage_urls import public_s3_object_url
 from app.core.security import get_current_user
 from app.database import get_db
 from app.models.user import User
@@ -80,7 +81,7 @@ async def presign(
             },
             ExpiresIn=3600,
         )
-        url = f"{public_endpoint_url}/{settings.s3_bucket}/{key}"
+        url = public_s3_object_url(key)
     except Exception:
         upload_url = f"https://example.com/upload?key={key}"
         url = f"https://example.com/media/{key}"

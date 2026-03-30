@@ -5,12 +5,7 @@ import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import type { Publication } from '@/types';
 import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
-
-type AlbumDef = {
-  id: string;
-  title: string;
-  match: (p: Publication) => boolean;
-};
+import { allAlbumDefs } from '@/lib/autoCollections';
 
 type AlbumView = {
   id: string;
@@ -28,6 +23,7 @@ function photoCoverOf(p: Publication): string | null {
 const Albums: React.FC = () => {
   const navigate = useNavigate();
   const [pubs, setPubs] = useState<Publication[]>([]);
+  const [autoMode, setAutoMode] = useState(false);
 
   const loadPubs = () => api.feed.list().then(setPubs);
 
@@ -54,14 +50,7 @@ const Albums: React.FC = () => {
     };
   }, []);
 
-  const defs: AlbumDef[] = useMemo(() => ([
-    { id: 'sochi', title: 'Лето в Сочи', match: (p) => (p.place || '').toLowerCase().includes('сочи') },
-    { id: 'new-year', title: 'Новый год', match: (p) => (p.title || '').toLowerCase().includes('новый') },
-    { id: 'school', title: 'Школьные годы', match: (p) => (p.title || '').toLowerCase().includes('гордость') },
-    { id: 'holidays', title: 'Семейные праздники', match: (p) => p.topicTag === 'Праздники' || p.topicTag === 'День рождения' },
-    { id: 'nature', title: 'Дача и природа', match: (p) => (p.title || '').toLowerCase().includes('волге') || (p.text || '').toLowerCase().includes('дач') },
-    { id: 'travel', title: 'Наши путешествия', match: (p) => p.topicTag === 'Путешествия' },
-  ]), []);
+  const defs = useMemo(() => allAlbumDefs(pubs, autoMode), [pubs, autoMode]);
 
   const albums: AlbumView[] = useMemo(() => {
     return defs.map((d) => {
@@ -78,6 +67,19 @@ const Albums: React.FC = () => {
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <div className="mx-auto max-w-full px-4 pt-8 pb-24 sm:max-w-md sm:px-5 md:max-w-2xl md:px-6 lg:max-w-4xl overflow-x-hidden">
           <h1 className="text-2xl font-semibold text-[var(--proto-text)] mb-6">Альбомы</h1>
+          <div className="mb-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAutoMode((v) => !v)}
+              className={`h-10 px-4 rounded-xl border text-sm font-semibold transition-colors ${
+                autoMode
+                  ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]'
+                  : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text)] hover:border-[var(--proto-active)]/40'
+              }`}
+            >
+              {autoMode ? 'Автосборка включена' : 'Собрать автоматически'}
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             {albums.map((a) => (
               <button

@@ -15,6 +15,7 @@ from app.schemas.feed import (
 )
 from app.schemas.media import PresignRequest, PresignResponse
 from app.schemas.profile import ProfileUpdate
+from app.schemas.history import EventResponse, EventListResponse, EventFromPublicationCreate
 
 __all__ = [
     "SendCodeRequest",
@@ -31,4 +32,7 @@ __all__ = [
     "PresignRequest",
     "PresignResponse",
     "ProfileUpdate",
+    "EventResponse",
+    "EventListResponse",
+    "EventFromPublicationCreate",
 ]

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, contact_requests, debug, family, feed, media, messages, profile
+from app.api import auth, contact_requests, debug, family, feed, history, media, messages, profile
 from app.config import get_settings
 from app.database import init_db
 
@@ -45,6 +45,8 @@ app.include_router(profile.router, prefix="/api")
 app.include_router(profile.router)
 app.include_router(messages.router, prefix="/api")
 app.include_router(messages.router)
+app.include_router(history.router, prefix="/api")
+app.include_router(history.router)
 app.include_router(contact_requests.router, prefix="/api")
 app.include_router(contact_requests.router)
 

@@ -78,6 +78,24 @@ export interface Publication {
   contentBlocks?: Array<{ type: string; text?: string; n?: number; url?: string }>;
 }
 
+export interface EventItem {
+  id: string;
+  title: string;
+  eventDate: string;
+  eventDateApproximate?: boolean;
+  familyId: string;
+  sourcePublicationId: string;
+  participantIds: string[];
+  media: Array<{
+    id: string;
+    type: string;
+    url: string;
+    thumbnail?: string | null;
+    name: string;
+  }>;
+  text: string;
+}
+
 export interface Invitation {
   id: string;
   fromId: string;

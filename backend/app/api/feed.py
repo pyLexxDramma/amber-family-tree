@@ -24,6 +24,7 @@ from app.services.email_notifications import (
 )
 from app.services.mentions import resolve_mentioned_member_ids
 from app.config import get_settings
+from app.storage_urls import public_s3_object_url, resolve_public_media_url
 from app.schemas.feed import (
     CommentCreate,
     CommentResponse,
@@ -56,16 +57,6 @@ def _infer_media_type_from_key(key: str) -> str | None:
         return None
     return None
 
-def _to_public_media_url(raw: str) -> str:
-    if raw.startswith("http://") or raw.startswith("https://"):
-        return raw
-    if raw.startswith("/"):
-        return raw
-    settings = get_settings()
-    base = (settings.s3_public_endpoint_url or settings.s3_endpoint_url).rstrip("/")
-    return f"{base}/{settings.s3_bucket}/{raw}"
-
-
 def _expand_strength(member_id: str, strength: int) -> list[str]:
     s = int(strength or 1)
     if s < 1:
@@ -76,8 +67,8 @@ def _expand_strength(member_id: str, strength: int) -> list[str]:
 
 
 def _media_to_response(m: MediaItem) -> dict:
-    url = _to_public_media_url(m.url)
-    thumb = m.thumbnail if (m.thumbnail and (m.thumbnail.startswith("http://") or m.thumbnail.startswith("https://"))) else url
+    url = public_s3_object_url(m.url)
+    thumb = resolve_public_media_url(m.thumbnail) or url
     media_likes = getattr(m, "__dict__", {}).get("media_likes") or []
     like_ids: list[str] = []
     for like in media_likes:

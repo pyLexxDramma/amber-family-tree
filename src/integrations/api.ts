@@ -17,6 +17,7 @@ function selectApi(): AngeloApi {
       profile: realApi.profile,
       media: realApi.media,
       messages: realApi.messages,
+      history: realApi.history,
       contactRequests: realApi.contactRequests,
     } as AngeloApi;
   return realApi;
@@ -62,6 +63,11 @@ export const api: AngeloApi = {
   messages: {
     listWith: (memberId) => selectApi().messages.listWith(memberId),
     sendTo: (memberId, text) => selectApi().messages.sendTo(memberId, text),
+  },
+  history: {
+    listEvents: (params) => selectApi().history.listEvents(params),
+    getEvent: (eventId) => selectApi().history.getEvent(eventId),
+    createFromPublication: (publicationId) => selectApi().history.createFromPublication(publicationId),
   },
   contactRequests: {
     getStateWith: (memberId) => selectApi().contactRequests.getStateWith(memberId),

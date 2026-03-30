@@ -2,7 +2,7 @@ import type { AngeloApi, FeedListParams, PublicationCreateBody } from './api.typ
 import { mockPublications } from '@/data/mock-publications';
 import { currentUserId, getCurrentUser, getMember, mockMembers } from '@/data/mock-members';
 import { myMediaDemoItems } from '@/data/my-media-demo';
-import type { Comment, ContactRequest, ContactRequestState, FamilyMember, MediaItem, Message, Publication } from '@/types';
+import type { Comment, ContactRequest, ContactRequestState, EventItem, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getCurrentUserForDisplay } from '@/data/demo-profile-storage';
 import { refUrl } from '@/data/mock-publications';
 
@@ -322,6 +322,82 @@ export const mockApi: AngeloApi = {
       };
       mockMessages = [...mockMessages, msg];
       return msg;
+    },
+  },
+  history: {
+    async listEvents(params?: { from?: string; to?: string; memberId?: string }): Promise<EventItem[]> {
+      const items = [...mockPublications]
+        .filter(p => {
+          const d = p.eventDate || p.publishDate;
+          if (params?.from && d < params.from) return false;
+          if (params?.to && d > params.to) return false;
+          if (params?.memberId) {
+            const participants = new Set([p.authorId, ...(p.participantIds ?? [])]);
+            if (!participants.has(params.memberId)) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => (b.eventDate || b.publishDate).localeCompare(a.eventDate || a.publishDate))
+        .map(p => ({
+          id: p.id,
+          title: p.title || `Событие ${p.eventDate}`,
+          eventDate: p.eventDate,
+          eventDateApproximate: p.eventDateApproximate ?? false,
+          familyId: 'mock-family',
+          sourcePublicationId: p.id,
+          participantIds: p.participantIds ?? [],
+          media: (p.media ?? []).map(m => ({
+            id: m.id,
+            type: m.type,
+            url: m.url,
+            thumbnail: m.thumbnail,
+            name: m.name,
+          })),
+          text: p.text ?? '',
+        }));
+      return items;
+    },
+    async getEvent(eventId: string): Promise<EventItem | null> {
+      const p = mockPublications.find(x => x.id === eventId);
+      if (!p) return null;
+      return {
+        id: p.id,
+        title: p.title || `Событие ${p.eventDate}`,
+        eventDate: p.eventDate,
+        eventDateApproximate: p.eventDateApproximate ?? false,
+        familyId: 'mock-family',
+        sourcePublicationId: p.id,
+        participantIds: p.participantIds ?? [],
+        media: (p.media ?? []).map(m => ({
+          id: m.id,
+          type: m.type,
+          url: m.url,
+          thumbnail: m.thumbnail,
+          name: m.name,
+        })),
+        text: p.text ?? '',
+      };
+    },
+    async createFromPublication(publicationId: string): Promise<EventItem> {
+      const p = mockPublications.find(x => x.id === publicationId);
+      if (!p) throw new Error('Publication not found');
+      return {
+        id: p.id,
+        title: p.title || `Событие ${p.eventDate}`,
+        eventDate: p.eventDate,
+        eventDateApproximate: p.eventDateApproximate ?? false,
+        familyId: 'mock-family',
+        sourcePublicationId: p.id,
+        participantIds: p.participantIds ?? [],
+        media: (p.media ?? []).map(m => ({
+          id: m.id,
+          type: m.type,
+          url: m.url,
+          thumbnail: m.thumbnail,
+          name: m.name,
+        })),
+        text: p.text ?? '',
+      };
     },
   },
   contactRequests: {

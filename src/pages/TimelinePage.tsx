@@ -7,7 +7,7 @@ import { getPrototypePublicationPhotoByTopic, getPrototypePublicationPhotoBySeed
 import { topicTags } from '@/data/mock-publications';
 import { currentUserId, getMember } from '@/data/mock-members';
 import { Users, MapPin, Tag, Send, FileImage, FileVideo, FileAudio, FileText, Sparkles, Heart, Cake, Trophy } from 'lucide-react';
-import type { Publication } from '@/types';
+import type { EventItem, Publication } from '@/types';
 import { api } from '@/integrations/api';
 import { isDemoMode } from '@/lib/demoMode';
 import { getMilestoneIds } from '@/lib/milestones';
@@ -46,6 +46,8 @@ function buildEvents(pubs: Publication[]) {
   }));
 }
 
+type EventCardData = ReturnType<typeof buildEvents>[number];
+
 function getDecade(dateStr: string): string {
   const y = parseInt(dateStr.slice(0, 4), 10);
   const dec = Math.floor(y / 10) * 10;
@@ -73,9 +75,29 @@ const TimelinePage: React.FC = () => {
   const [milestoneVer, setMilestoneVer] = useState(0);
 
   useEffect(() => {
-    api.feed.list().then(pubs => {
-      setBaseEvents(buildEvents(pubs));
-      setAllPlaces([...new Set(pubs.map(p => (p as { place?: string }).place).filter(Boolean))] as string[]);
+    Promise.all([api.history.listEvents(), api.feed.list()]).then(([events, pubs]) => {
+      const pubsMap = new Map(pubs.map(p => [p.id, p]));
+      const normalizedFromHistory: EventCardData[] = events.map((ev: EventItem) => {
+        const p = pubsMap.get(ev.sourcePublicationId);
+        const mediaThumb = ev.media.find(m => m.type === 'photo')?.thumbnail
+          || ev.media.find(m => m.type === 'photo')?.url
+          || ev.media.find(m => m.thumbnail)?.thumbnail
+          || getPrototypePublicationPhotoBySeed(ev.id, 0).src;
+        return {
+          id: ev.id,
+          date: ev.eventDate,
+          title: ev.title || p?.title || 'Событие',
+          subtitle: ev.text || p?.text || '',
+          topic: p?.topicTag || '',
+          place: p?.place,
+          type: p?.type || 'text',
+          authorId: p?.authorId || '',
+          participantIds: ev.participantIds ?? p?.participantIds ?? [],
+          thumb: mediaThumb,
+        };
+      });
+      setBaseEvents(normalizedFromHistory);
+      setAllPlaces([...new Set(normalizedFromHistory.map(p => p.place).filter(Boolean))] as string[]);
     });
   }, []);
 

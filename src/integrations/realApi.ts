@@ -1,5 +1,5 @@
 import type { AngeloApi, FeedListParams, PresignUploadRequest, PresignUploadResponse, PublicationCreateBody } from './api.types';
-import type { AppUser, Comment, ContactRequest, ContactRequestState, FamilyMember, MediaItem, Message, Publication } from '@/types';
+import type { AppUser, Comment, ContactRequest, ContactRequestState, EventItem, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import { getJson, requestJson } from './request';
 import {
   normalizeAppUser,
@@ -17,6 +17,27 @@ const debugApi = {
     return requestJson<{ ok: boolean }>('POST', '/debug/seed-reference');
   },
 };
+
+function normalizeEventItem(input: any): EventItem {
+  const media = Array.isArray(input?.media) ? input.media : [];
+  return {
+    id: String(input?.id ?? ''),
+    title: String(input?.title ?? ''),
+    eventDate: String(input?.eventDate ?? input?.event_date ?? ''),
+    eventDateApproximate: Boolean(input?.eventDateApproximate ?? input?.event_date_approximate ?? false),
+    familyId: String(input?.familyId ?? input?.family_id ?? ''),
+    sourcePublicationId: String(input?.sourcePublicationId ?? input?.source_publication_id ?? ''),
+    participantIds: Array.isArray(input?.participantIds ?? input?.participant_ids) ? (input?.participantIds ?? input?.participant_ids) : [],
+    media: media.map((m: any) => ({
+      id: String(m?.id ?? ''),
+      type: String(m?.type ?? ''),
+      url: String(m?.url ?? ''),
+      thumbnail: m?.thumbnail ? String(m.thumbnail) : undefined,
+      name: String(m?.name ?? ''),
+    })),
+    text: String(input?.text ?? ''),
+  };
+}
 
 export const realApi: AngeloApi = {
   feed: {
@@ -186,6 +207,27 @@ export const realApi: AngeloApi = {
     async sendTo(memberId: string, text: string) {
       const res = await requestJson<unknown>('POST', `/messages/with/${memberId}`, { text });
       return normalizeMessage(res);
+    },
+  },
+  history: {
+    async listEvents(params?: { from?: string; to?: string; memberId?: string }) {
+      const q = new URLSearchParams();
+      if (params?.from) q.set('from', params.from);
+      if (params?.to) q.set('to', params.to);
+      if (params?.memberId) q.set('member_id', params.memberId);
+      const suffix = q.toString() ? `?${q}` : '';
+      const res = await getJson<any>(`/history/events${suffix}`);
+      const items = Array.isArray(res?.items) ? res.items : [];
+      return items.map(normalizeEventItem);
+    },
+    async getEvent(eventId: string) {
+      const res = await getJson<any>(`/history/events/${eventId}`);
+      if (!res) return null;
+      return normalizeEventItem(res);
+    },
+    async createFromPublication(publicationId: string) {
+      const res = await requestJson<any>('POST', '/history/events/from-publication', { publication_id: publicationId });
+      return normalizeEventItem(res);
     },
   },
   contactRequests: {

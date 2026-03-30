@@ -12,7 +12,7 @@ import {
 import { AppLayout } from '@/components/AppLayout';
 import { TopBar } from '@/components/TopBar';
 import { usePlatform } from '@/platform/PlatformContext';
-import { ChevronLeft, ChevronRight, Heart, Star, X } from 'lucide-react';
+import { CalendarPlus, ChevronLeft, ChevronRight, Heart, MessageCircle, Star, X } from 'lucide-react';
 import type { FamilyMember, Publication } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { isDemoMode, useAvatarFallback } from '@/lib/demoMode';
@@ -141,6 +141,11 @@ const PublicationDetails: React.FC = () => {
   const [milestone, setMilestone] = useState(false);
   const [animatedMediaLikeId, setAnimatedMediaLikeId] = useState<string | null>(null);
   const [fullscreenMedia, setFullscreenMedia] = useState<{ type: 'photo' | 'video' | 'audio'; items: { id?: string; url: string; thumbnail?: string; name?: string; likes?: string[] }[]; index: number } | null>(null);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareTargetId, setShareTargetId] = useState('');
+  const [shareText, setShareText] = useState('');
+  const [isShareSending, setIsShareSending] = useState(false);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
@@ -498,6 +503,45 @@ const PublicationDetails: React.FC = () => {
     }
   };
 
+  const createEventFromPublication = async () => {
+    if (!pub || isCreatingEvent) return;
+    setIsCreatingEvent(true);
+    try {
+      await api.history.createFromPublication(pub.id);
+      toast({ title: 'Событие создано в Истории' });
+      platform.hapticFeedback('light');
+    } catch {
+      toast({ title: 'Не удалось создать событие', variant: 'destructive' });
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
+  const openShareToMessages = () => {
+    if (!pub) return;
+    const title = pub.title?.trim() || 'Событие';
+    const date = pub.eventDate || pub.publishDate;
+    setShareText(`${title}\nДата: ${date}\nОткрой в Angelo: /classic/publication/${pub.id}`);
+    setShareTargetId('');
+    setShareOpen(true);
+  };
+
+  const sendShareToMessages = async () => {
+    if (!shareTargetId || !shareText.trim() || isShareSending) return;
+    setIsShareSending(true);
+    try {
+      await api.messages.sendTo(shareTargetId, shareText.trim());
+      setShareOpen(false);
+      navigate(`${ROUTES.classic.messages(shareTargetId)}?draft=`);
+      toast({ title: 'Отправлено в сообщения' });
+      platform.hapticFeedback('light');
+    } catch {
+      toast({ title: 'Не удалось отправить', variant: 'destructive' });
+    } finally {
+      setIsShareSending(false);
+    }
+  };
+
   const scrollToPhoto = (idx: number) => {
     const el = photoScrollerRef.current;
     if (!el) return;
@@ -842,6 +886,25 @@ const PublicationDetails: React.FC = () => {
               {commentCountLabel((pub.comments ?? []).length)}
             </span>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={createEventFromPublication}
+              disabled={isCreatingEvent}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] text-sm text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              {isCreatingEvent ? 'Создаю…' : 'Создать событие'}
+            </button>
+            <button
+              type="button"
+              onClick={openShareToMessages}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--proto-card)] border border-[var(--proto-border)] text-sm text-[var(--proto-text)] hover:border-[var(--proto-active)]/30 transition-colors"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Поделиться в сообщения
+            </button>
+          </div>
 
           {participants.length > 0 && (
             <div>
@@ -1144,6 +1207,44 @@ const PublicationDetails: React.FC = () => {
               disabled={isSaving}
             >
               {isSaving ? 'Сохраняю…' : 'Сохранить'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="bg-[var(--proto-bg)] border-[var(--proto-border)] rounded-3xl w-[92vw] max-w-md p-6">
+          <DialogHeader className="text-center sm:text-center">
+            <DialogTitle className="font-serif text-2xl text-[var(--proto-text)]">Поделиться</DialogTitle>
+          </DialogHeader>
+          <div className="mt-2 space-y-3">
+            <select
+              value={shareTargetId}
+              onChange={(e) => setShareTargetId(e.target.value)}
+              className="w-full rounded-xl border-2 border-[var(--proto-border)] bg-white h-11 px-3 text-sm text-[var(--proto-text)]"
+            >
+              <option value="">Выберите родственника</option>
+              {members
+                .filter((m) => m.id !== myMemberId)
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {memberDisplayName(m)}
+                  </option>
+                ))}
+            </select>
+            <Textarea
+              value={shareText}
+              onChange={(e) => setShareText(e.target.value)}
+              className="rounded-xl border-2 border-[var(--proto-border)] bg-white text-[var(--proto-text)] min-h-[130px]"
+              placeholder="Текст сообщения"
+            />
+            <Button
+              type="button"
+              className="w-full rounded-2xl h-12 bg-[var(--proto-active)] hover:opacity-90 text-white font-semibold disabled:opacity-50"
+              onClick={sendShareToMessages}
+              disabled={!shareTargetId || !shareText.trim() || isShareSending}
+            >
+              {isShareSending ? 'Отправляю…' : 'Отправить'}
             </Button>
           </div>
         </DialogContent>

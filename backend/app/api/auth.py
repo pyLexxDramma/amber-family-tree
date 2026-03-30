@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.storage_urls import resolve_public_media_url
 from app.core.security import create_access_token, get_current_user
 from app.database import get_db
 from app.models.family import Family
@@ -132,7 +133,7 @@ async def verify(
         death_date=member.death_date,
         city=member.city,
         about=member.about,
-        avatar=member.avatar,
+        avatar=resolve_public_media_url(member.avatar),
         role=member.role,
         is_active=member.is_active,
         generation=member.generation,
@@ -178,7 +179,7 @@ async def me(
         death_date=member.death_date,
         city=member.city,
         about=member.about,
-        avatar=member.avatar,
+        avatar=resolve_public_media_url(member.avatar),
         role=member.role,
         is_active=member.is_active,
         generation=member.generation,

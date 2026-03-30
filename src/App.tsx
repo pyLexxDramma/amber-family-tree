@@ -23,6 +23,8 @@ import MyMedia from "./pages/MyMedia";
 import EditMyProfile from "./pages/EditMyProfile";
 import ContactProfile from "./pages/ContactProfile";
 import Messages from "./pages/Messages";
+import MessagesGroup from "./pages/MessagesGroup";
+import MessagesHub from "./pages/MessagesHub";
 import ContactRequests from "./pages/ContactRequests";
 import CreateMemberProfile from "./pages/CreateMemberProfile";
 import EditMemberProfile from "./pages/EditMemberProfile";
@@ -43,6 +45,7 @@ import DemoMode from "./pages/DemoMode";
 import DemoPreview from "./pages/DemoPreview";
 import DemoLogin from "./pages/DemoLogin";
 import { CLASSIC_BASE } from "./constants/routes";
+import { visionDefaultClassicPath } from "./lib/visionIa";
 import { UIVariantProvider, UIVariantSync } from "./contexts/UIVariantContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { PrivacyVisibilityProvider } from "./contexts/PrivacyVisibilityContext";
@@ -73,7 +76,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/confirm-code" element={<ConfirmCode />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path={CLASSIC_BASE} element={<Navigate to={`${CLASSIC_BASE}/tree`} replace />} />
+            <Route path={CLASSIC_BASE} element={<Navigate to={visionDefaultClassicPath()} replace />} />
             <Route path={`${CLASSIC_BASE}/tree`} element={<FamilyTree />} />
             <Route path={`${CLASSIC_BASE}/timeline`} element={<TimelinePage />} />
             <Route path={`${CLASSIC_BASE}/timeline/year/:year`} element={<TimelineYear />} />
@@ -90,7 +93,9 @@ const App = () => (
             <Route path={`${CLASSIC_BASE}/my-media`} element={<MyMedia />} />
             <Route path={`${CLASSIC_BASE}/profile/:id/edit`} element={<EditMemberProfile />} />
             <Route path={`${CLASSIC_BASE}/profile/:id`} element={<ContactProfile />} />
+            <Route path={`${CLASSIC_BASE}/messages`} element={<MessagesHub />} />
             <Route path={`${CLASSIC_BASE}/messages/:id`} element={<Messages />} />
+            <Route path={`${CLASSIC_BASE}/messages-group/:id`} element={<MessagesGroup />} />
             <Route path={`${CLASSIC_BASE}/contact-requests`} element={<ContactRequests />} />
             <Route path={`${CLASSIC_BASE}/invite`} element={<InviteFlow />} />
             <Route path={`${CLASSIC_BASE}/store`} element={<StorePage />} />

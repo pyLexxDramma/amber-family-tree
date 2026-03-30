@@ -5,12 +5,7 @@ import { ROUTES } from '@/constants/routes';
 import { api } from '@/integrations/api';
 import type { Publication } from '@/types';
 import { getPrototypePublicationPhotoByTopic } from '@/lib/prototype-assets';
-
-type AlbumDef = {
-  id: string;
-  title: string;
-  match: (p: Publication) => boolean;
-};
+import { allAlbumDefs } from '@/lib/autoCollections';
 
 function photoCoverOf(p: Publication): string | null {
   const ph = p.media.find(m => m.type === 'photo');
@@ -47,14 +42,7 @@ const AlbumDetails: React.FC = () => {
     };
   }, []);
 
-  const defs: AlbumDef[] = useMemo(() => ([
-    { id: 'sochi', title: 'Лето в Сочи', match: (p) => (p.place || '').toLowerCase().includes('сочи') },
-    { id: 'new-year', title: 'Новый год', match: (p) => (p.title || '').toLowerCase().includes('новый') },
-    { id: 'school', title: 'Школьные годы', match: (p) => (p.title || '').toLowerCase().includes('гордость') },
-    { id: 'holidays', title: 'Семейные праздники', match: (p) => p.topicTag === 'Праздники' || p.topicTag === 'День рождения' },
-    { id: 'nature', title: 'Дача и природа', match: (p) => (p.title || '').toLowerCase().includes('волге') || (p.text || '').toLowerCase().includes('дач') },
-    { id: 'travel', title: 'Наши путешествия', match: (p) => p.topicTag === 'Путешествия' },
-  ]), []);
+  const defs = useMemo(() => allAlbumDefs(pubs, true), [pubs]);
 
   const album = defs.find(d => d.id === id) ?? null;
   const matched = album ? pubs.filter(album.match) : [];

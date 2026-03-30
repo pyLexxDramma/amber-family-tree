@@ -1,4 +1,4 @@
-import type { AppUser, ContactRequest, ContactRequestState, FamilyMember, MediaItem, Message, Publication } from '@/types';
+import type { AppUser, ContactRequest, ContactRequestState, EventItem, FamilyMember, MediaItem, Message, Publication } from '@/types';
 import type { Comment } from '@/types';
 
 export interface FeedListParams {
@@ -111,6 +111,12 @@ export interface MessagesApi {
   sendTo(memberId: string, text: string): Promise<Message>;
 }
 
+export interface HistoryApi {
+  listEvents(params?: { from?: string; to?: string; memberId?: string }): Promise<EventItem[]>;
+  getEvent(eventId: string): Promise<EventItem | null>;
+  createFromPublication(publicationId: string): Promise<EventItem>;
+}
+
 export interface ContactRequestsApi {
   getStateWith(memberId: string): Promise<ContactRequestState>;
   createWith(memberId: string): Promise<ContactRequestState>;
@@ -130,6 +136,7 @@ export interface AngeloApi {
   profile: ProfileApi;
   media: MediaApi;
   messages: MessagesApi;
+  history: HistoryApi;
   contactRequests: ContactRequestsApi;
   debug?: DebugApi;
 }

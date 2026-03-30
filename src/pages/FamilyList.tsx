@@ -114,6 +114,13 @@ const FamilyList: React.FC = () => {
             <div className="flex gap-6 border-b border-[var(--proto-border)]">
               <button
                 type="button"
+                onClick={() => navigate(ROUTES.classic.tree)}
+                className="pb-2 text-sm font-medium transition-colors border-b-2 text-[var(--proto-text-muted)] border-transparent hover:text-[var(--proto-text)]"
+              >
+                Дерево
+              </button>
+              <button
+                type="button"
                 onClick={() => navigate(ROUTES.classic.myProfile)}
                 className="pb-2 text-sm font-medium transition-colors border-b-2 text-[var(--proto-text-muted)] border-transparent hover:text-[var(--proto-text)]"
               >

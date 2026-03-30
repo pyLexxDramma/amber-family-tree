@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
+from app.storage_urls import public_s3_object_url, resolve_public_media_url
 from app.core.security import get_current_user
 from app.database import get_db
 from app.models.media_item import MediaItem
@@ -13,14 +13,6 @@ from app.schemas.feed import MediaItemResponse
 from app.schemas.profile import ProfileUpdate
 
 router = APIRouter(prefix="/profile", tags=["profile"])
-
-def _to_public_media_url(raw: str) -> str:
-    if raw.startswith("http://") or raw.startswith("https://"):
-        return raw
-    settings = get_settings()
-    base = (settings.s3_public_endpoint_url or settings.s3_endpoint_url).rstrip("/")
-    return f"{base}/{settings.s3_bucket}/{raw}"
-
 
 @router.get("/me")
 async def get_my_profile(
@@ -43,7 +35,7 @@ async def get_my_profile(
         death_date=member.death_date,
         city=member.city,
         about=member.about,
-        avatar=member.avatar,
+        avatar=resolve_public_media_url(member.avatar),
         role=member.role,
         is_active=member.is_active,
         generation=member.generation,
@@ -78,7 +70,7 @@ async def update_my_profile(
         death_date=member.death_date,
         city=member.city,
         about=member.about,
-        avatar=member.avatar,
+        avatar=resolve_public_media_url(member.avatar),
         role=member.role,
         is_active=member.is_active,
         generation=member.generation,
@@ -104,8 +96,8 @@ async def list_my_media(
         MediaItemResponse(
             id=str(m.id),
             type=m.type,
-            url=_to_public_media_url(m.url),
-            thumbnail=m.thumbnail,
+            url=public_s3_object_url(m.url),
+            thumbnail=resolve_public_media_url(m.thumbnail) or public_s3_object_url(m.url),
             name=m.name,
             size=m.size,
             duration=m.duration,

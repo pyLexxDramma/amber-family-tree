@@ -381,7 +381,7 @@ const FamilyTree: React.FC = () => {
     <AppLayout>
       <div className="prototype-screen min-h-screen bg-[var(--proto-bg)]">
         <TopBar
-          title="Дерево"
+          title="Семья"
           subtitle={me ? `Вы вошли как: ${me.nickname || me.firstName} ${me.lastName}` : undefined}
           onBack={() => navigate(-1)}
           light
@@ -403,6 +403,22 @@ const FamilyTree: React.FC = () => {
           }
         />
         <div className="mx-auto max-w-6xl p-3 sm:p-4">
+          <div className="mb-4 flex gap-2 border-b border-[var(--proto-border)]">
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.classic.tree)}
+              className="pb-2 text-sm font-medium transition-colors border-b-2 text-[var(--proto-text)] border-[var(--proto-active)]"
+            >
+              Дерево
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(ROUTES.classic.family)}
+              className="pb-2 text-sm font-medium transition-colors border-b-2 text-[var(--proto-text-muted)] border-transparent hover:text-[var(--proto-text)]"
+            >
+              Список
+            </button>
+          </div>
           <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--proto-border)] bg-[var(--proto-card)] p-3">
             <label className="text-sm text-[var(--proto-text)]">
               Глубина дерева
