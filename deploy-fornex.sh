@@ -21,6 +21,13 @@ cd ..
 echo ">>> frontend: npm run build"
 export VITE_USE_MOCK_API=false
 export SKIP_DEMO_FEED=true
+if [ -f "$PROJECT_DIR/.env.deploy" ]; then
+  echo ">>> loading $PROJECT_DIR/.env.deploy (VITE_* and overrides)"
+  set -a
+  # shellcheck source=/dev/null
+  . "$PROJECT_DIR/.env.deploy"
+  set +a
+fi
 npm ci --silent 2>/dev/null || npm install
 npm run build
 
