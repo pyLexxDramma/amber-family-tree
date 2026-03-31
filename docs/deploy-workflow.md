@@ -34,6 +34,12 @@ cd /opt/angelo
 
 Скрипт делает: `git fetch` + `git reset --hard origin/main` (локальные коммиты на VPS **не** хранить), пересборка backend в Docker, фронт, nginx.
 
+### Коммит на GitHub совпадает с VPS, а сайт «как старый»
+
+1. **Фронт собран с другими `VITE_*`, чем локально.** Локально это `.env.local`, на сервере при `./deploy-fornex.sh` — опциональный `/opt/angelo/.env.deploy` (см. `.env.example`). Без флагов вроде `VITE_VISION_IA_NAV` интерфейс будет как в базовом режиме при том же исходнике.
+2. **Два деплоя в один каталог.** Workflow `.github/workflows/deploy.yml` после каждого push в `main` заливает **только** `dist/` по **FTP**. Если цель FTP — тот же `root`, что и у nginx на Fornex (`/var/www/angelo`), то сборка из GitHub Actions **перезапишет** фронт после вашего `./deploy-fornex.sh`. У Actions нет серверного `.env.deploy`, поэтому визуально снова «старая» сборка. Варианты: отключить/перенастроить FTP на другой хост, или добавить те же `VITE_*` в secrets/vars CI и шаг сборки там, или деплоить на VPS **последним** снова `./deploy-fornex.sh` после успешного workflow.
+3. **Кэш HTML в браузере.** Жёсткое обновление (Ctrl+Shift+R) или приватное окно. На сервере в nginx лучше не кэшировать `index.html`, а ассеты из `/assets/` — с длинным кэшем; пример: `docs/nginx-angelo.conf`.
+
 **Ошибка `column likes.strength does not exist`:** после деплоя один раз применить миграцию к Postgres в Docker:
 
 ```bash
