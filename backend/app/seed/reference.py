@@ -241,8 +241,14 @@ def _photo_url(pub_data: dict, seed: int) -> str:
 logger = logging.getLogger(__name__)
 
 
-async def seed_reference_user(db: AsyncSession, user: User, member: FamilyMember, force: bool = False) -> None:
-    if user.identifier.strip().lower() != REFERENCE_EMAIL:
+async def seed_reference_user(
+    db: AsyncSession,
+    user: User,
+    member: FamilyMember,
+    force: bool = False,
+    only_reference_user: bool = True,
+) -> None:
+    if only_reference_user and user.identifier.strip().lower() != REFERENCE_EMAIL:
         return
     if not user.family_id:
         logger.warning("seed_reference_user: user has no family_id")

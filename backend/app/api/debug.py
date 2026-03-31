@@ -27,3 +27,26 @@ async def force_seed_reference(
         return {"ok": True, "message": "Seed completed"}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/seed-demo-content")
+async def seed_demo_content_for_current_user(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.member_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No member profile")
+    member = await db.get(FamilyMember, current_user.member_id)
+    if not member:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+    try:
+        await seed_reference_user(
+            db,
+            current_user,
+            member,
+            force=True,
+            only_reference_user=False,
+        )
+        return {"ok": True, "message": "Demo content seeded for current user"}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
