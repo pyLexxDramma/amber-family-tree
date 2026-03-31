@@ -12,7 +12,17 @@ type AlbumView = {
   title: string;
   photoCount: number;
   coverUrl: string | null;
+  fallbackUrl: string;
   topicTag: string;
+};
+
+const ALBUM_FALLBACK_BY_ID: Record<string, string> = {
+  sochi: '/demo/media/photo5.png',
+  'new-year': '/demo/media/photo3.png',
+  school: '/demo/media/photo7.png',
+  holidays: '/demo/media/photo1.jpg',
+  nature: '/demo/media/photo6.png',
+  travel: '/demo/media/photo4.png',
 };
 
 function photoCoverOf(p: Publication): string | null {
@@ -24,6 +34,7 @@ const Albums: React.FC = () => {
   const navigate = useNavigate();
   const [pubs, setPubs] = useState<Publication[]>([]);
   const [autoMode, setAutoMode] = useState(false);
+  const [hideEmpty, setHideEmpty] = useState(false);
 
   const loadPubs = () => api.feed.list().then(setPubs);
 
@@ -58,9 +69,24 @@ const Albums: React.FC = () => {
       const photos = matched.flatMap(p => p.media.filter(m => m.type === 'photo'));
       const cover = matched.map(photoCoverOf).find(Boolean) || null;
       const firstPub = matched.find(p => photoCoverOf(p));
-      return { id: d.id, title: d.title, photoCount: photos.length, coverUrl: cover, topicTag: firstPub?.topicTag || '' };
+      const fallbackUrl =
+        ALBUM_FALLBACK_BY_ID[d.id] ||
+        getPrototypePublicationPhotoByTopic(firstPub?.topicTag || '').src;
+      return {
+        id: d.id,
+        title: d.title,
+        photoCount: photos.length,
+        coverUrl: cover,
+        fallbackUrl,
+        topicTag: firstPub?.topicTag || '',
+      };
     });
   }, [defs, pubs]);
+
+  const visibleAlbums = useMemo(
+    () => (hideEmpty ? albums.filter((a) => a.photoCount > 0) : albums),
+    [albums, hideEmpty],
+  );
 
   return (
     <AppLayout>
@@ -79,9 +105,20 @@ const Albums: React.FC = () => {
             >
               {autoMode ? 'Автосборка включена' : 'Собрать автоматически'}
             </button>
+            <button
+              type="button"
+              onClick={() => setHideEmpty((v) => !v)}
+              className={`h-10 px-3 rounded-xl border text-xs font-semibold transition-colors ${
+                hideEmpty
+                  ? 'bg-[var(--proto-active)] text-white border-[var(--proto-active)]'
+                  : 'bg-[var(--proto-card)] border-[var(--proto-border)] text-[var(--proto-text-muted)]'
+              }`}
+            >
+              {hideEmpty ? 'Пустые скрыты' : 'Скрыть пустые'}
+            </button>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {albums.map((a) => (
+            {visibleAlbums.map((a) => (
               <button
                 key={a.id}
                 type="button"
@@ -90,10 +127,10 @@ const Albums: React.FC = () => {
               >
                 <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--proto-border)]">
                   <img
-                    src={a.coverUrl || getPrototypePublicationPhotoByTopic(a.topicTag).src}
+                    src={a.coverUrl || a.fallbackUrl}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.src = getPrototypePublicationPhotoByTopic(a.topicTag).src; }}
+                    onError={(e) => { e.currentTarget.src = a.fallbackUrl; }}
                   />
                   <span className="absolute bottom-2 right-2 px-2 py-1 rounded-lg text-xs font-medium bg-black/55 text-white">
                     {a.photoCount} фото
